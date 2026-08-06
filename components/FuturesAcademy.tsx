@@ -858,14 +858,16 @@ export default function FuturesAcademy() {
   const canAdmin = role === "owner" || role === "admin";
 
   useEffect(() => {
-    if (!supabase) {
-      setAuthReady(true);
-      return;
-    }
+  const client = supabase;
 
-    let mounted = true;
+  if (!client) {
+    setAuthReady(true);
+    return;
+  }
 
-    const loadAuthenticatedProfile = async (session: any) => {
+  let mounted = true;
+
+  const loadAuthenticatedProfile = async (session: any) => {
       if (!mounted) return;
 
       if (!session?.user) {
@@ -884,7 +886,7 @@ export default function FuturesAcademy() {
       setEmail(user.email || "");
       setIdentityMode("account");
 
-      const { data: profile } = await supabase
+      const { data: profile } = await client
         .from("profiles")
         .select("display_name, role, premium, xp, streak")
         .eq("id", user.id)
@@ -920,9 +922,9 @@ export default function FuturesAcademy() {
       setAuthReady(true);
     };
 
-    supabase.auth.getSession().then(({ data }) => loadAuthenticatedProfile(data.session));
+    client.auth.getSession().then(({ data }) => loadAuthenticatedProfile(data.session));
 
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: listener } = client.auth.onAuthStateChange((_event, session) => {
       loadAuthenticatedProfile(session);
     });
 
