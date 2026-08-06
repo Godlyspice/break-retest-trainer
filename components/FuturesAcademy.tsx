@@ -2899,8 +2899,8 @@ export default function FuturesAcademy() {
           <div><strong>Futures Academy</strong><span>v3 Academy RPG</span></div>
         </button>
         <div className="v1-status-strip">
-          <span>⭐ {reputation.toLocaleString()}</span>
-          <span>🪙 {points.toLocaleString()}</span>
+          <span className="v41-header-pill v41-pill-violet"><AcademyIcon name="reputation" size={16} /> {reputation.toLocaleString()}</span>
+          <span className="v41-header-pill v41-pill-cyan"><AcademyIcon name="points" size={16} /> {points.toLocaleString()}</span>
           <span>LVL {level}</span>
           <span>{currentRank.name}</span>
           <RankEmblem level={level} label={currentRank.name} compact />
@@ -2933,7 +2933,7 @@ export default function FuturesAcademy() {
                 className={tab===id ? "active":""}
                 onClick={() => setTab(id as Tab)}
               >
-                <span className="v3-nav-icon"><AcademyIcon name={icon as any} size={21} /></span>
+                <span className="v3-nav-icon"><AcademyIcon name={icon as any} size={21} framed /></span>
                 <span className="v3-nav-copy">
                   <strong>{label}</strong>
                   <small>{description}</small>
@@ -2963,7 +2963,7 @@ export default function FuturesAcademy() {
                 className={tab===id ? "active":""}
                 onClick={() => setTab(id as Tab)}
               >
-                <span className="v3-nav-icon"><AcademyIcon name={icon as any} size={21} /></span>
+                <span className="v3-nav-icon"><AcademyIcon name={icon as any} size={21} framed /></span>
                 <span className="v3-nav-copy">
                   <strong>{label}</strong>
                   <small>{description}</small>
@@ -2992,7 +2992,7 @@ export default function FuturesAcademy() {
                 className={tab===id ? "active":""}
                 onClick={() => setTab(id as Tab)}
               >
-                <span className="v3-nav-icon"><AcademyIcon name={icon as any} size={21} /></span>
+                <span className="v3-nav-icon"><AcademyIcon name={icon as any} size={21} framed /></span>
                 <span className="v3-nav-copy">
                   <strong>{label}</strong>
                   <small>{description}</small>
@@ -3042,7 +3042,7 @@ export default function FuturesAcademy() {
               setMobileAcademyMenuOpen(false);
             }}
           >
-            <span><AcademyIcon name={icon as any} size={20} /></span>
+            <span><AcademyIcon name={icon as any} size={20} framed /></span>
             <small>{label}</small>
           </button>
         ))}
@@ -3106,7 +3106,7 @@ export default function FuturesAcademy() {
                     setMobileAcademyMenuOpen(false);
                   }}
                 >
-                  <span className="v3-mobile-menu-icon"><AcademyIcon name={icon as any} size={22} /></span>
+                  <span className="v3-mobile-menu-icon"><AcademyIcon name={icon as any} size={22} framed /></span>
                   <span>
                     <strong>{label}</strong>
                     <small>{description}</small>

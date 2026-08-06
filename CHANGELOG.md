@@ -1,31 +1,12 @@
-# Futures Academy v4.0 Changelog
+# Futures Academy v4.1 Changelog
 
-## Visual system
-- Unified cyber-neon palette
-- New black/navy application background
-- Improved borders, glows, hover states, and depth
-- Consistent focus states and reduced-motion support
-
-## Custom icon system
-- Original reusable SVG icons
-- Desktop navigation integration
-- Mobile dock integration
-- Mobile menu integration
-- Scalable and resolution-independent
-
-## RPG presentation
-- New hexagonal rank emblem
-- Stronger violet/cyan progression identity
-- Better class, skill-tree, and quest card presentation
-
-## Marketplace presentation
-- Improved Common, Uncommon, Rare, Epic, and Legendary treatment
-- Stronger gold and violet reward styling
-- Better card hover hierarchy
-
-## Mobile
-- Custom illustrated SVG navigation icons
-- Labeled navigation retained
-- Improved active states
-- Better status-row overflow behavior
-- Stronger modal and bottom-dock depth
+- Reworked the global canvas to a true black/navy presentation
+- Added color tones to every custom Academy SVG icon
+- Added hexagonal illustrated icon frames
+- Updated desktop and mobile navigation icons
+- Increased cyan, violet, purple, green, and gold contrast
+- Enhanced brand emblem glow
+- Enhanced rank emblem glow and colors
+- Improved action buttons and progress bars
+- Increased Marketplace rarity differentiation
+- Preserved v2.2, v3, Supabase, evaluation, and owner-console logic

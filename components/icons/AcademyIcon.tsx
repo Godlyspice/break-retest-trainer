@@ -174,18 +174,53 @@ const paths: Record<AcademyIconName, ReactNode> = {
   )
 };
 
+const iconTones: Record<AcademyIconName, string> = {
+  command: "violet",
+  trade: "green",
+  academy: "blue",
+  career: "cyan",
+  handbook: "blue",
+  daily: "gold",
+  replay: "violet",
+  trophy: "gold",
+  marketplace: "purple",
+  statistics: "cyan",
+  profile: "silver",
+  settings: "silver",
+  admin: "red",
+  evaluation: "blue",
+  quest: "gold",
+  class: "cyan",
+  skill: "violet",
+  pattern: "purple",
+  risk: "cyan",
+  psychology: "gold",
+  reputation: "violet",
+  points: "cyan",
+  streak: "gold",
+  rank: "violet"
+};
+
 export function AcademyIcon({
   name,
   size = 22,
-  className = ""
+  className = "",
+  framed = false
 }: {
   name: AcademyIconName;
   size?: number;
   className?: string;
+  framed?: boolean;
 }) {
   return (
     <span
-      className={`academy-icon-shell academy-icon-${name} ${className}`}
+      className={[
+        "academy-icon-shell",
+        `academy-icon-${name}`,
+        `academy-icon-tone-${iconTones[name]}`,
+        framed ? "academy-icon-framed" : "",
+        className
+      ].filter(Boolean).join(" ")}
       aria-hidden="true"
       style={{ width: size, height: size }}
     >
