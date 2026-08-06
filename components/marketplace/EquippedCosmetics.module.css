@@ -1,0 +1,183 @@
+.cosmeticProfile {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.cosmeticProfile > * {
+  position: relative;
+  z-index: 2;
+}
+
+.cosmeticAvatar {
+  font-size: 1.75rem;
+}
+
+.cosmeticLabels {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  margin: 7px 0 3px;
+}
+
+.equippedTitle,
+.equippedBadge {
+  padding: 5px 8px;
+  border: 1px solid #36536a;
+  border-radius: 999px;
+  background: rgba(14, 29, 40, .88);
+  color: #bde0fb;
+  font-size: .66rem;
+  font-weight: 800;
+}
+
+/* Profile frames */
+.frame_steel {
+  box-shadow: inset 0 0 0 2px #8c9aa4, 0 0 18px rgba(150,165,175,.14);
+}
+.frame_blue {
+  box-shadow: inset 0 0 0 2px #3e9be0, 0 0 24px rgba(62,155,224,.22);
+}
+.frame_emerald {
+  box-shadow: inset 0 0 0 2px #38b77f, 0 0 24px rgba(56,183,127,.22);
+}
+.frame_violet {
+  box-shadow: inset 0 0 0 2px #9670df, 0 0 28px rgba(150,112,223,.25);
+}
+.frame_gold {
+  box-shadow:
+    inset 0 0 0 2px #e2b84f,
+    0 0 35px rgba(226,184,79,.32);
+}
+
+/* Profile backgrounds */
+.background_floor::before,
+.background_midnight::before,
+.background_sunrise::before,
+.background_city::before,
+.background_vault::before,
+.background_legend::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  opacity: .72;
+  pointer-events: none;
+}
+
+.background_floor::before {
+  background:
+    linear-gradient(rgba(33,103,147,.12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(33,103,147,.12) 1px, transparent 1px),
+    radial-gradient(circle at 50% 120%, #173c52, #0b1319 68%);
+  background-size: 24px 24px, 24px 24px, auto;
+}
+.background_midnight::before {
+  background:
+    radial-gradient(circle at 80% 20%, rgba(65,107,193,.28), transparent 30%),
+    linear-gradient(145deg, #101b35, #070d17);
+}
+.background_sunrise::before {
+  background:
+    radial-gradient(circle at 50% 100%, rgba(249,148,67,.42), transparent 45%),
+    linear-gradient(155deg, #18233c, #100d18);
+}
+.background_city::before {
+  background:
+    linear-gradient(to top, rgba(25,80,112,.58), transparent 48%),
+    repeating-linear-gradient(
+      90deg,
+      rgba(71,136,168,.18) 0 12px,
+      transparent 12px 22px
+    ),
+    #0a1218;
+}
+.background_vault::before {
+  background:
+    radial-gradient(circle, transparent 24%, rgba(99,122,139,.16) 25% 26%, transparent 27%),
+    linear-gradient(145deg, #17212a, #080d11);
+  background-size: 70px 70px, auto;
+}
+.background_legend::before {
+  background:
+    radial-gradient(circle at 50% 0, rgba(229,184,71,.34), transparent 42%),
+    linear-gradient(145deg, #2b2416, #0d1115 72%);
+}
+
+/* Equipped effects */
+.effect_neon::after,
+.effect_candles::after,
+.effect_sparks::after,
+.effect_gold::after {
+  content: "";
+  position: absolute;
+  inset: -35%;
+  z-index: 1;
+  pointer-events: none;
+  animation: cosmeticDrift 7s linear infinite;
+}
+
+.effect_neon::after {
+  background:
+    radial-gradient(circle at 20% 35%, rgba(56,178,255,.20), transparent 20%),
+    radial-gradient(circle at 80% 60%, rgba(155,89,255,.18), transparent 22%);
+}
+.effect_candles::after {
+  background:
+    repeating-linear-gradient(
+      90deg,
+      transparent 0 22px,
+      rgba(38,192,141,.12) 23px 27px,
+      transparent 28px 45px,
+      rgba(225,78,98,.12) 46px 50px
+    );
+}
+.effect_sparks::after {
+  background:
+    radial-gradient(circle at 20% 30%, #69bfff 0 1px, transparent 2px),
+    radial-gradient(circle at 72% 22%, #b082ff 0 1px, transparent 2px),
+    radial-gradient(circle at 45% 74%, #62e1bd 0 1px, transparent 2px);
+  background-size: 70px 70px, 90px 90px, 110px 110px;
+}
+.effect_gold::after {
+  background:
+    radial-gradient(circle at 25% 40%, rgba(255,214,102,.34), transparent 18%),
+    radial-gradient(circle at 75% 65%, rgba(255,184,49,.26), transparent 20%);
+}
+
+@keyframes cosmeticDrift {
+  from { transform: translate3d(-4%, -3%, 0) rotate(0deg); }
+  to { transform: translate3d(4%, 3%, 0) rotate(360deg); }
+}
+
+/* Whole-app themes */
+.theme_terminal {
+  --accent: #48db84;
+  --accent-strong: #7cf0a6;
+  filter: saturate(.9) hue-rotate(65deg);
+}
+.theme_ice {
+  --accent: #86d5ff;
+  --accent-strong: #c8efff;
+  filter: saturate(.82) hue-rotate(8deg);
+}
+.theme_crimson {
+  --accent: #ef6074;
+  --accent-strong: #ff9baa;
+  filter: hue-rotate(300deg) saturate(1.08);
+}
+.theme_gold {
+  --accent: #e4bc55;
+  --accent-strong: #ffe39a;
+  filter: sepia(.12) saturate(1.12);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .effect_neon::after,
+  .effect_candles::after,
+  .effect_sparks::after,
+  .effect_gold::after {
+    animation: none;
+  }
+}

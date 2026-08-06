@@ -1,20 +1,18 @@
-# Futures Academy v2.1.6 — Full Progress Header Sync
+# Futures Academy v2.1.7 — Visible Equipped Cosmetics
 
-The owner refresh event was working, which is why XP/Level changed, but the
-authenticated profile query did not include Credits or Reputation.
+Marketplace purchases were saved and marked equipped, but the main application
+did not consume the equipped slots.
 
-This patch loads and synchronizes:
+This patch makes equipped cosmetics visible:
 
-- XP
-- Streak
-- Credits / Academy Points
-- Reputation
+- Account icons appear in Profile, Account Access, and the top header.
+- Titles appear below the profile and in the header.
+- Badges appear on the profile and signed-in account panel.
+- Profile frames change the profile-card border and glow.
+- Backgrounds change the profile-card scene.
+- Effects animate over the profile card.
+- Themes modify the full application appearance.
 
-Extract into the project root and replace:
-
-- components/FuturesAcademy.tsx
+Extract into the project root and replace/merge the included files.
 
 No Supabase migration is required.
-
-After deployment, adjust your own Credits or Reputation in Admin. The header
-and evaluation unlocks should update immediately.

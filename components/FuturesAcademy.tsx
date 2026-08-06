@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { hasSupabase, supabase } from "@/lib/supabase-browser";
 import OwnerDashboard from "@/components/admin/OwnerDashboard";
 import Marketplace from "@/components/marketplace/Marketplace";
+import cosmeticStyles from "@/components/marketplace/EquippedCosmetics.module.css";
 import { marketplaceCatalog, type MarketplaceItem } from "@/lib/marketplace";
 import AccountSelector from "@/components/evaluations/AccountSelector";
 import EvaluationHUD from "@/components/evaluations/EvaluationHUD";
@@ -756,6 +757,35 @@ export default function FuturesAcademy() {
     identityMode === "guest" ? "👤 Guest Trader" :
     identityMode === "demo" ? "🎮 Demo" :
     "⭐ Academy Member";
+
+  const equippedAccountIcon = marketplaceCatalog.find(
+    item => item.id === equippedShopItems.accountIcon
+  );
+  const equippedBadge = marketplaceCatalog.find(
+    item => item.id === equippedShopItems.badge
+  );
+  const equippedTitle = marketplaceCatalog.find(
+    item => item.id === equippedShopItems.title
+  );
+  const equippedProfileFrame = marketplaceCatalog.find(
+    item => item.id === equippedShopItems.profileFrame
+  );
+  const equippedBackground = marketplaceCatalog.find(
+    item => item.id === equippedShopItems.background
+  );
+  const equippedEffect = marketplaceCatalog.find(
+    item => item.id === equippedShopItems.effect
+  );
+  const equippedTheme = marketplaceCatalog.find(
+    item => item.id === equippedShopItems.theme
+  );
+
+  const accountIdentityIcon =
+    equippedAccountIcon?.icon ||
+    (profileRole === "owner" ? "👑" : profilePremium ? "⭐" : "FA");
+
+  const cosmeticClass = (itemId?: string) =>
+    itemId ? cosmeticStyles[itemId] || "" : "";
 
   const selectedAccount =
     activeAccount ||
@@ -2151,15 +2181,45 @@ export default function FuturesAcademy() {
     if (tab === "profile") {
       return (
         <section className="page-section profile-grid">
-          <div className={`profile-card ${profileRole === "owner" ? "profile-owner" : ""}`}>
-            <div className="avatar">
-              {profileName.split(/\s+/).map(part => part[0]).join("").slice(0,2).toUpperCase() || "FA"}
+          <div
+            className={[
+              "profile-card",
+              profileRole === "owner" ? "profile-owner" : "",
+              cosmeticStyles.cosmeticProfile,
+              cosmeticClass(equippedProfileFrame?.id),
+              cosmeticClass(equippedBackground?.id),
+              cosmeticClass(equippedEffect?.id)
+            ].filter(Boolean).join(" ")}
+          >
+            <div className={`${"avatar"} ${cosmeticStyles.cosmeticAvatar}`}>
+              {equippedAccountIcon
+                ? equippedAccountIcon.icon
+                : profileName
+                    .split(/\s+/)
+                    .map(part => part[0])
+                    .join("")
+                    .slice(0, 2)
+                    .toUpperCase() || "FA"}
             </div>
             <h2>{profileName}</h2>
             <span className={`premium-badge ${profileRole === "owner" ? "owner-badge" : ""}`}>
               {profileRole === "owner" ? "👑 OWNER" : profilePremium ? "PREMIUM" : "FREE MEMBER"}
             </span>
             <small className="profile-membership">{membershipLabel}</small>
+            {(equippedTitle || equippedBadge) && (
+              <div className={cosmeticStyles.cosmeticLabels}>
+                {equippedTitle && (
+                  <span className={cosmeticStyles.equippedTitle}>
+                    {equippedTitle.icon} {equippedTitle.name}
+                  </span>
+                )}
+                {equippedBadge && (
+                  <span className={cosmeticStyles.equippedBadge}>
+                    {equippedBadge.icon} {equippedBadge.name}
+                  </span>
+                )}
+              </div>
+            )}
             <div className="profile-stats">
               <div><strong>{level}</strong><span>Level</span></div>
               <div><strong>{xp}</strong><span>Total XP</span></div>
@@ -2173,7 +2233,13 @@ export default function FuturesAcademy() {
             {authUserId ? (
               <div className="signed-in-card">
                 <div className="signed-in-icon">
-                  {profileRole === "owner" ? "👑" : profilePremium ? "⭐" : "✓"}
+                  {equippedAccountIcon
+                    ? equippedAccountIcon.icon
+                    : profileRole === "owner"
+                    ? "👑"
+                    : profilePremium
+                    ? "⭐"
+                    : "✓"}
                 </div>
                 <div className="signed-in-copy">
                   <span>Signed in as</span>
@@ -2181,6 +2247,12 @@ export default function FuturesAcademy() {
                   <small>{email}</small>
                   <div className="signed-in-tags">
                     <b>{membershipLabel}</b>
+                    {equippedTitle && (
+                      <b>{equippedTitle.icon} {equippedTitle.name}</b>
+                    )}
+                    {equippedBadge && (
+                      <b>{equippedBadge.icon} {equippedBadge.name}</b>
+                    )}
                     {profilePremium && <b>Premium</b>}
                     <b>Email verified</b>
                   </div>
@@ -2233,7 +2305,9 @@ export default function FuturesAcademy() {
         authUserId={authUserId}
       />
     );
-  }, [tab, scenario, dailyScenario, choice, reveal, xp, streak, role, premium, email, password, authMessage, question, aiAnswer, aiLoading, canAdmin, level, practiceMode, accuracy, mistakes, selectedMistake, unlockedAchievements, soundEnabled, reducedMotion, showCelebration, totalAttempts, entryPrice, stopPrice, targetPrice, planFeedback, visibleCandles, replayRunning, replaySpeed, activePlacement, contracts, orderType, liveRiskPoints, liveRewardPoints, liveRR, estimatedLoss, estimatedProfit, lastPlacedLevel, combo, bestCombo, currentRankIndex, currentRank, nextRank, rankProgress, currentMode, dailyProgress, points, selectedAccountId, selectedAccount, paperBalance, peakBalance, trailingDrawdownFloor, drawdownRemaining, accountFailed, ownedShopItems, equippedShopItems, shopMessage, reputation, membershipLabel, profileName, profileRole, profilePremium, authUserId, showGuestImport, guestSnapshot, activeEvaluation, activeAccount, applyTradeResult]);
+  }, [tab, scenario, dailyScenario, choice, reveal, xp, streak, role, premium, email, password, authMessage, question, aiAnswer, aiLoading, canAdmin, level, practiceMode, accuracy, mistakes, selectedMistake, unlockedAchievements, soundEnabled, reducedMotion, showCelebration, totalAttempts, entryPrice, stopPrice, targetPrice, planFeedback, visibleCandles, replayRunning, replaySpeed, activePlacement, contracts, orderType, liveRiskPoints, liveRewardPoints, liveRR, estimatedLoss, estimatedProfit, lastPlacedLevel, combo, bestCombo, currentRankIndex, currentRank, nextRank, rankProgress, currentMode, dailyProgress, points, selectedAccountId, selectedAccount, paperBalance, peakBalance, trailingDrawdownFloor, drawdownRemaining, accountFailed, ownedShopItems, equippedShopItems, shopMessage, reputation, membershipLabel,
+    equippedAccountIcon, equippedBadge, equippedTitle, equippedProfileFrame,
+    equippedBackground, equippedEffect, equippedTheme, profileName, profileRole, profilePremium, authUserId, showGuestImport, guestSnapshot, activeEvaluation, activeAccount, applyTradeResult]);
 
   if (identityMode === "landing") {
     return (
@@ -2256,7 +2330,13 @@ export default function FuturesAcademy() {
   }
 
   return (
-    <main className={`app-shell app-mode-${practiceMode}`}>
+    <main
+      className={[
+        "app-shell",
+        `app-mode-${practiceMode}`,
+        cosmeticClass(equippedTheme?.id)
+      ].filter(Boolean).join(" ")}
+    >
       <header className="v1-topbar">
         <button className="brand brand-button" type="button" onClick={() => setTab("home")}>
           <span className="brand-mark">FA</span>
@@ -2268,7 +2348,14 @@ export default function FuturesAcademy() {
           <span>LVL {level}</span>
           <span>{currentRank.name}</span>
           <span>{selectedAccount.icon} ${paperBalance.toLocaleString(undefined,{maximumFractionDigits:0})}</span>
-          <span>{membershipLabel}</span>
+          {equippedTitle && (
+            <span>{equippedTitle.icon} {equippedTitle.name}</span>
+          )}
+          <span>
+            {equippedAccountIcon?.icon || ""}
+            {equippedAccountIcon ? " " : ""}
+            {membershipLabel}
+          </span>
         </div>
       </header>
       <div className="v1-layout">
