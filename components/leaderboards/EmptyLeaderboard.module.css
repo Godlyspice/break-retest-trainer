@@ -1,0 +1,44 @@
+.empty {
+  min-height: 330px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 8px;
+  padding: 30px;
+  border: 1px dashed #334957;
+  border-radius: 12px;
+  background:
+    radial-gradient(circle at 50% 10%, rgba(70, 151, 219, .08), transparent 35%),
+    #0e161d;
+  text-align: center;
+}
+
+.icon {
+  width: 68px;
+  height: 68px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #172735;
+  font-size: 2rem;
+  opacity: .8;
+}
+
+.empty h3 {
+  margin: 4px 0 0;
+}
+
+.empty p {
+  max-width: 500px;
+  margin: 0;
+  color: #8997a3;
+}
+
+.empty button {
+  margin-top: 8px;
+  padding: 10px 14px;
+  border: 1px solid #397bb0;
+  border-radius: 7px;
+  background: #173958;
+  color: #bfe2ff;
+}

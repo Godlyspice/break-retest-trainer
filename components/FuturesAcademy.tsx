@@ -2,7 +2,10 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { hasSupabase, supabase } from "@/lib/supabase-browser";
-import OwnerDashboard from "@/components/admin/OwnerDashboard";
+import AccountSelector from "@/components/evaluations/AccountSelector";
+import EmptyLeaderboard from "@/components/leaderboards/EmptyLeaderboard";
+import { careerRanks, evaluationAccounts } from "@/lib/evaluations";
+import { useEvaluation } from "@/hooks/useEvaluation";
 
 type Role = "user" | "moderator" | "admin" | "owner";
 type Tab = "home" | "train" | "daily" | "career" | "accounts" | "exams" | "handbook" | "mistakes" | "achievements" | "trophies" | "leaderboard" | "balance" | "shop" | "stats" | "ai" | "profile" | "settings" | "admin";
@@ -15,23 +18,6 @@ type Scenario = {
   candles: Candle[];
   xp: number;
 };
-
-const demoBalanceLeaders = [
-  { name: "ChartFalcon", balance: 58740, account: "Pro Account" },
-  { name: "RetestRanger", balance: 55210, account: "Pro Account" },
-  { name: "MESMaster", balance: 31840, account: "Growth Account" },
-  { name: "CandleKnight", balance: 28750, account: "Growth Account" },
-  { name: "Demo Trader", balance: 25240, account: "Growth Account" }
-];
-
-const demoLeaders = [
-  { name: "CandleKnight", xp: 4820, streak: 18 },
-  { name: "MESMaster", xp: 4390, streak: 12 },
-  { name: "RetestRanger", xp: 4010, streak: 9 },
-  { name: "BreakoutScout", xp: 3660, streak: 14 },
-  { name: "Demo Trader", xp: 1240, streak: 3 }
-];
-
 
 const achievementCatalog = [
   { id: "first_correct", title: "First Confirmation", description: "Get your first scenario correct.", icon: "🧭", requirement: 1 },
@@ -92,75 +78,6 @@ const practiceModes = [
     reward: "Streak XP",
     description: "Choppy markets and invalid setups designed to train the hardest action: doing nothing.",
     callout: "A skipped bad trade is a successful decision."
-  }
-];
-
-const careerRanks = [
-  { name: "Recruit", min: 0, reputation: 0, icon: "I" },
-  { name: "Cadet", min: 1200, reputation: 75, icon: "II" },
-  { name: "Junior Trader", min: 3500, reputation: 200, icon: "III" },
-  { name: "Trader", min: 7500, reputation: 450, icon: "IV" },
-  { name: "Senior Trader", min: 14000, reputation: 900, icon: "V" },
-  { name: "Professional Trader", min: 25000, reputation: 1800, icon: "VI" },
-  { name: "Elite Trader", min: 42000, reputation: 3500, icon: "VII" },
-  { name: "Market Specialist", min: 70000, reputation: 6500, icon: "VIII" },
-  { name: "Prop Firm Candidate", min: 110000, reputation: 11000, icon: "IX" },
-  { name: "Funded Operator", min: 165000, reputation: 18000, icon: "X" },
-  { name: "Market Veteran", min: 240000, reputation: 28000, icon: "XI" },
-  { name: "Academy Legend", min: 350000, reputation: 45000, icon: "XII" }
-];
-
-
-const paperAccounts = [
-  {
-    id: "starter",
-    name: "Starter Account",
-    balance: 10000,
-    maxDrawdown: 600,
-    resetCost: 500,
-    reputationRequired: 0,
-    icon: "🟦",
-    description: "Lower balance and tighter limits for focused practice."
-  },
-  {
-    id: "growth",
-    name: "Growth Account",
-    balance: 25000,
-    maxDrawdown: 1500,
-    resetCost: 1500,
-    reputationRequired: 500,
-    icon: "🟩",
-    description: "Balanced account for regular simulator sessions."
-  },
-  {
-    id: "pro",
-    name: "Pro Account",
-    balance: 50000,
-    maxDrawdown: 2500,
-    resetCost: 4000,
-    reputationRequired: 2500,
-    icon: "🟪",
-    description: "Larger account with stricter point costs and progression."
-  },
-  {
-    id: "elite",
-    name: "Elite Account",
-    balance: 100000,
-    maxDrawdown: 4000,
-    resetCost: 10000,
-    reputationRequired: 8000,
-    icon: "🟨",
-    description: "High-level paper account for proven academy traders."
-  },
-  {
-    id: "challenge",
-    name: "Funded Challenge",
-    balance: 150000,
-    maxDrawdown: 5000,
-    resetCost: 25000,
-    reputationRequired: 20000,
-    icon: "🟥",
-    description: "The hardest paper account with demanding unlock requirements."
   }
 ];
 
@@ -810,12 +727,23 @@ export default function FuturesAcademy() {
   const [ownedShopItems, setOwnedShopItems] = useState<string[]>([]);
   const [shopMessage, setShopMessage] = useState("");
 
+  const {
+    activeEvaluation,
+    activeAccount,
+    startEvaluation
+  } = useEvaluation(authUserId);
+
   const [correctWaits, setCorrectWaits] = useState(0);
   const [fakeoutsFound, setFakeoutsFound] = useState(0);
   const [mistakes, setMistakes] = useState<Array<{ scenario: Scenario; selected: string; createdAt: string }>>([]);
   const [selectedMistake, setSelectedMistake] = useState<number | null>(null);
   const [showCelebration, setShowCelebration] = useState(false);
   const [practiceMode, setPracticeMode] = useState("mixed");
+  const [users, setUsers] = useState([
+    { id: "1", email: "owner@example.com", role: "owner" as Role, premium: true, xp: 1240 },
+    { id: "2", email: "student@example.com", role: "user" as Role, premium: false, xp: 680 },
+    { id: "3", email: "coach@example.com", role: "moderator" as Role, premium: true, xp: 1910 }
+  ]);
 
   const level = Math.floor(xp / 500) + 1;
   const accuracy = totalAttempts ? Math.round((correctAttempts / totalAttempts) * 100) : 0;
@@ -835,7 +763,10 @@ export default function FuturesAcademy() {
     identityMode === "demo" ? "🎮 Demo" :
     "⭐ Academy Member";
 
-  const selectedAccount = paperAccounts.find(account => account.id === selectedAccountId) || paperAccounts[1];
+  const selectedAccount =
+    activeAccount ||
+    evaluationAccounts.find(account => account.id === selectedAccountId) ||
+    evaluationAccounts[0];
   const trailingDrawdownFloor = Math.max(
     selectedAccount.balance - selectedAccount.maxDrawdown,
     peakBalance - selectedAccount.maxDrawdown
@@ -854,16 +785,16 @@ export default function FuturesAcademy() {
   const canAdmin = role === "owner" || role === "admin";
 
   useEffect(() => {
-    const client = supabase;
+  const client = supabase;
 
-    if (!client) {
-      setAuthReady(true);
-      return;
-    }
+  if (!client) {
+    setAuthReady(true);
+    return;
+  }
 
-    let mounted = true;
+  let mounted = true;
 
-    const loadAuthenticatedProfile = async (session: any) => {
+  const loadAuthenticatedProfile = async (session: any) => {
       if (!mounted) return;
 
       if (!session?.user) {
@@ -931,6 +862,13 @@ export default function FuturesAcademy() {
   }, []);
 
   useEffect(() => {
+    if (!activeEvaluation) return;
+    setSelectedAccountId(activeEvaluation.accountId);
+    setPaperBalance(activeEvaluation.currentBalance);
+    setPeakBalance(activeEvaluation.peakBalance);
+  }, [activeEvaluation]);
+
+  useEffect(() => {
     if (typeof window === "undefined" || !authReady || authUserId) return;
     const saved = window.localStorage.getItem("futures-academy-guest");
     if (!saved) return;
@@ -947,19 +885,6 @@ export default function FuturesAcademy() {
       }
     } catch {}
   }, [authReady, authUserId]);
-
-  useEffect(() => {
-    const client = supabase;
-    if (!client || !authUserId) return;
-
-    client.rpc("touch_last_active").then(() => undefined);
-
-    const interval = window.setInterval(() => {
-      client.rpc("touch_last_active").then(() => undefined);
-    }, 5 * 60 * 1000);
-
-    return () => window.clearInterval(interval);
-  }, [authUserId]);
 
   useEffect(() => {
     if (typeof window === "undefined" || identityMode !== "guest") return;
@@ -1227,6 +1152,10 @@ export default function FuturesAcademy() {
     }
   }
 
+  function updateUser(id: string, patch: Partial<(typeof users)[number]>) {
+    setUsers(current => current.map(user => (user.id === id ? { ...user, ...patch } : user)));
+  }
+
   const entryNum = Number(entryPrice);
   const stopNum = Number(stopPrice);
   const targetNum = Number(targetPrice);
@@ -1271,21 +1200,22 @@ export default function FuturesAcademy() {
     setPlanFeedback("");
   }
 
-  function choosePaperAccount(accountId: string) {
-    const account = paperAccounts.find(item => item.id === accountId);
-    if (!account) return;
-    if ((identityMode === "guest" || identityMode === "demo") && account.id !== "starter") {
-      setGuestPrompt("Create a free account to unlock additional paper accounts and cloud saving.");
-      return;
+  async function launchEvaluation(accountId: string) {
+    const account = evaluationAccounts.find(item => item.id === accountId);
+    if (!account) return { ok: false, message: "Account not found." };
+
+    const result = await startEvaluation(account, reputation, identityMode);
+
+    if (!result.ok) {
+      setShopMessage(result.message);
+      return result;
     }
-    if (reputation < account.reputationRequired) {
-      setShopMessage(`Requires ${account.reputationRequired.toLocaleString()} reputation.`);
-      return;
-    }
+
     setSelectedAccountId(account.id);
     setPaperBalance(account.balance);
     setPeakBalance(account.balance);
-    setShopMessage("");
+    setShopMessage(`${account.name} started successfully.`);
+    return { ok: true };
   }
 
   function resetPaperAccount() {
@@ -1336,34 +1266,17 @@ export default function FuturesAcademy() {
                 <small>Career rank</small>
               </div>
               <div className="rank-progress"><i style={{ width: `${rankProgress}%` }} /></div>
-              <p>{nextRank ? `${nextRank.min - xp} XP to ${nextRank.name}` : "Maximum rank reached"}</p>
+              <p>{nextRank ? `${Math.max(0, nextRank.min - xp).toLocaleString()} XP and ${Math.max(0, nextRank.reputation - reputation).toLocaleString()} reputation to ${nextRank.name}` : "Maximum rank reached"}</p>
             </div>
           </div>
 
-          <section className="paper-account-section">
-            <div className="section-heading">
-              <div><span className="eyebrow">Paper trading</span><h2>Choose your training account</h2></div>
-              <div className="points-pill">🪙 {points.toLocaleString()} points</div>
-            </div>
-            <div className="paper-account-grid">
-              {paperAccounts.map(account => (
-                <button
-                  type="button"
-                  key={account.id}
-                  className={`paper-account-card ${selectedAccountId === account.id ? "active" : ""}`}
-                  onClick={() => choosePaperAccount(account.id)}
-                >
-                  <span className="account-icon">{account.icon}</span>
-                  <div>
-                    <strong>{account.name}</strong>
-                    <small>${account.balance.toLocaleString()} balance</small>
-                    <small>${account.maxDrawdown.toLocaleString()} trailing drawdown</small>
-                  </div>
-                  <em>{account.resetCost} reset pts</em>
-                </button>
-              ))}
-            </div>
-          </section>
+          <AccountSelector
+            points={points}
+            reputation={reputation}
+            activeAccountId={activeEvaluation?.accountId || selectedAccountId}
+            identityMode={identityMode}
+            onStart={async account => launchEvaluation(account.id)}
+          />
 
           <div className="hud-grid">
             <div className="hud-card accent-card">
@@ -1777,7 +1690,7 @@ export default function FuturesAcademy() {
           </div>
           <div className="career-path">
             {careerRanks.map((rank, index) => {
-              const unlocked = xp >= rank.min;
+              const unlocked = xp >= rank.min && reputation >= rank.reputation;
               const active = index === currentRankIndex;
               return (
                 <div className={`rank-node ${unlocked ? "unlocked" : ""} ${active ? "active" : ""}`} key={rank.name}>
@@ -1847,7 +1760,7 @@ export default function FuturesAcademy() {
             <div className="reputation-chip">⭐ {reputation.toLocaleString()} reputation</div>
           </div>
           <div className="vault-grid">
-            {paperAccounts.map(account => {
+            {evaluationAccounts.map(account => {
               const unlocked = reputation >= account.reputationRequired;
               const selected = account.id === selectedAccountId;
               return (
@@ -1862,7 +1775,7 @@ export default function FuturesAcademy() {
                   </div>
                   <p>{account.description}</p>
                   <div className="vault-requirement">⭐ {account.reputationRequired.toLocaleString()} reputation required</div>
-                  <button disabled={!unlocked || selected} onClick={() => choosePaperAccount(account.id)}>
+                  <button disabled={!unlocked || selected} onClick={() => void launchEvaluation(account.id)}>
                     {selected ? "Active account" : unlocked ? "Activate account" : "Locked"}
                   </button>
                 </article>
@@ -2024,16 +1937,16 @@ export default function FuturesAcademy() {
     if (tab === "leaderboard") {
       return (
         <section className="page-section">
-          <div className="section-heading"><div><span className="eyebrow">Community</span><h2>Weekly leaderboard</h2></div></div>
-          <div className="leaderboard">
-            {demoLeaders.map((leader, index) => (
-              <div className={`leader ${index < 3 ? "podium" : ""}`} key={leader.name}>
-                <span className="rank">#{index + 1}</span>
-                <div><strong>{leader.name}</strong><span>{leader.streak}-day streak</span></div>
-                <b>{leader.xp.toLocaleString()} XP</b>
-              </div>
-            ))}
+          <div className="section-heading">
+            <div><span className="eyebrow">Community</span><h2>Streak leaderboard</h2></div>
           </div>
+          <EmptyLeaderboard
+            title="No traders have qualified yet"
+            description="The streak leaderboard will populate when real Academy members complete eligible sessions."
+            icon="🔥"
+            actionLabel="Start practicing"
+            onAction={() => setTab("train")}
+          />
         </section>
       );
     }
@@ -2045,15 +1958,13 @@ export default function FuturesAcademy() {
             <div><span className="eyebrow">Paper accounts</span><h2>Balance leaderboard</h2></div>
             <div className="points-pill">Current: ${paperBalance.toLocaleString(undefined, { maximumFractionDigits: 2 })}</div>
           </div>
-          <div className="leaderboard">
-            {demoBalanceLeaders.map((leader, index) => (
-              <div className={`leader ${index < 3 ? "podium" : ""}`} key={leader.name}>
-                <span className="rank">#{index + 1}</span>
-                <div><strong>{leader.name}</strong><span>{leader.account}</span></div>
-                <b>${leader.balance.toLocaleString()}</b>
-              </div>
-            ))}
-          </div>
+          <EmptyLeaderboard
+            title="No balance leaders yet"
+            description="Only real members with eligible active evaluations will appear here. Be the first trader to claim the top spot."
+            icon="💰"
+            actionLabel="Open an evaluation"
+            onAction={() => setTab("home")}
+          />
         </section>
       );
     }
@@ -2197,12 +2108,59 @@ export default function FuturesAcademy() {
     }
 
     return (
-      <OwnerDashboard
-        profileRole={profileRole}
-        authUserId={authUserId}
-      />
+      <section className="page-section">
+        <div className="section-heading">
+          <div><span className="eyebrow">Owner controls</span><h2>Private admin dashboard</h2></div>
+          <span className="role-badge">{role.toUpperCase()}</span>
+        </div>
+        {!canAdmin ? (
+          <div className="locked">This page is restricted to administrators and the owner.</div>
+        ) : (
+          <>
+            <div className="metric-grid">
+              <div className="metric"><span>Total accounts</span><strong>{users.length}</strong></div>
+              <div className="metric"><span>Premium users</span><strong>{users.filter(u => u.premium).length}</strong></div>
+              <div className="metric"><span>Active this week</span><strong>{users.length}</strong></div>
+              <div className="metric"><span>Attempts logged</span><strong>1,284</strong></div>
+            </div>
+            <div className="admin-table-wrap">
+              <table>
+                <thead><tr><th>User</th><th>XP</th><th>Premium</th><th>Permission</th></tr></thead>
+                <tbody>
+                  {users.map(user => (
+                    <tr key={user.id}>
+                      <td>{user.email}</td>
+                      <td>{user.xp}</td>
+                      <td>
+                        <input
+                          type="checkbox"
+                          checked={user.premium}
+                          disabled={role !== "owner" && user.role === "owner"}
+                          onChange={e => updateUser(user.id, { premium: e.target.checked })}
+                        />
+                      </td>
+                      <td>
+                        <select
+                          value={user.role}
+                          disabled={role !== "owner" || user.role === "owner"}
+                          onChange={e => updateUser(user.id, { role: e.target.value as Role })}
+                        >
+                          <option value="user">User</option>
+                          <option value="moderator">Moderator</option>
+                          <option value="admin">Admin</option>
+                          <option value="owner">Owner</option>
+                        </select>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
+      </section>
     );
-  }, [tab, scenario, dailyScenario, choice, reveal, xp, streak, role, premium, email, password, authMessage, question, aiAnswer, aiLoading, canAdmin, level, practiceMode, accuracy, mistakes, selectedMistake, unlockedAchievements, soundEnabled, reducedMotion, showCelebration, totalAttempts, entryPrice, stopPrice, targetPrice, planFeedback, visibleCandles, replayRunning, replaySpeed, activePlacement, contracts, orderType, liveRiskPoints, liveRewardPoints, liveRR, estimatedLoss, estimatedProfit, lastPlacedLevel, combo, bestCombo, currentRankIndex, currentRank, nextRank, rankProgress, currentMode, dailyProgress, points, selectedAccountId, selectedAccount, paperBalance, peakBalance, trailingDrawdownFloor, drawdownRemaining, accountFailed, ownedShopItems, shopMessage, reputation, membershipLabel, profileName, profileRole, profilePremium, authUserId, showGuestImport, guestSnapshot]);
+  }, [tab, scenario, dailyScenario, choice, reveal, xp, streak, role, premium, email, password, authMessage, question, aiAnswer, aiLoading, users, canAdmin, level, practiceMode, accuracy, mistakes, selectedMistake, unlockedAchievements, soundEnabled, reducedMotion, showCelebration, totalAttempts, entryPrice, stopPrice, targetPrice, planFeedback, visibleCandles, replayRunning, replaySpeed, activePlacement, contracts, orderType, liveRiskPoints, liveRewardPoints, liveRR, estimatedLoss, estimatedProfit, lastPlacedLevel, combo, bestCombo, currentRankIndex, currentRank, nextRank, rankProgress, currentMode, dailyProgress, points, selectedAccountId, selectedAccount, paperBalance, peakBalance, trailingDrawdownFloor, drawdownRemaining, accountFailed, ownedShopItems, shopMessage, reputation, membershipLabel, profileName, profileRole, profilePremium, authUserId, showGuestImport, guestSnapshot, activeEvaluation, activeAccount]);
 
   if (identityMode === "landing") {
     return (
