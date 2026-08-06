@@ -815,11 +815,50 @@ export default function FuturesAcademy() {
   const [selectedMistake, setSelectedMistake] = useState<number | null>(null);
   const [showCelebration, setShowCelebration] = useState(false);
   const [practiceMode, setPracticeMode] = useState("mixed");
-  const [users, setUsers] = useState([
-    { id: "1", email: "owner@example.com", role: "owner" as Role, premium: true, xp: 1240 },
-    { id: "2", email: "student@example.com", role: "user" as Role, premium: false, xp: 680 },
-    { id: "3", email: "coach@example.com", role: "moderator" as Role, premium: true, xp: 1910 }
-  ]);
+  type ManagedUser = {
+    id: string;
+    email: string;
+    display_name: string | null;
+    role: Role;
+    premium: boolean;
+    xp: number;
+    credits: number;
+    reputation: number;
+    streak: number;
+    banned: boolean;
+    suspended_until: string | null;
+    created_at: string;
+    last_active_at: string;
+  };
+
+  type PlatformStats = {
+    total_accounts: number;
+    premium_users: number;
+    banned_users: number;
+    suspended_users: number;
+    active_24h: number;
+    active_7d: number;
+    signups_today: number;
+    attempts_total: number;
+    attempts_today: number;
+  };
+
+  type DailyActivity = {
+    activity_date: string;
+    signups: number;
+    active_users: number;
+    attempts: number;
+  };
+
+  const [users, setUsers] = useState<ManagedUser[]>([]);
+  const [platformStats, setPlatformStats] = useState<PlatformStats | null>(null);
+  const [dailyActivity, setDailyActivity] = useState<DailyActivity[]>([]);
+  const [adminSearch, setAdminSearch] = useState("");
+  const [adminLoading, setAdminLoading] = useState(false);
+  const [adminMessage, setAdminMessage] = useState("");
+  const [selectedAdminUser, setSelectedAdminUser] = useState<ManagedUser | null>(null);
+  const [grantAmount, setGrantAmount] = useState(100);
+  const [suspensionDays, setSuspensionDays] = useState(7);
 
   const level = Math.floor(xp / 500) + 1;
   const accuracy = totalAttempts ? Math.round((correctAttempts / totalAttempts) * 100) : 0;
@@ -858,16 +897,14 @@ export default function FuturesAcademy() {
   const canAdmin = role === "owner" || role === "admin";
 
   useEffect(() => {
-  const client = supabase;
+    if (!supabase) {
+      setAuthReady(true);
+      return;
+    }
 
-  if (!client) {
-    setAuthReady(true);
-    return;
-  }
+    let mounted = true;
 
-  let mounted = true;
-
-  const loadAuthenticatedProfile = async (session: any) => {
+    const loadAuthenticatedProfile = async (session: any) => {
       if (!mounted) return;
 
       if (!session?.user) {
@@ -886,7 +923,7 @@ export default function FuturesAcademy() {
       setEmail(user.email || "");
       setIdentityMode("account");
 
-      const { data: profile } = await client
+      const { data: profile } = await supabase
         .from("profiles")
         .select("display_name, role, premium, xp, streak")
         .eq("id", user.id)
@@ -922,9 +959,9 @@ export default function FuturesAcademy() {
       setAuthReady(true);
     };
 
-    client.auth.getSession().then(({ data }) => loadAuthenticatedProfile(data.session));
+    supabase.auth.getSession().then(({ data }) => loadAuthenticatedProfile(data.session));
 
-    const { data: listener } = client.auth.onAuthStateChange((_event, session) => {
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       loadAuthenticatedProfile(session);
     });
 
@@ -951,6 +988,21 @@ export default function FuturesAcademy() {
       }
     } catch {}
   }, [authReady, authUserId]);
+
+  useEffect(() => {
+    if (!supabase || !authUserId) return;
+    supabase.rpc("touch_last_active").then(() => undefined);
+    const interval = window.setInterval(() => {
+      supabase.rpc("touch_last_active").then(() => undefined);
+    }, 5 * 60 * 1000);
+    return () => window.clearInterval(interval);
+  }, [authUserId]);
+
+  useEffect(() => {
+    if (tab === "admin" && profileRole === "owner") {
+      loadOwnerDashboard();
+    }
+  }, [tab, profileRole]);
 
   useEffect(() => {
     if (typeof window === "undefined" || identityMode !== "guest") return;
@@ -1218,8 +1270,68 @@ export default function FuturesAcademy() {
     }
   }
 
-  function updateUser(id: string, patch: Partial<(typeof users)[number]>) {
-    setUsers(current => current.map(user => (user.id === id ? { ...user, ...patch } : user)));
+  async function loadOwnerDashboard(search = adminSearch) {
+    if (!supabase || profileRole !== "owner") return;
+    setAdminLoading(true);
+    setAdminMessage("");
+
+    const [usersResult, statsResult, activityResult] = await Promise.all([
+      supabase.rpc("owner_list_users", {
+        search_text: search || null,
+        page_limit: 100,
+        page_offset: 0
+      }),
+      supabase.rpc("owner_platform_stats"),
+      supabase.rpc("owner_daily_activity", { days_back: 14 })
+    ]);
+
+    if (usersResult.error || statsResult.error || activityResult.error) {
+      const error =
+        usersResult.error?.message ||
+        statsResult.error?.message ||
+        activityResult.error?.message ||
+        "Could not load owner dashboard.";
+      setAdminMessage(error);
+      setAdminLoading(false);
+      return;
+    }
+
+    setUsers((usersResult.data || []) as ManagedUser[]);
+    setPlatformStats((statsResult.data || null) as PlatformStats | null);
+    setDailyActivity((activityResult.data || []) as DailyActivity[]);
+    setAdminLoading(false);
+  }
+
+  async function ownerAction(
+    user: ManagedUser,
+    action: string,
+    value?: string | null,
+    amount?: number | null
+  ) {
+    if (!supabase || profileRole !== "owner") return;
+    setAdminLoading(true);
+    setAdminMessage("");
+
+    const { error } = await supabase.rpc("owner_manage_user", {
+      target_user_id: user.id,
+      requested_action: action,
+      requested_value: value ?? null,
+      requested_amount: amount ?? null
+    });
+
+    if (error) {
+      setAdminMessage(error.message);
+      setAdminLoading(false);
+      return;
+    }
+
+    setAdminMessage(`Updated ${user.display_name || user.email}.`);
+    await loadOwnerDashboard();
+    setSelectedAdminUser(current =>
+      current?.id === user.id
+        ? (users.find(item => item.id === user.id) || null)
+        : current
+    );
   }
 
   const entryNum = Number(entryPrice);
@@ -2192,59 +2304,212 @@ export default function FuturesAcademy() {
     }
 
     return (
-      <section className="page-section">
+      <section className="page-section owner-dashboard">
         <div className="section-heading">
-          <div><span className="eyebrow">Owner controls</span><h2>Private admin dashboard</h2></div>
-          <span className="role-badge">{role.toUpperCase()}</span>
+          <div>
+            <span className="eyebrow">Owner controls</span>
+            <h2>Academy operations</h2>
+            <p className="muted">Manage users through owner-verified Supabase functions. Every sensitive action is logged.</p>
+          </div>
+          <span className={`role-badge ${profileRole === "owner" ? "owner-role-badge" : ""}`}>
+            {profileRole.toUpperCase()}
+          </span>
         </div>
-        {!canAdmin ? (
-          <div className="locked">This page is restricted to administrators and the owner.</div>
+
+        {profileRole !== "owner" ? (
+          <div className="locked">This page is restricted to the Academy owner.</div>
         ) : (
           <>
-            <div className="metric-grid">
-              <div className="metric"><span>Total accounts</span><strong>{users.length}</strong></div>
-              <div className="metric"><span>Premium users</span><strong>{users.filter(u => u.premium).length}</strong></div>
-              <div className="metric"><span>Active this week</span><strong>{users.length}</strong></div>
-              <div className="metric"><span>Attempts logged</span><strong>1,284</strong></div>
+            {adminMessage && <div className="admin-message">{adminMessage}</div>}
+
+            <div className="metric-grid owner-metrics">
+              <div className="metric"><span>Total accounts</span><strong>{platformStats?.total_accounts ?? "—"}</strong></div>
+              <div className="metric"><span>Signups today</span><strong>{platformStats?.signups_today ?? "—"}</strong></div>
+              <div className="metric"><span>Active 24 hours</span><strong>{platformStats?.active_24h ?? "—"}</strong></div>
+              <div className="metric"><span>Active 7 days</span><strong>{platformStats?.active_7d ?? "—"}</strong></div>
+              <div className="metric"><span>Premium users</span><strong>{platformStats?.premium_users ?? "—"}</strong></div>
+              <div className="metric"><span>Attempts today</span><strong>{platformStats?.attempts_today ?? "—"}</strong></div>
+              <div className="metric"><span>Total attempts</span><strong>{platformStats?.attempts_total ?? "—"}</strong></div>
+              <div className="metric danger-metric"><span>Restricted users</span><strong>{(platformStats?.banned_users ?? 0) + (platformStats?.suspended_users ?? 0)}</strong></div>
             </div>
+
+            <div className="admin-activity-card">
+              <div className="section-heading compact-heading">
+                <div><span className="eyebrow">Last 14 days</span><h3>Signups and active users</h3></div>
+                <button className="secondary compact" type="button" onClick={() => loadOwnerDashboard()} disabled={adminLoading}>
+                  {adminLoading ? "Loading…" : "Refresh"}
+                </button>
+              </div>
+              <div className="activity-chart" aria-label="Daily signup and active user chart">
+                {dailyActivity.map(day => {
+                  const maxValue = Math.max(
+                    1,
+                    ...dailyActivity.flatMap(item => [Number(item.signups), Number(item.active_users), Number(item.attempts)])
+                  );
+                  return (
+                    <div className="activity-day" key={day.activity_date}>
+                      <div className="activity-bars">
+                        <i className="signup-bar" style={{ height: `${Math.max(4, (Number(day.signups) / maxValue) * 100)}%` }} title={`${day.signups} signups`} />
+                        <i className="active-bar" style={{ height: `${Math.max(4, (Number(day.active_users) / maxValue) * 100)}%` }} title={`${day.active_users} active users`} />
+                        <i className="attempt-bar" style={{ height: `${Math.max(4, (Number(day.attempts) / maxValue) * 100)}%` }} title={`${day.attempts} attempts`} />
+                      </div>
+                      <small>{new Date(`${day.activity_date}T00:00:00`).toLocaleDateString(undefined, { month: "numeric", day: "numeric" })}</small>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="chart-legend">
+                <span><i className="signup-dot" />Signups</span>
+                <span><i className="active-dot" />Active users</span>
+                <span><i className="attempt-dot" />Attempts</span>
+              </div>
+            </div>
+
+            <div className="admin-toolbar">
+              <div className="admin-search">
+                <span>🔎</span>
+                <input
+                  value={adminSearch}
+                  onChange={event => setAdminSearch(event.target.value)}
+                  onKeyDown={event => event.key === "Enter" && loadOwnerDashboard(adminSearch)}
+                  placeholder="Search users by email or display name"
+                />
+              </div>
+              <button className="primary compact" type="button" onClick={() => loadOwnerDashboard(adminSearch)} disabled={adminLoading}>
+                Search
+              </button>
+            </div>
+
             <div className="admin-table-wrap">
-              <table>
-                <thead><tr><th>User</th><th>XP</th><th>Premium</th><th>Permission</th></tr></thead>
+              <table className="owner-user-table">
+                <thead>
+                  <tr>
+                    <th>User</th>
+                    <th>Status</th>
+                    <th>Progress</th>
+                    <th>Access</th>
+                    <th>Last active</th>
+                    <th />
+                  </tr>
+                </thead>
                 <tbody>
-                  {users.map(user => (
-                    <tr key={user.id}>
-                      <td>{user.email}</td>
-                      <td>{user.xp}</td>
-                      <td>
-                        <input
-                          type="checkbox"
-                          checked={user.premium}
-                          disabled={role !== "owner" && user.role === "owner"}
-                          onChange={e => updateUser(user.id, { premium: e.target.checked })}
-                        />
-                      </td>
-                      <td>
-                        <select
-                          value={user.role}
-                          disabled={role !== "owner" || user.role === "owner"}
-                          onChange={e => updateUser(user.id, { role: e.target.value as Role })}
-                        >
-                          <option value="user">User</option>
-                          <option value="moderator">Moderator</option>
-                          <option value="admin">Admin</option>
-                          <option value="owner">Owner</option>
-                        </select>
-                      </td>
-                    </tr>
-                  ))}
+                  {users.map(user => {
+                    const suspended = Boolean(user.suspended_until && new Date(user.suspended_until) > new Date());
+                    return (
+                      <tr key={user.id}>
+                        <td>
+                          <div className="admin-user-cell">
+                            <strong>{user.display_name || "Unnamed trader"}</strong>
+                            <span>{user.email}</span>
+                            <small>Joined {new Date(user.created_at).toLocaleDateString()}</small>
+                          </div>
+                        </td>
+                        <td>
+                          <div className="status-stack">
+                            {user.banned ? <b className="status-banned">Banned</b> :
+                              suspended ? <b className="status-suspended">Suspended</b> :
+                              <b className="status-active">Active</b>}
+                            {user.premium && <b className="status-premium">Premium</b>}
+                          </div>
+                        </td>
+                        <td>
+                          <div className="progress-stack">
+                            <span>XP {Number(user.xp).toLocaleString()}</span>
+                            <span>🪙 {Number(user.credits).toLocaleString()}</span>
+                            <span>⭐ {Number(user.reputation).toLocaleString()}</span>
+                          </div>
+                        </td>
+                        <td><span className="table-role">{user.role}</span></td>
+                        <td>{new Date(user.last_active_at).toLocaleString()}</td>
+                        <td>
+                          <button className="secondary compact" type="button" onClick={() => setSelectedAdminUser(user)}>
+                            Manage
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  {!adminLoading && users.length === 0 && (
+                    <tr><td colSpan={6} className="empty-admin-table">No matching users.</td></tr>
+                  )}
                 </tbody>
               </table>
             </div>
           </>
         )}
+
+        {selectedAdminUser && profileRole === "owner" && (
+          <div className="admin-modal-backdrop" onPointerDown={event => {
+            if (event.currentTarget === event.target) setSelectedAdminUser(null);
+          }}>
+            <section className="admin-user-modal">
+              <button className="modal-close" type="button" onClick={() => setSelectedAdminUser(null)}>×</button>
+              <span className="eyebrow">Manage user</span>
+              <h2>{selectedAdminUser.display_name || selectedAdminUser.email}</h2>
+              <p className="muted">{selectedAdminUser.email}</p>
+
+              <div className="admin-modal-section">
+                <h3>Permission and Premium</h3>
+                <div className="admin-action-row">
+                  <select
+                    value={selectedAdminUser.role}
+                    disabled={selectedAdminUser.id === authUserId}
+                    onChange={event => ownerAction(selectedAdminUser, "set_role", event.target.value)}
+                  >
+                    <option value="user">User</option>
+                    <option value="moderator">Moderator</option>
+                    <option value="admin">Admin</option>
+                    <option value="owner">Owner</option>
+                  </select>
+                  <button
+                    className={selectedAdminUser.premium ? "warning-button" : "success-button"}
+                    type="button"
+                    onClick={() => ownerAction(selectedAdminUser, "set_premium", String(!selectedAdminUser.premium))}
+                  >
+                    {selectedAdminUser.premium ? "Remove Premium" : "Grant Premium"}
+                  </button>
+                </div>
+              </div>
+
+              <div className="admin-modal-section">
+                <h3>Grant or remove progression</h3>
+                <input type="number" value={grantAmount} onChange={event => setGrantAmount(Number(event.target.value) || 0)} />
+                <div className="admin-action-grid">
+                  <button type="button" onClick={() => ownerAction(selectedAdminUser, "grant_xp", null, grantAmount)}>Adjust XP</button>
+                  <button type="button" onClick={() => ownerAction(selectedAdminUser, "grant_credits", null, grantAmount)}>Adjust Credits</button>
+                  <button type="button" onClick={() => ownerAction(selectedAdminUser, "grant_reputation", null, grantAmount)}>Adjust Reputation</button>
+                </div>
+                <small className="muted">Use a negative number to remove an amount. Values can never fall below zero.</small>
+              </div>
+
+              <div className="admin-modal-section">
+                <h3>Account restrictions</h3>
+                <div className="suspension-row">
+                  <input type="number" min="1" max="3650" value={suspensionDays} onChange={event => setSuspensionDays(Math.max(1, Number(event.target.value) || 1))} />
+                  <button type="button" className="warning-button" disabled={selectedAdminUser.id === authUserId} onClick={() => ownerAction(selectedAdminUser, "suspend", null, suspensionDays)}>
+                    Suspend days
+                  </button>
+                  <button type="button" onClick={() => ownerAction(selectedAdminUser, "unsuspend")}>Clear suspension</button>
+                </div>
+                <div className="admin-action-row">
+                  <button
+                    type="button"
+                    className={selectedAdminUser.banned ? "success-button" : "danger-button"}
+                    disabled={selectedAdminUser.id === authUserId}
+                    onClick={() => ownerAction(selectedAdminUser, selectedAdminUser.banned ? "unban" : "ban")}
+                  >
+                    {selectedAdminUser.banned ? "Unban user" : "Ban user"}
+                  </button>
+                </div>
+              </div>
+            </section>
+          </div>
+        )}
       </section>
     );
-  }, [tab, scenario, dailyScenario, choice, reveal, xp, streak, role, premium, email, password, authMessage, question, aiAnswer, aiLoading, users, canAdmin, level, practiceMode, accuracy, mistakes, selectedMistake, unlockedAchievements, soundEnabled, reducedMotion, showCelebration, totalAttempts, entryPrice, stopPrice, targetPrice, planFeedback, visibleCandles, replayRunning, replaySpeed, activePlacement, contracts, orderType, liveRiskPoints, liveRewardPoints, liveRR, estimatedLoss, estimatedProfit, lastPlacedLevel, combo, bestCombo, currentRankIndex, currentRank, nextRank, rankProgress, currentMode, dailyProgress, points, selectedAccountId, selectedAccount, paperBalance, peakBalance, trailingDrawdownFloor, drawdownRemaining, accountFailed, ownedShopItems, shopMessage, reputation, membershipLabel, profileName, profileRole, profilePremium, authUserId, showGuestImport, guestSnapshot]);
+  }, [tab, scenario, dailyScenario, choice, reveal, xp, streak, role, premium, email, password, authMessage, question, aiAnswer, aiLoading, users, canAdmin, level, practiceMode, accuracy, mistakes, selectedMistake, unlockedAchievements, soundEnabled, reducedMotion, showCelebration, totalAttempts, entryPrice, stopPrice, targetPrice, planFeedback, visibleCandles, replayRunning, replaySpeed, activePlacement, contracts, orderType, liveRiskPoints, liveRewardPoints, liveRR, estimatedLoss, estimatedProfit, lastPlacedLevel, combo, bestCombo, currentRankIndex, currentRank, nextRank, rankProgress, currentMode, dailyProgress, points, selectedAccountId, selectedAccount, paperBalance, peakBalance, trailingDrawdownFloor, drawdownRemaining, accountFailed, ownedShopItems, shopMessage, reputation, membershipLabel, profileName, profileRole, profilePremium, authUserId, showGuestImport, guestSnapshot, platformStats, dailyActivity,
+    adminSearch, adminLoading, adminMessage, selectedAdminUser, grantAmount,
+    suspensionDays]);
 
   if (identityMode === "landing") {
     return (

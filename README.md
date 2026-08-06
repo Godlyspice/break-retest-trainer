@@ -350,3 +350,34 @@ This is the V1 foundation, not the final 1.0 public release. The purpose of this
 - Corrected the exact current profile-page component
 - Signed-in users now see account details instead of the email/password form
 - Owner and premium state now synchronize with the existing admin permission system
+
+
+# Futures Academy v1.1.2 — Secure Owner Dashboard
+
+## Owner tools
+
+- View registered users
+- Search users by email or display name
+- Promote users to moderator or admin
+- Grant or remove Premium
+- Ban and unban users
+- Suspend users for a selected number of days
+- Grant or remove XP, Academy Credits, and Reputation
+- View total accounts, daily signups, active users, attempts, premium users, and restricted users
+- View a 14-day chart of signups, active users, and attempts
+- Automatic activity heartbeat for signed-in members
+- Audit log for every sensitive owner action
+
+## Security
+
+The browser does not directly update protected profile fields. Every owner action calls a
+`security definer` Supabase function that verifies `public.is_owner()` before changing data.
+Normal authenticated users receive update permission only for `display_name`.
+
+## Installation
+
+After deploying the code, run:
+
+`supabase/admin_dashboard_v112.sql`
+
+once in the Supabase SQL Editor. Then sign out and back in before opening the Admin page.
