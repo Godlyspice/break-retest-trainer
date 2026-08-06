@@ -4,8 +4,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { hasSupabase, supabase } from "@/lib/supabase-browser";
 
 type Role = "user" | "moderator" | "admin" | "owner";
-type Tab = "train" | "daily" | "mistakes" | "achievements" | "leaderboard" | "ai" | "profile" | "settings" | "admin";
-type Candle = { open: number; high: number; low: number; close: number };
+type Tab = "home" | "train" | "daily" | "career" | "mistakes" | "achievements" | "leaderboard" | "ai" | "profile" | "settings" | "admin";
+type Candle = { open: number; high: number; low: number; close: number; volume: number };
 type Scenario = {
   id: string;
   setup: "bull_retest" | "bear_retest" | "bull_fakeout" | "bear_fakeout" | "chop";
@@ -34,12 +34,67 @@ const achievementCatalog = [
 ];
 
 const practiceModes = [
-  { id: "mixed", label: "Main Mode", description: "All break-and-retest situations mixed together." },
-  { id: "weakness", label: "Practice Weakness", description: "Focus on the setup type you miss most." },
-  { id: "clean", label: "Clean Retests", description: "Optional focused practice for clear confirmations." },
-  { id: "fakeouts", label: "Fakeouts", description: "Optional focused practice for failed breaks." },
-  { id: "wait", label: "No-Trade", description: "Optional patience and invalid-setup practice." }
+  {
+    id: "mixed",
+    label: "Main Simulator",
+    short: "MIXED",
+    icon: "◆",
+    difficulty: "Adaptive",
+    reward: "40–100 XP",
+    description: "Every break-and-retest situation is mixed together. No hints about what comes next.",
+    callout: "Read the chart. Trust the process."
+  },
+  {
+    id: "weakness",
+    label: "Weakness Hunt",
+    short: "FOCUS",
+    icon: "◎",
+    difficulty: "Personalized",
+    reward: "Bonus XP",
+    description: "Targets the scenario types you miss most and saves them to Mistake Replay.",
+    callout: "Turn your weakest setup into your strongest."
+  },
+  {
+    id: "clean",
+    label: "Confirmation Lab",
+    short: "GUIDED",
+    icon: "✓",
+    difficulty: "Beginner",
+    reward: "30 XP",
+    description: "Clear bullish and bearish retests with stronger visual guidance and calmer pacing.",
+    callout: "Build confidence before increasing difficulty."
+  },
+  {
+    id: "fakeouts",
+    label: "Fakeout Arena",
+    short: "HARD",
+    icon: "↯",
+    difficulty: "Advanced",
+    reward: "75 XP",
+    description: "Failed breaks, traps, and fast reversals. Waiting is often the winning decision.",
+    callout: "Do not let the first breakout candle fool you."
+  },
+  {
+    id: "wait",
+    label: "Patience Protocol",
+    short: "DISCIPLINE",
+    icon: "◷",
+    difficulty: "Mental",
+    reward: "Streak XP",
+    description: "Choppy markets and invalid setups designed to train the hardest action: doing nothing.",
+    callout: "A skipped bad trade is a successful decision."
+  }
 ];
+
+const careerRanks = [
+  { name: "Retail Rookie", min: 0, icon: "I" },
+  { name: "Chart Scout", min: 1000, icon: "II" },
+  { name: "Retest Specialist", min: 2500, icon: "III" },
+  { name: "Prop Candidate", min: 5000, icon: "IV" },
+  { name: "Funded Operator", min: 9000, icon: "V" },
+  { name: "Market Veteran", min: 15000, icon: "VI" }
+];
+
 
 
 function random(min: number, max: number) {
@@ -93,7 +148,8 @@ function generateScenario(daily = false, mode = "mixed"): Scenario {
       open,
       close,
       high: Math.max(open, close) + random(0.2, wick),
-      low: Math.min(open, close) - random(0.2, wick)
+      low: Math.min(open, close) - random(0.2, wick),
+      volume: Math.round(random(180, 1200) * volatility)
     });
     price = close;
   };
@@ -140,7 +196,11 @@ function Chart({
   choice,
   entryPrice,
   stopPrice,
-  targetPrice
+  targetPrice,
+  visibleCandles,
+  activePlacement,
+  onPlaceLevel,
+  onChangeLevel
 }: {
   scenario: Scenario;
   reveal: boolean;
@@ -148,6 +208,10 @@ function Chart({
   entryPrice?: string;
   stopPrice?: string;
   targetPrice?: string;
+  visibleCandles?: number;
+  activePlacement?: "entry" | "stop" | "target" | null;
+  onPlaceLevel?: (kind: "entry" | "stop" | "target", value: number) => void;
+  onChangeLevel?: (kind: "entry" | "stop" | "target", value: number) => void;
 }) {
   const ref = useRef<HTMLCanvasElement>(null);
 
@@ -156,6 +220,11 @@ function Chart({
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
+
+    let zoom = 1;
+    let crossX: number | null = null;
+    let crossY: number | null = null;
+    let dragging: "entry" | "stop" | "target" | null = null;
 
     const draw = () => {
       const rect = canvas.getBoundingClientRect();
@@ -172,14 +241,15 @@ function Chart({
       const pad = { l: 54, r: reveal ? 190 : 26, t: 22, b: 34 };
       const plotW = w - pad.l - pad.r;
       const plotH = h - pad.t - pad.b;
-      const values = scenario.candles.flatMap(c => [c.high, c.low]).concat(scenario.level);
+      const displayCandles = scenario.candles.slice(0, visibleCandles ?? scenario.candles.length);
+      const values = displayCandles.flatMap(c => [c.high, c.low]).concat(scenario.level);
       let min = Math.min(...values);
       let max = Math.max(...values);
       const extra = (max - min) * 0.12;
       min -= extra;
       max += extra;
       const y = (v: number) => pad.t + ((max - v) / (max - min)) * plotH;
-      const step = plotW / scenario.candles.length;
+      const step = (plotW / Math.max(displayCandles.length, 1)) * zoom;
 
       ctx.strokeStyle = "#1d2630";
       ctx.fillStyle = "#7d8996";
@@ -205,7 +275,7 @@ function Chart({
       ctx.fillStyle = "#65a7f1";
       ctx.fillText(`KEY LEVEL ${scenario.level.toFixed(2)}`, pad.l + 8, levelY - 7);
 
-      scenario.candles.forEach((c, i) => {
+      displayCandles.forEach((c, i) => {
         const x = pad.l + i * step + step / 2;
         const up = c.close >= c.open;
         ctx.strokeStyle = up ? "#1bb386" : "#dd5669";
@@ -220,17 +290,29 @@ function Chart({
         ctx.fillRect(x - step * 0.27, top, step * 0.54, Math.max(2, bottom - top));
       });
 
+      const volumeHeight = 62;
+      const maxVolume = Math.max(...displayCandles.map(c => c.volume), 1);
+      displayCandles.forEach((c, i) => {
+        const x = pad.l + i * step + step / 2;
+        const barH = (c.volume / maxVolume) * volumeHeight;
+        ctx.fillStyle = c.close >= c.open ? "rgba(27,179,134,.35)" : "rgba(221,86,105,.35)";
+        ctx.fillRect(x - step * 0.22, h - pad.b - barH, step * 0.44, barH);
+      });
+      ctx.fillStyle = "#6f7c89";
+      ctx.font = "10px system-ui";
+      ctx.fillText("VOLUME", pad.l + 4, h - pad.b - volumeHeight - 6);
+
       const tradeLevels = [
-        { label: "ENTRY", value: Number(entryPrice), color: "#398bea" },
-        { label: "STOP", value: Number(stopPrice), color: "#dd5669" },
-        { label: "TARGET", value: Number(targetPrice), color: "#1bb386" }
+        { label: "ENTRY", value: Number(entryPrice), color: "#398bea", kind: "entry" as const },
+        { label: "STOP", value: Number(stopPrice), color: "#dd5669", kind: "stop" as const },
+        { label: "TARGET", value: Number(targetPrice), color: "#1bb386", kind: "target" as const }
       ].filter(item => Number.isFinite(item.value));
 
       tradeLevels.forEach(item => {
         const yy = y(item.value);
         ctx.setLineDash([4, 4]);
         ctx.strokeStyle = item.color;
-        ctx.lineWidth = 1.3;
+        ctx.lineWidth = 1.6;
         ctx.beginPath();
         ctx.moveTo(pad.l, yy);
         ctx.lineTo(w - pad.r, yy);
@@ -239,6 +321,27 @@ function Chart({
         ctx.fillStyle = item.color;
         ctx.fillText(`${item.label} ${item.value.toFixed(2)}`, pad.l + 8, yy - 5);
       });
+
+      if (crossX !== null && crossY !== null) {
+        ctx.setLineDash([3, 3]);
+        ctx.strokeStyle = "rgba(220,230,240,.35)";
+        ctx.beginPath();
+        ctx.moveTo(crossX, pad.t);
+        ctx.lineTo(crossX, h - pad.b);
+        ctx.moveTo(pad.l, crossY);
+        ctx.lineTo(w - pad.r, crossY);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        const crossPrice = max - ((crossY - pad.t) / plotH) * (max - min);
+        ctx.fillStyle = "#dce5ee";
+        ctx.fillText(crossPrice.toFixed(2), w - pad.r - 54, crossY - 5);
+      }
+
+      if (activePlacement) {
+        ctx.fillStyle = "#d9a63c";
+        ctx.font = "600 12px system-ui";
+        ctx.fillText(`Tap chart to place ${activePlacement.toUpperCase()}`, pad.l + 8, h - 12);
+      }
 
       if (reveal) {
         const last = scenario.candles.length - 1;
@@ -308,17 +411,102 @@ function Chart({
       }
     };
 
+    const getGeometry = () => {
+      const rect = canvas.getBoundingClientRect();
+      const pad = { l: 54, r: reveal ? 190 : 26, t: 22, b: 34 };
+      const displayCandles = scenario.candles.slice(0, visibleCandles ?? scenario.candles.length);
+      const values = displayCandles.flatMap(c => [c.high, c.low]).concat(scenario.level);
+      let min = Math.min(...values);
+      let max = Math.max(...values);
+      const extra = (max - min) * 0.12;
+      min -= extra;
+      max += extra;
+      const plotH = rect.height - pad.t - pad.b;
+      const priceFromY = (clientY: number) => {
+        const localY = clientY - rect.top;
+        return max - ((localY - pad.t) / plotH) * (max - min);
+      };
+      return { rect, pad, priceFromY, min, max };
+    };
+
+    const nearestLine = (clientY: number) => {
+      const { rect, pad, min, max } = getGeometry();
+      const localY = clientY - rect.top;
+      const plotH = rect.height - pad.t - pad.b;
+      const yFor = (v: number) => pad.t + ((max - v) / (max - min)) * plotH;
+      const candidates = [
+        { kind: "entry" as const, value: Number(entryPrice) },
+        { kind: "stop" as const, value: Number(stopPrice) },
+        { kind: "target" as const, value: Number(targetPrice) }
+      ].filter(x => Number.isFinite(x.value));
+      const match = candidates
+        .map(x => ({ ...x, distance: Math.abs(localY - yFor(x.value)) }))
+        .sort((a,b) => a.distance - b.distance)[0];
+      return match && match.distance < 12 ? match.kind : null;
+    };
+
+    const onMove = (event: PointerEvent) => {
+      const rect = canvas.getBoundingClientRect();
+      crossX = event.clientX - rect.left;
+      crossY = event.clientY - rect.top;
+      if (dragging && onChangeLevel) {
+        onChangeLevel(dragging, Math.round(getGeometry().priceFromY(event.clientY) * 4) / 4);
+      }
+      draw();
+    };
+
+    const onDown = (event: PointerEvent) => {
+      if (activePlacement && onPlaceLevel) {
+        onPlaceLevel(activePlacement, Math.round(getGeometry().priceFromY(event.clientY) * 4) / 4);
+        return;
+      }
+      dragging = nearestLine(event.clientY);
+      if (dragging) canvas.setPointerCapture(event.pointerId);
+    };
+
+    const onUp = (event: PointerEvent) => {
+      dragging = null;
+      try { canvas.releasePointerCapture(event.pointerId); } catch {}
+    };
+
+    const onLeave = () => {
+      if (!dragging) {
+        crossX = null;
+        crossY = null;
+        draw();
+      }
+    };
+
+    const onWheel = (event: WheelEvent) => {
+      event.preventDefault();
+      zoom = Math.min(1.6, Math.max(.65, zoom + (event.deltaY < 0 ? .08 : -.08)));
+      draw();
+    };
+
+    canvas.addEventListener("pointermove", onMove);
+    canvas.addEventListener("pointerdown", onDown);
+    canvas.addEventListener("pointerup", onUp);
+    canvas.addEventListener("pointerleave", onLeave);
+    canvas.addEventListener("wheel", onWheel, { passive: false });
+
     draw();
     const observer = new ResizeObserver(draw);
     observer.observe(canvas);
-    return () => observer.disconnect();
-  }, [scenario, reveal, choice]);
+    return () => {
+      observer.disconnect();
+      canvas.removeEventListener("pointermove", onMove);
+      canvas.removeEventListener("pointerdown", onDown);
+      canvas.removeEventListener("pointerup", onUp);
+      canvas.removeEventListener("pointerleave", onLeave);
+      canvas.removeEventListener("wheel", onWheel);
+    };
+  }, [scenario, reveal, choice, entryPrice, stopPrice, targetPrice, visibleCandles, activePlacement, onPlaceLevel, onChangeLevel]);
 
   return <canvas ref={ref} className="chart" aria-label="Synthetic MES candlestick training chart" />;
 }
 
 export default function FuturesAcademy() {
-  const [tab, setTab] = useState<Tab>("train");
+  const [tab, setTab] = useState<Tab>("home");
   const [scenario, setScenario] = useState(() => generateScenario());
   const [dailyScenario] = useState(() => generateScenario(true));
   const [choice, setChoice] = useState<"buy" | "sell" | "wait" | null>(null);
@@ -326,6 +514,12 @@ export default function FuturesAcademy() {
   const [stopPrice, setStopPrice] = useState("");
   const [targetPrice, setTargetPrice] = useState("");
   const [planFeedback, setPlanFeedback] = useState("");
+  const [activePlacement, setActivePlacement] = useState<"entry" | "stop" | "target" | null>(null);
+  const [visibleCandles, setVisibleCandles] = useState(18);
+  const [replayRunning, setReplayRunning] = useState(false);
+  const [replaySpeed, setReplaySpeed] = useState(700);
+  const [orderType, setOrderType] = useState<"market" | "limit" | "stop">("market");
+  const [contracts, setContracts] = useState(1);
   const [reveal, setReveal] = useState(false);
   const [xp, setXp] = useState(1240);
   const [streak, setStreak] = useState(3);
@@ -342,6 +536,8 @@ export default function FuturesAcademy() {
   const [reducedMotion, setReducedMotion] = useState(false);
   const [totalAttempts, setTotalAttempts] = useState(0);
   const [correctAttempts, setCorrectAttempts] = useState(0);
+  const [combo, setCombo] = useState(0);
+  const [bestCombo, setBestCombo] = useState(6);
   const [correctWaits, setCorrectWaits] = useState(0);
   const [fakeoutsFound, setFakeoutsFound] = useState(0);
   const [mistakes, setMistakes] = useState<Array<{ scenario: Scenario; selected: string; createdAt: string }>>([]);
@@ -364,6 +560,14 @@ export default function FuturesAcademy() {
     item.id === "streak_7" ? streak >= item.requirement :
     correctWaits >= item.requirement
   );
+  const currentRankIndex = careerRanks.reduce((found, rank, index) => xp >= rank.min ? index : found, 0);
+  const currentRank = careerRanks[currentRankIndex];
+  const nextRank = careerRanks[currentRankIndex + 1];
+  const rankProgress = nextRank
+    ? Math.min(100, Math.round(((xp - currentRank.min) / (nextRank.min - currentRank.min)) * 100))
+    : 100;
+  const currentMode = practiceModes.find(mode => mode.id === practiceMode) || practiceModes[0];
+  const dailyProgress = Math.min(10, correctAttempts % 11);
   const canAdmin = role === "owner" || role === "admin";
 
   useEffect(() => {
@@ -372,6 +576,20 @@ export default function FuturesAcademy() {
       if (data.session?.user.email) setEmail(data.session.user.email);
     });
   }, []);
+
+  useEffect(() => {
+    if (!replayRunning) return;
+    const timer = window.setInterval(() => {
+      setVisibleCandles(current => {
+        if (current >= scenario.candles.length) {
+          setReplayRunning(false);
+          return current;
+        }
+        return current + 1;
+      });
+    }, replaySpeed);
+    return () => window.clearInterval(timer);
+  }, [replayRunning, replaySpeed, scenario.candles.length]);
 
   async function auth(mode: "signin" | "signup") {
     if (!supabase) {
@@ -425,6 +643,11 @@ export default function FuturesAcademy() {
 
     if (correct) {
       setCorrectAttempts(v => v + 1);
+      setCombo(current => {
+        const next = current + 1;
+        setBestCombo(best => Math.max(best, next));
+        return next;
+      });
       if (choice === "wait") setCorrectWaits(v => v + 1);
       if (activeScenario.setup.includes("fakeout")) setFakeoutsFound(v => v + 1);
       setXp(v => v + activeScenario.xp);
@@ -433,6 +656,7 @@ export default function FuturesAcademy() {
       window.setTimeout(() => setShowCelebration(false), reducedMotion ? 250 : 1100);
     } else {
       setStreak(0);
+      setCombo(0);
       setMistakes(current => [
         { scenario: activeScenario, selected: choice, createdAt: new Date().toISOString() },
         ...current
@@ -497,23 +721,207 @@ export default function FuturesAcademy() {
     setUsers(current => current.map(user => (user.id === id ? { ...user, ...patch } : user)));
   }
 
+  const entryNum = Number(entryPrice);
+  const stopNum = Number(stopPrice);
+  const targetNum = Number(targetPrice);
+  const pointValue = 5 * contracts;
+  const liveRiskPoints =
+    choice === "buy" ? entryNum - stopNum :
+    choice === "sell" ? stopNum - entryNum : 0;
+  const liveRewardPoints =
+    choice === "buy" ? targetNum - entryNum :
+    choice === "sell" ? entryNum - targetNum : 0;
+  const liveRR = liveRiskPoints > 0 ? liveRewardPoints / liveRiskPoints : 0;
+  const estimatedLoss = liveRiskPoints > 0 ? liveRiskPoints * pointValue : 0;
+  const estimatedProfit = liveRewardPoints > 0 ? liveRewardPoints * pointValue : 0;
+
+  function setLevel(kind: "entry" | "stop" | "target", value: number) {
+    const formatted = value.toFixed(2);
+    if (kind === "entry") setEntryPrice(formatted);
+    if (kind === "stop") setStopPrice(formatted);
+    if (kind === "target") setTargetPrice(formatted);
+    setActivePlacement(null);
+  }
+
+  function adjustLevel(kind: "entry" | "stop" | "target", amount: number) {
+    const current =
+      kind === "entry" ? Number(entryPrice) :
+      kind === "stop" ? Number(stopPrice) :
+      Number(targetPrice);
+    const base = Number.isFinite(current) ? current : scenario.candles[Math.min(visibleCandles, scenario.candles.length) - 1]?.close || scenario.level;
+    setLevel(kind, Math.round((base + amount) * 4) / 4);
+  }
+
+  function resetReplay() {
+    setReplayRunning(false);
+    setVisibleCandles(18);
+    setReveal(false);
+    setChoice(null);
+    setEntryPrice("");
+    setStopPrice("");
+    setTargetPrice("");
+    setPlanFeedback("");
+  }
+
   const content = useMemo(() => {
+    if (tab === "home") {
+      return (
+        <section className="command-center">
+          <div className="hero-panel">
+            <div className="hero-copy">
+              <span className="hero-kicker">TRADING COMMAND CENTER</span>
+              <h1>Welcome back, Trader.</h1>
+              <p>Master break-and-retest decisions through missions, replay, and focused review.</p>
+              <div className="hero-actions">
+                <button className="launch-button" type="button" onClick={() => setTab("train")}>
+                  <span>▶</span>
+                  <div><strong>Continue simulator</strong><small>{currentMode.label} · MES replay</small></div>
+                </button>
+                <button className="ghost-launch" type="button" onClick={() => setTab("daily")}>Open daily mission</button>
+              </div>
+            </div>
+            <div className="rank-orbit">
+              <div className="rank-ring">
+                <span>{currentRank.icon}</span>
+                <strong>{currentRank.name}</strong>
+                <small>Career rank</small>
+              </div>
+              <div className="rank-progress"><i style={{ width: `${rankProgress}%` }} /></div>
+              <p>{nextRank ? `${nextRank.min - xp} XP to ${nextRank.name}` : "Maximum rank reached"}</p>
+            </div>
+          </div>
+
+          <div className="hud-grid">
+            <div className="hud-card accent-card">
+              <span>LEVEL</span><strong>{level}</strong>
+              <div className="mini-track"><i style={{ width: `${(xp % 500) / 5}%` }} /></div>
+              <small>{xp.toLocaleString()} total XP</small>
+            </div>
+            <div className="hud-card fire-card">
+              <span>COMBO</span><strong>×{combo}</strong><small>Best ×{bestCombo}</small>
+            </div>
+            <div className="hud-card">
+              <span>ACCURACY</span><strong>{accuracy}%</strong><small>{correctAttempts}/{totalAttempts} correct</small>
+            </div>
+            <div className="hud-card">
+              <span>DAILY STREAK</span><strong>🔥 {streak}</strong><small>Keep the chain alive</small>
+            </div>
+          </div>
+
+          <div className="mission-grid">
+            <article className="mission-card daily-mission">
+              <div className="mission-top"><span>🔥 DAILY MISSION</span><b>ONE DAY LEFT</b></div>
+              <h2>Confirmation Under Pressure</h2>
+              <p>Complete 10 mixed scenarios with at least 70% accuracy.</p>
+              <div className="mission-progress-label"><span>{dailyProgress}/10 completed</span><strong>+600 XP</strong></div>
+              <div className="mission-track"><i style={{ width: `${dailyProgress * 10}%` }} /></div>
+              <button type="button" onClick={() => setTab("daily")}>Enter mission</button>
+            </article>
+
+            <article className="mission-card simulator-mission">
+              <div className="mission-top"><span>◆ MAIN SIMULATOR</span><b>UNLIMITED</b></div>
+              <h2>Mixed Market Operations</h2>
+              <p>Breaks, retests, fakeouts, and no-trade situations with no advance warning.</p>
+              <div className="difficulty-row"><span>Difficulty</span><strong>★★★★☆</strong></div>
+              <button type="button" onClick={() => { changePracticeMode("mixed"); setTab("train"); }}>Launch replay</button>
+            </article>
+
+            <article className="mission-card review-mission">
+              <div className="mission-top"><span>◎ REVIEW CENTER</span><b>{mistakes.length} SAVED</b></div>
+              <h2>Eliminate Repeat Mistakes</h2>
+              <p>Replay the exact charts that trapped you and study the numbered explanation lanes.</p>
+              <div className="difficulty-row"><span>Priority</span><strong>{mistakes.length ? "HIGH" : "CLEAR"}</strong></div>
+              <button type="button" onClick={() => setTab("mistakes")}>Review mistakes</button>
+            </article>
+          </div>
+
+          <div className="program-section">
+            <div className="section-heading">
+              <div><span className="eyebrow">Choose your operation</span><h2>Training programs</h2></div>
+              <button className="text-button" type="button" onClick={() => setTab("career")}>View career path →</button>
+            </div>
+            <div className="program-grid">
+              {practiceModes.map(mode => (
+                <button
+                  type="button"
+                  key={mode.id}
+                  className={`program-card program-${mode.id}`}
+                  onClick={() => { changePracticeMode(mode.id); setTab("train"); }}
+                >
+                  <span className="program-icon">{mode.icon}</span>
+                  <div><b>{mode.short}</b><strong>{mode.label}</strong><small>{mode.description}</small></div>
+                  <em>{mode.reward}</em>
+                </button>
+              ))}
+            </div>
+          </div>
+        </section>
+      );
+    }
+
     if (tab === "train") {
       return (
-        <section className={`workspace ${showCelebration ? "celebrate" : ""}`}>
-          {showCelebration && <div className="xp-pop">+{scenario.xp} XP</div>}
+        <section className={`simulator-screen mode-${practiceMode} ${showCelebration ? "celebrate" : ""}`}>
+          {showCelebration && <div className="xp-pop">PERFECT · +{scenario.xp} XP · COMBO ×{combo}</div>}
+          <div className="mode-hero">
+            <div className="mode-symbol">{currentMode.icon}</div>
+            <div>
+              <span>{currentMode.short} PROGRAM</span>
+              <h2>{currentMode.label}</h2>
+              <p>{currentMode.callout}</p>
+            </div>
+            <div className="mode-meta">
+              <small>DIFFICULTY</small><strong>{currentMode.difficulty}</strong>
+              <small>REWARD</small><strong>{currentMode.reward}</strong>
+            </div>
+          </div>
+          <div className="mode-deck">
+            {practiceModes.map(mode => (
+              <button
+                type="button"
+                key={mode.id}
+                className={practiceMode === mode.id ? "active" : ""}
+                onClick={() => changePracticeMode(mode.id)}
+              >
+                <span>{mode.icon}</span><b>{mode.short}</b>
+              </button>
+            ))}
+          </div>
+          <div className="workspace">
           <div className="chart-panel">
             <div className="instrument-bar">
               <div><strong>MES</strong><span>Micro E-mini S&amp;P 500 · Synthetic replay</span></div>
-              <div className="mode-control">
-                <label htmlFor="practiceMode">Practice mode</label>
-                <select id="practiceMode" value={practiceMode} onChange={e => changePracticeMode(e.target.value)}>
-                  {practiceModes.map(mode => <option value={mode.id} key={mode.id}>{mode.label}</option>)}
-                </select>
-              </div>
-              <div className="market-chip">{practiceMode === "mixed" ? "MAIN MODE" : "FOCUSED"}</div>
+              <div className="market-chip">{currentMode.short}</div>
             </div>
-            <Chart scenario={scenario} reveal={reveal} choice={choice} entryPrice={entryPrice} stopPrice={stopPrice} targetPrice={targetPrice} />
+            <div className="replay-toolbar">
+              <button type="button" className="secondary compact" onClick={() => setReplayRunning(v => !v)}>
+                {replayRunning ? "Pause" : "Play"}
+              </button>
+              <button type="button" className="secondary compact" onClick={() => setVisibleCandles(v => Math.min(v + 1, scenario.candles.length))}>
+                +1 candle
+              </button>
+              <button type="button" className="secondary compact" onClick={resetReplay}>Reset</button>
+              <label>Speed
+                <select value={replaySpeed} onChange={e => setReplaySpeed(Number(e.target.value))}>
+                  <option value={1200}>Slow</option>
+                  <option value={700}>Normal</option>
+                  <option value={350}>Fast</option>
+                </select>
+              </label>
+              <span>{visibleCandles}/{scenario.candles.length} candles</span>
+            </div>
+            <Chart
+              scenario={scenario}
+              reveal={reveal}
+              choice={choice}
+              entryPrice={entryPrice}
+              stopPrice={stopPrice}
+              targetPrice={targetPrice}
+              visibleCandles={visibleCandles}
+              activePlacement={activePlacement}
+              onPlaceLevel={setLevel}
+              onChangeLevel={setLevel}
+            />
           </div>
           <aside className="ticket">
             <h2>{practiceMode === "mixed" ? "Main mixed trainer" : "Focused practice"}</h2>
@@ -522,7 +930,14 @@ export default function FuturesAcademy() {
             </p>
             <div className="quote-grid">
               <div><span>Instrument</span><strong>MES</strong></div>
-              <div><span>Quantity</span><strong>1</strong></div>
+              <label><span>Contracts</span><input type="number" min="1" max="10" value={contracts} onChange={e => setContracts(Math.max(1, Number(e.target.value) || 1))} /></label>
+            </div>
+            <div className="order-type-row">
+              {(["market", "limit", "stop"] as const).map(type => (
+                <button type="button" key={type} className={orderType === type ? "active" : ""} onClick={() => setOrderType(type)}>
+                  {type.toUpperCase()}
+                </button>
+              ))}
             </div>
             <p className="label">Your decision</p>
             <div className="decision-grid">
@@ -539,38 +954,49 @@ export default function FuturesAcademy() {
             </div>
 
             {choice !== "wait" && (
-              <div className="trade-plan-grid">
-                <label>
-                  Entry
-                  <input
-                    inputMode="decimal"
-                    value={entryPrice}
-                    onChange={e => setEntryPrice(e.target.value)}
-                    placeholder={scenario.candles.at(-1)?.close.toFixed(2)}
-                    disabled={reveal}
-                  />
-                </label>
-                <label>
-                  Stop-loss
-                  <input
-                    inputMode="decimal"
-                    value={stopPrice}
-                    onChange={e => setStopPrice(e.target.value)}
-                    placeholder="Price"
-                    disabled={reveal}
-                  />
-                </label>
-                <label>
-                  Take-profit
-                  <input
-                    inputMode="decimal"
-                    value={targetPrice}
-                    onChange={e => setTargetPrice(e.target.value)}
-                    placeholder="Price"
-                    disabled={reveal}
-                  />
-                </label>
-              </div>
+              <>
+                <div className="trade-plan-grid">
+                  {([
+                    ["entry", "Entry", entryPrice, setEntryPrice],
+                    ["stop", "Stop-loss", stopPrice, setStopPrice],
+                    ["target", "Take-profit", targetPrice, setTargetPrice]
+                  ] as const).map(([kind, label, value, setter]) => (
+                    <div className="level-control" key={kind}>
+                      <div className="level-heading">
+                        <span>{label}</span>
+                        <button
+                          type="button"
+                          className={activePlacement === kind ? "targeting active" : "targeting"}
+                          onClick={() => setActivePlacement(activePlacement === kind ? null : kind)}
+                          title={`Place ${label} on chart`}
+                        >
+                          ⊕
+                        </button>
+                      </div>
+                      <input
+                        inputMode="decimal"
+                        value={value}
+                        onChange={e => setter(e.target.value)}
+                        placeholder="Price"
+                        disabled={reveal}
+                      />
+                      <div className="tick-row">
+                        <button type="button" onClick={() => adjustLevel(kind, -1)}>-1.00</button>
+                        <button type="button" onClick={() => adjustLevel(kind, -.25)}>-0.25</button>
+                        <button type="button" onClick={() => adjustLevel(kind, .25)}>+0.25</button>
+                        <button type="button" onClick={() => adjustLevel(kind, 1)}>+1.00</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="risk-card">
+                  <div><span>Risk</span><strong>{liveRiskPoints > 0 ? `${liveRiskPoints.toFixed(2)} pts` : "—"}</strong></div>
+                  <div><span>Reward</span><strong>{liveRewardPoints > 0 ? `${liveRewardPoints.toFixed(2)} pts` : "—"}</strong></div>
+                  <div><span>R:R</span><strong>{liveRR > 0 ? `${liveRR.toFixed(2)}:1` : "—"}</strong></div>
+                  <div><span>Est. loss</span><strong>{estimatedLoss > 0 ? `$${estimatedLoss.toFixed(2)}` : "—"}</strong></div>
+                  <div><span>Est. profit</span><strong>{estimatedProfit > 0 ? `$${estimatedProfit.toFixed(2)}` : "—"}</strong></div>
+                </div>
+              </>
             )}
 
             <button
@@ -597,14 +1023,22 @@ export default function FuturesAcademy() {
                     ? "Price crossed the level but quickly returned through it. The failed break makes waiting safer."
                     : "Price remained choppy around the level without a clean close, retest, and confirmation sequence."}
                 </p>
+                <div className="score-breakdown">
+                  <div><span>Direction</span><strong>{choice === scenario.answer ? "10/10" : "0/10"}</strong></div>
+                  <div><span>Entry plan</span><strong>{choice === "wait" ? "N/A" : entryPrice ? "8/10" : "0/10"}</strong></div>
+                  <div><span>Stop placement</span><strong>{choice === "wait" ? "N/A" : liveRiskPoints > 0 ? "8/10" : "0/10"}</strong></div>
+                  <div><span>Target</span><strong>{choice === "wait" ? "N/A" : liveRR >= 2 ? "10/10" : liveRR >= 1 ? "7/10" : "3/10"}</strong></div>
+                  <div><span>Risk management</span><strong>{choice === "wait" ? "10/10" : liveRR >= 2 ? "10/10" : liveRR >= 1 ? "6/10" : "2/10"}</strong></div>
+                </div>
                 <div className="plan-grade">
-                  <strong>Trade-plan feedback</strong>
+                  <strong>Coach feedback</strong>
                   <span>{planFeedback}</span>
                 </div>
                 <button className="secondary" type="button" onClick={nextScenario}>Next scenario</button>
               </div>
             )}
           </aside>
+          </div>
         </section>
       );
     }
@@ -631,6 +1065,39 @@ export default function FuturesAcademy() {
       );
     }
 
+
+    if (tab === "career") {
+      return (
+        <section className="career-page">
+          <div className="career-hero">
+            <span className="eyebrow">Career progression</span>
+            <h2>Rise through the trading ranks</h2>
+            <p>Ranks represent training consistency—not real-world trading status or guaranteed profitability.</p>
+          </div>
+          <div className="career-path">
+            {careerRanks.map((rank, index) => {
+              const unlocked = xp >= rank.min;
+              const active = index === currentRankIndex;
+              return (
+                <div className={`rank-node ${unlocked ? "unlocked" : ""} ${active ? "active" : ""}`} key={rank.name}>
+                  <div className="rank-medal">{rank.icon}</div>
+                  <div><strong>{rank.name}</strong><span>{rank.min.toLocaleString()} XP required</span></div>
+                  <b>{active ? "CURRENT" : unlocked ? "UNLOCKED" : "LOCKED"}</b>
+                </div>
+              );
+            })}
+          </div>
+          <div className="career-rewards">
+            <h3>Next-rank rewards</h3>
+            <div className="reward-grid">
+              <div><span>◆</span><strong>New chart atmosphere</strong><small>Visual customization</small></div>
+              <div><span>↯</span><strong>Harder fakeouts</strong><small>Advanced scenario pool</small></div>
+              <div><span>★</span><strong>Profile title</strong><small>Leaderboard recognition</small></div>
+            </div>
+          </div>
+        </section>
+      );
+    }
 
     if (tab === "mistakes") {
       const current = selectedMistake === null ? null : mistakes[selectedMistake];
@@ -841,15 +1308,15 @@ export default function FuturesAcademy() {
         )}
       </section>
     );
-  }, [tab, scenario, dailyScenario, choice, reveal, xp, streak, role, premium, email, password, authMessage, question, aiAnswer, aiLoading, users, canAdmin, level, practiceMode, accuracy, mistakes, selectedMistake, unlockedAchievements, soundEnabled, reducedMotion, showCelebration, totalAttempts, entryPrice, stopPrice, targetPrice, planFeedback]);
+  }, [tab, scenario, dailyScenario, choice, reveal, xp, streak, role, premium, email, password, authMessage, question, aiAnswer, aiLoading, users, canAdmin, level, practiceMode, accuracy, mistakes, selectedMistake, unlockedAchievements, soundEnabled, reducedMotion, showCelebration, totalAttempts, entryPrice, stopPrice, targetPrice, planFeedback, visibleCandles, replayRunning, replaySpeed, activePlacement, contracts, orderType, liveRiskPoints, liveRewardPoints, liveRR, estimatedLoss, estimatedProfit, combo, bestCombo, currentRankIndex, currentRank, nextRank, rankProgress, currentMode, dailyProgress]);
 
   return (
-    <main className="app-shell">
+    <main className={`app-shell app-mode-${practiceMode}`}>
       <header className="topbar">
-        <div className="brand">
+        <button className="brand brand-button" type="button" onClick={() => setTab("home")}>
           <span className="brand-mark">FA</span>
           <div><strong>Futures Academy</strong><span>Break · Retest · Master</span></div>
-        </div>
+        </button>
         <div className="top-stats">
           <span>LVL {level}</span>
           <div className="xp-track"><i style={{ width: `${(xp % 500) / 5}%` }} /></div>
@@ -858,9 +1325,11 @@ export default function FuturesAcademy() {
       </header>
       <nav className="nav">
         {[
-          ["train", "Trainer"],
-          ["daily", "Daily"],
-          ["mistakes", "Mistakes"],
+          ["home", "Command Center"],
+          ["train", "Simulator"],
+          ["daily", "Daily Mission"],
+          ["career", "Career"],
+          ["mistakes", "Review"],
           ["achievements", "Badges"],
           ["leaderboard", "Leaders"],
           ["ai", "AI Coach"],

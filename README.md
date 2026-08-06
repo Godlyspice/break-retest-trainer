@@ -141,3 +141,40 @@ The main mixed trainer now requires a complete trade plan for Buy and Sell decis
 - Entry, stop, and target lines drawn directly on the chart
 
 Wait decisions do not require trade levels.
+
+
+## Simulator v0.2
+
+Added:
+
+- Replay mode with Play, Pause, one-candle advance, reset, and speed controls
+- Hidden future candles
+- Optional chart placement for entry, stop, and target
+- Draggable trade lines
+- Mobile-friendly side entry fields remain available
+- Tick adjustment buttons for precise phone input
+- Crosshair price reading
+- Mouse-wheel zoom
+- Volume bars
+- Market, limit, and stop order-type controls
+- Contract quantity input
+- Live risk, reward, reward-to-risk, estimated MES profit, and estimated MES loss
+- Expanded scoring for direction, entry, stop, target, and risk management
+
+
+## Game Hub v0.3
+
+This release changes the app from a plain trainer into a return-focused training game:
+
+- New Trading Command Center home screen
+- Daily mission card with progress and reward
+- Career rank system and visual career path
+- Combo meter and best-combo tracking
+- Large training-program cards instead of a subtle dropdown
+- Every training program has a distinct color atmosphere, banner, icon, difficulty, reward, and message
+- Main Simulator, Weakness Hunt, Confirmation Lab, Fakeout Arena, and Patience Protocol
+- Quick access to Mistake Replay and daily missions
+- Mobile-responsive game hub
+- Simulator and precise side-panel trade controls remain intact
+
+This is still an educational simulator using synthetic scenarios. Rank names are game progression labels, not claims of real trading ability.
