@@ -620,3 +620,174 @@ footer { padding: 8px 12px; text-align: center; color: var(--muted); border-top:
     grid-column: 1;
   }
 }
+
+
+/* Polish pass v0.3.3 */
+.help-wrap {
+  display: inline-grid;
+  place-items: center;
+  line-height: 1;
+  vertical-align: middle;
+  z-index: 20;
+}
+.help-button {
+  display: grid !important;
+  place-items: center !important;
+  align-self: center;
+  position: relative;
+  z-index: 21;
+  margin: 0;
+  transform: none !important;
+}
+.order-type-row > div,
+.decision-grid > div {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.order-type-row > div > button,
+.decision-grid > div > .decision {
+  flex: 1;
+}
+.help-popover {
+  z-index: 200;
+}
+.chart-panel,
+.mode-hero,
+.ticket,
+.program-card,
+.mission-card,
+.decision,
+.order-type-row button,
+.level-control,
+.risk-card {
+  transition:
+    background-color .2s ease,
+    border-color .2s ease,
+    box-shadow .2s ease,
+    transform .16s ease,
+    opacity .2s ease;
+}
+.scenario-transition {
+  animation: scenarioFade .28s ease;
+}
+@keyframes scenarioFade {
+  from { opacity: .5; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.decision.buy {
+  color: #8ff0d0;
+  border-color: rgba(27,179,134,.45);
+}
+.decision.sell {
+  color: #ff9bad;
+  border-color: rgba(221,86,105,.45);
+}
+.decision.wait {
+  color: #f3d67d;
+  border-color: rgba(217,166,60,.45);
+}
+.decision.buy:hover,
+.decision.buy.active {
+  box-shadow: 0 0 18px rgba(27,179,134,.2);
+}
+.decision.sell:hover,
+.decision.sell.active {
+  box-shadow: 0 0 18px rgba(221,86,105,.2);
+}
+.decision.wait:hover,
+.decision.wait.active {
+  box-shadow: 0 0 18px rgba(217,166,60,.18);
+}
+.level-control {
+  padding: 9px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: #0d151c;
+}
+.level-entry {
+  border-left: 3px solid #398bea;
+}
+.level-stop {
+  border-left: 3px solid #dd5669;
+}
+.level-target {
+  border-left: 3px solid #1bb386;
+}
+.level-entry input:focus {
+  border-color: #398bea;
+  box-shadow: 0 0 0 2px rgba(57,139,234,.15);
+}
+.level-stop input:focus {
+  border-color: #dd5669;
+  box-shadow: 0 0 0 2px rgba(221,86,105,.15);
+}
+.level-target input:focus {
+  border-color: #1bb386;
+  box-shadow: 0 0 0 2px rgba(27,179,134,.15);
+}
+.trade-summary-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 10px 0 6px;
+}
+.trade-summary-title strong {
+  font-size: .78rem;
+}
+.trade-summary-title span {
+  color: var(--muted);
+  font-size: .68rem;
+}
+.risk-metric {
+  position: relative;
+  overflow: hidden;
+}
+.risk-metric::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  opacity: .9;
+}
+.risk-metric-loss::before { background: #dd5669; }
+.risk-metric-profit::before { background: #1bb386; }
+.risk-metric-ratio::before { background: #d9a63c; }
+.risk-metric-loss strong { color: #ff9aaa; }
+.risk-metric-profit strong { color: #82e7c7; }
+.risk-metric-ratio strong { color: #f3d67d; }
+.ticket-error {
+  animation: ticketShake .32s ease;
+}
+@keyframes ticketShake {
+  0%,100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  50% { transform: translateX(5px); }
+  75% { transform: translateX(-3px); }
+}
+.primary:active,
+.secondary:active,
+.decision:active,
+.order-type-row button:active,
+.tick-row button:active,
+.targeting:active {
+  transform: translateY(1px) scale(.985);
+}
+.mode-hero {
+  animation: modeFade .3s ease;
+}
+@keyframes modeFade {
+  from { opacity: .65; }
+  to { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .scenario-transition,
+  .ticket-error,
+  .mode-hero {
+    animation: none !important;
+  }
+  * {
+    scroll-behavior: auto !important;
+  }
+}

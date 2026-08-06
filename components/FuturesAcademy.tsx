@@ -191,11 +191,39 @@ function generateScenario(daily = false, mode = "mixed"): Scenario {
 }
 
 
+
 function HelpTip({ title, text }: { title: string; text: string }) {
   const [open, setOpen] = useState(false);
+  const wrapRef = useRef<HTMLSpanElement>(null);
+
+  useEffect(() => {
+    const closeOtherTips = () => setOpen(false);
+    window.addEventListener("close-help-tips", closeOtherTips);
+    return () => window.removeEventListener("close-help-tips", closeOtherTips);
+  }, []);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const closeOnOutside = (event: PointerEvent) => {
+      if (!wrapRef.current?.contains(event.target as Node)) setOpen(false);
+    };
+
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+
+    window.addEventListener("pointerdown", closeOnOutside);
+    window.addEventListener("keydown", closeOnEscape);
+
+    return () => {
+      window.removeEventListener("pointerdown", closeOnOutside);
+      window.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [open]);
 
   return (
-    <span className="help-wrap">
+    <span className="help-wrap" ref={wrapRef}>
       <button
         type="button"
         className="help-button"
@@ -203,6 +231,7 @@ function HelpTip({ title, text }: { title: string; text: string }) {
         aria-expanded={open}
         onClick={event => {
           event.stopPropagation();
+          if (!open) window.dispatchEvent(new CustomEvent("close-help-tips"));
           setOpen(value => !value);
         }}
       >
@@ -228,7 +257,8 @@ function Chart({
   visibleCandles,
   activePlacement,
   onPlaceLevel,
-  onChangeLevel
+  onChangeLevel,
+  lastPlacedLevel
 }: {
   scenario: Scenario;
   reveal: boolean;
@@ -240,6 +270,7 @@ function Chart({
   activePlacement?: "entry" | "stop" | "target" | null;
   onPlaceLevel?: (kind: "entry" | "stop" | "target", value: number) => void;
   onChangeLevel?: (kind: "entry" | "stop" | "target", value: number) => void;
+  lastPlacedLevel?: "entry" | "stop" | "target" | null;
 }) {
   const ref = useRef<HTMLCanvasElement>(null);
 
@@ -278,7 +309,9 @@ function Chart({
       min -= extra;
       max += extra;
       const y = (v: number) => pad.t + ((max - v) / (max - min)) * plotH;
-      const step = (plotW / Math.max(displayCandles.length, 1)) * zoom;
+      const virtualSlots = Math.max(34, Math.min(42, scenario.candles.length));
+      const step = (plotW / virtualSlots) * zoom;
+      const chartOffset = Math.max(0, (virtualSlots - displayCandles.length) * step);
 
       ctx.strokeStyle = "#1d2630";
       ctx.fillStyle = "#7d8996";
@@ -305,7 +338,7 @@ function Chart({
       ctx.fillText(`KEY LEVEL ${scenario.level.toFixed(2)}`, pad.l + 8, levelY - 7);
 
       displayCandles.forEach((c, i) => {
-        const x = pad.l + i * step + step / 2;
+        const x = pad.l + chartOffset + i * step + step / 2;
         const up = c.close >= c.open;
         ctx.strokeStyle = up ? "#1bb386" : "#dd5669";
         ctx.fillStyle = up ? "#1bb386" : "#dd5669";
@@ -323,7 +356,7 @@ function Chart({
       const volumeHeight = 62;
       const maxVolume = Math.max(...displayCandles.map(c => c.volume), 1);
       displayCandles.forEach((c, i) => {
-        const x = pad.l + i * step + step / 2;
+        const x = pad.l + chartOffset + i * step + step / 2;
         const barH = (c.volume / maxVolume) * volumeHeight;
         ctx.fillStyle = c.close >= c.open ? "rgba(27,179,134,.35)" : "rgba(221,86,105,.35)";
         const volumeWidth = Math.max(3, Math.min(11, step * 0.44));
@@ -422,10 +455,15 @@ function Chart({
         ctx.setLineDash(item.kind === "entry" ? [] : [5, 4]);
         ctx.strokeStyle = item.color;
         ctx.lineWidth = item.kind === "entry" ? 2.2 : 1.7;
+        if (lastPlacedLevel === item.kind) {
+          ctx.shadowColor = item.color;
+          ctx.shadowBlur = 12;
+        }
         ctx.beginPath();
         ctx.moveTo(pad.l, yy);
         ctx.lineTo(w - pad.r, yy);
         ctx.stroke();
+        ctx.shadowBlur = 0;
         ctx.setLineDash([]);
 
         const tagWidth = item.kind === "entry" ? 122 : 132;
@@ -649,6 +687,7 @@ export default function FuturesAcademy() {
   const [targetPrice, setTargetPrice] = useState("");
   const [planFeedback, setPlanFeedback] = useState("");
   const [activePlacement, setActivePlacement] = useState<"entry" | "stop" | "target" | null>(null);
+  const [lastPlacedLevel, setLastPlacedLevel] = useState<"entry" | "stop" | "target" | null>(null);
   const [visibleCandles, setVisibleCandles] = useState(18);
   const [replayRunning, setReplayRunning] = useState(false);
   const [replaySpeed, setReplaySpeed] = useState(700);
@@ -873,6 +912,8 @@ export default function FuturesAcademy() {
 
   function setLevel(kind: "entry" | "stop" | "target", value: number) {
     const formatted = value.toFixed(2);
+    setLastPlacedLevel(kind);
+    window.setTimeout(() => setLastPlacedLevel(null), 450);
     if (kind === "entry") setEntryPrice(formatted);
     if (kind === "stop") setStopPrice(formatted);
     if (kind === "target") setTargetPrice(formatted);
@@ -1024,7 +1065,7 @@ export default function FuturesAcademy() {
             ))}
           </div>
           <div className="workspace">
-          <div className="chart-panel">
+          <div className="chart-panel scenario-transition" key={scenario.id}>
             <div className="instrument-bar">
               <div><strong>MES</strong><span>Micro E-mini S&amp;P 500 · Synthetic replay</span></div>
               <div className="market-chip">{currentMode.short}</div>
@@ -1066,9 +1107,10 @@ export default function FuturesAcademy() {
               activePlacement={activePlacement}
               onPlaceLevel={setLevel}
               onChangeLevel={setLevel}
+              lastPlacedLevel={lastPlacedLevel}
             />
           </div>
-          <aside className="ticket">
+          <aside className={`ticket ${reveal && choice !== scenario.answer ? "ticket-error" : ""}`}>
             <h2>{practiceMode === "mixed" ? "Main mixed trainer" : "Focused practice"}</h2>
             <p className="mode-description">
               {practiceModes.find(mode => mode.id === practiceMode)?.description}
@@ -1097,15 +1139,15 @@ export default function FuturesAcademy() {
             <p className="label">Your decision</p>
             <div className="decision-grid">
               <div>
-                <button className={`decision buy ${choice === "buy" ? "active" : ""}`} onClick={() => !reveal && setChoice("buy")} type="button">BUY</button>
+                <button className={`decision buy ${choice === "buy" ? "active" : ""}`} onClick={() => !reveal && setChoice("buy")} type="button">▲ BUY</button>
                 <HelpTip title="Buy" text="Choose Buy when you expect price to move higher after a valid bullish break and retest." />
               </div>
               <div>
-                <button className={`decision sell ${choice === "sell" ? "active" : ""}`} onClick={() => !reveal && setChoice("sell")} type="button">SELL</button>
+                <button className={`decision sell ${choice === "sell" ? "active" : ""}`} onClick={() => !reveal && setChoice("sell")} type="button">▼ SELL</button>
                 <HelpTip title="Sell" text="Choose Sell when you expect price to move lower after a valid bearish break and retest." />
               </div>
               <div>
-                <button className={`decision wait ${choice === "wait" ? "active" : ""}`} onClick={() => !reveal && setChoice("wait")} type="button">WAIT</button>
+                <button className={`decision wait ${choice === "wait" ? "active" : ""}`} onClick={() => !reveal && setChoice("wait")} type="button">● WAIT</button>
                 <HelpTip title="Wait" text="Choose Wait when the break, retest, or confirmation is missing, unclear, or invalid." />
               </div>
             </div>
@@ -1118,7 +1160,7 @@ export default function FuturesAcademy() {
                     ["stop", "Stop-loss", stopPrice, setStopPrice],
                     ["target", "Take-profit", targetPrice, setTargetPrice]
                   ] as const).map(([kind, label, value, setter]) => (
-                    <div className="level-control" key={kind}>
+                    <div className={`level-control level-${kind}`} key={kind}>
                       <div className="level-heading">
                         <span className="label-with-help">
                           {label}
@@ -1163,12 +1205,16 @@ export default function FuturesAcademy() {
                   <span><i className="legend-swatch risk-zone" />Red area: planned loss zone</span>
                   <HelpTip title="Risk/reward brackets" text="The shaded green and red areas visualize your planned reward and risk. The side brackets show the distance from entry to target and from entry to stop." />
                 </div>
+                <div className="trade-summary-title">
+                  <strong>Live trade summary</strong>
+                  <span>{liveRR >= 2 ? "Strong plan" : liveRR >= 1 ? "Acceptable plan" : "Needs adjustment"}</span>
+                </div>
                 <div className="risk-card">
-                  <div><span className="label-with-help">Risk <HelpTip title="Risk" text="The distance from entry to stop-loss, measured in index points." /></span><strong>{liveRiskPoints > 0 ? `${liveRiskPoints.toFixed(2)} pts` : "—"}</strong></div>
-                  <div><span className="label-with-help">Reward <HelpTip title="Reward" text="The distance from entry to take-profit, measured in index points." /></span><strong>{liveRewardPoints > 0 ? `${liveRewardPoints.toFixed(2)} pts` : "—"}</strong></div>
-                  <div><span className="label-with-help">R:R <HelpTip title="Reward-to-risk" text="Compares planned reward with planned risk. A value of 2:1 means two units of reward for each unit risked." /></span><strong>{liveRR > 0 ? `${liveRR.toFixed(2)}:1` : "—"}</strong></div>
-                  <div><span className="label-with-help">Est. loss <HelpTip title="Estimated loss" text="Approximate simulated dollar loss if the stop is reached, based on MES point value and contract count." /></span><strong>{estimatedLoss > 0 ? `$${estimatedLoss.toFixed(2)}` : "—"}</strong></div>
-                  <div><span className="label-with-help">Est. profit <HelpTip title="Estimated profit" text="Approximate simulated dollar profit if the target is reached, based on MES point value and contract count." /></span><strong>{estimatedProfit > 0 ? `$${estimatedProfit.toFixed(2)}` : "—"}</strong></div>
+                  <div className="risk-metric risk-metric-loss"><span className="label-with-help">Risk <HelpTip title="Risk" text="The distance from entry to stop-loss, measured in index points." /></span><strong>{liveRiskPoints > 0 ? `${liveRiskPoints.toFixed(2)} pts` : "—"}</strong></div>
+                  <div className="risk-metric risk-metric-profit"><span className="label-with-help">Reward <HelpTip title="Reward" text="The distance from entry to take-profit, measured in index points." /></span><strong>{liveRewardPoints > 0 ? `${liveRewardPoints.toFixed(2)} pts` : "—"}</strong></div>
+                  <div className="risk-metric risk-metric-ratio"><span className="label-with-help">R:R <HelpTip title="Reward-to-risk" text="Compares planned reward with planned risk. A value of 2:1 means two units of reward for each unit risked." /></span><strong>{liveRR > 0 ? `${liveRR.toFixed(2)}:1` : "—"}</strong></div>
+                  <div className="risk-metric risk-metric-loss"><span className="label-with-help">Est. loss <HelpTip title="Estimated loss" text="Approximate simulated dollar loss if the stop is reached, based on MES point value and contract count." /></span><strong>{estimatedLoss > 0 ? `$${estimatedLoss.toFixed(2)}` : "—"}</strong></div>
+                  <div className="risk-metric risk-metric-profit"><span className="label-with-help">Est. profit <HelpTip title="Estimated profit" text="Approximate simulated dollar profit if the target is reached, based on MES point value and contract count." /></span><strong>{estimatedProfit > 0 ? `$${estimatedProfit.toFixed(2)}` : "—"}</strong></div>
                 </div>
               </>
             )}
@@ -1485,7 +1531,7 @@ export default function FuturesAcademy() {
         )}
       </section>
     );
-  }, [tab, scenario, dailyScenario, choice, reveal, xp, streak, role, premium, email, password, authMessage, question, aiAnswer, aiLoading, users, canAdmin, level, practiceMode, accuracy, mistakes, selectedMistake, unlockedAchievements, soundEnabled, reducedMotion, showCelebration, totalAttempts, entryPrice, stopPrice, targetPrice, planFeedback, visibleCandles, replayRunning, replaySpeed, activePlacement, contracts, orderType, liveRiskPoints, liveRewardPoints, liveRR, estimatedLoss, estimatedProfit, combo, bestCombo, currentRankIndex, currentRank, nextRank, rankProgress, currentMode, dailyProgress]);
+  }, [tab, scenario, dailyScenario, choice, reveal, xp, streak, role, premium, email, password, authMessage, question, aiAnswer, aiLoading, users, canAdmin, level, practiceMode, accuracy, mistakes, selectedMistake, unlockedAchievements, soundEnabled, reducedMotion, showCelebration, totalAttempts, entryPrice, stopPrice, targetPrice, planFeedback, visibleCandles, replayRunning, replaySpeed, activePlacement, contracts, orderType, liveRiskPoints, liveRewardPoints, liveRR, estimatedLoss, estimatedProfit, lastPlacedLevel, combo, bestCombo, currentRankIndex, currentRank, nextRank, rankProgress, currentMode, dailyProgress]);
 
   return (
     <main className={`app-shell app-mode-${practiceMode}`}>

@@ -197,3 +197,18 @@ This is still an educational simulator using synthetic scenarios. Rank names are
 - Added point and approximate MES dollar labels
 - Added live reward-to-risk label inside the reward bracket
 - Order lines and price tags remain draggable and are rendered above the colored zones
+
+
+## Polish pass v0.3.3
+
+- Fixed question-mark icon alignment so it remains centered beside each control
+- Help popovers close when clicking outside or pressing Escape
+- Opening a new help popover closes the previous one
+- Normalized horizontal candle spacing across all training modes
+- Kept candle width capped while preserving a stable Tradovate-like density
+- Added semantic color styling to Buy, Sell, Wait, Entry, Stop, and Target controls
+- Added a more visual live trade summary
+- Added scenario fade transitions
+- Added line-placement glow feedback
+- Added incorrect-answer panel shake
+- Added tactile button press feedback
