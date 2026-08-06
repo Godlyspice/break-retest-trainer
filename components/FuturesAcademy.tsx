@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { hasSupabase, supabase } from "@/lib/supabase-browser";
 
 type Role = "user" | "moderator" | "admin" | "owner";
-type Tab = "home" | "train" | "daily" | "career" | "mistakes" | "achievements" | "leaderboard" | "balance" | "shop" | "ai" | "profile" | "settings" | "admin";
+type Tab = "home" | "train" | "daily" | "career" | "accounts" | "exams" | "mistakes" | "achievements" | "trophies" | "leaderboard" | "balance" | "shop" | "stats" | "ai" | "profile" | "settings" | "admin";
 type Candle = { open: number; high: number; low: number; close: number; volume: number };
 type Scenario = {
   id: string;
@@ -95,12 +95,18 @@ const practiceModes = [
 ];
 
 const careerRanks = [
-  { name: "Retail Rookie", min: 0, icon: "I" },
-  { name: "Chart Scout", min: 1000, icon: "II" },
-  { name: "Retest Specialist", min: 2500, icon: "III" },
-  { name: "Prop Candidate", min: 5000, icon: "IV" },
-  { name: "Funded Operator", min: 9000, icon: "V" },
-  { name: "Market Veteran", min: 15000, icon: "VI" }
+  { name: "Recruit", min: 0, reputation: 0, icon: "I" },
+  { name: "Cadet", min: 1200, reputation: 75, icon: "II" },
+  { name: "Junior Trader", min: 3500, reputation: 200, icon: "III" },
+  { name: "Trader", min: 7500, reputation: 450, icon: "IV" },
+  { name: "Senior Trader", min: 14000, reputation: 900, icon: "V" },
+  { name: "Professional Trader", min: 25000, reputation: 1800, icon: "VI" },
+  { name: "Elite Trader", min: 42000, reputation: 3500, icon: "VII" },
+  { name: "Market Specialist", min: 70000, reputation: 6500, icon: "VIII" },
+  { name: "Prop Firm Candidate", min: 110000, reputation: 11000, icon: "IX" },
+  { name: "Funded Operator", min: 165000, reputation: 18000, icon: "X" },
+  { name: "Market Veteran", min: 240000, reputation: 28000, icon: "XI" },
+  { name: "Academy Legend", min: 350000, reputation: 45000, icon: "XII" }
 ];
 
 
@@ -110,7 +116,8 @@ const paperAccounts = [
     name: "Starter Account",
     balance: 10000,
     maxDrawdown: 600,
-    resetCost: 350,
+    resetCost: 500,
+    reputationRequired: 0,
     icon: "🟦",
     description: "Lower balance and tighter limits for focused practice."
   },
@@ -119,7 +126,8 @@ const paperAccounts = [
     name: "Growth Account",
     balance: 25000,
     maxDrawdown: 1500,
-    resetCost: 700,
+    resetCost: 1500,
+    reputationRequired: 500,
     icon: "🟩",
     description: "Balanced account for regular simulator sessions."
   },
@@ -128,9 +136,30 @@ const paperAccounts = [
     name: "Pro Account",
     balance: 50000,
     maxDrawdown: 2500,
-    resetCost: 1200,
+    resetCost: 4000,
+    reputationRequired: 2500,
     icon: "🟪",
     description: "Larger account with stricter point costs and progression."
+  },
+  {
+    id: "elite",
+    name: "Elite Account",
+    balance: 100000,
+    maxDrawdown: 4000,
+    resetCost: 10000,
+    reputationRequired: 8000,
+    icon: "🟨",
+    description: "High-level paper account for proven academy traders."
+  },
+  {
+    id: "challenge",
+    name: "Funded Challenge",
+    balance: 150000,
+    maxDrawdown: 5000,
+    resetCost: 25000,
+    reputationRequired: 20000,
+    icon: "🟥",
+    description: "The hardest paper account with demanding unlock requirements."
   }
 ];
 
@@ -761,6 +790,7 @@ export default function FuturesAcademy() {
   const [combo, setCombo] = useState(0);
   const [bestCombo, setBestCombo] = useState(6);
   const [points, setPoints] = useState(950);
+  const [reputation, setReputation] = useState(120);
   const [selectedAccountId, setSelectedAccountId] = useState("growth");
   const [paperBalance, setPaperBalance] = useState(25000);
   const [peakBalance, setPeakBalance] = useState(25000);
@@ -797,7 +827,7 @@ export default function FuturesAcademy() {
   const drawdownRemaining = Math.max(0, paperBalance - trailingDrawdownFloor);
   const accountFailed = paperBalance <= trailingDrawdownFloor;
 
-  const currentRankIndex = careerRanks.reduce((found, rank, index) => xp >= rank.min ? index : found, 0);
+  const currentRankIndex = careerRanks.reduce((found, rank, index) => xp >= rank.min && reputation >= rank.reputation ? index : found, 0);
   const currentRank = careerRanks[currentRankIndex];
   const nextRank = careerRanks[currentRankIndex + 1];
   const rankProgress = nextRank
@@ -841,6 +871,13 @@ export default function FuturesAcademy() {
     setAuthMessage(error ? error.message : mode === "signup" ? "Account created. Check your email if confirmation is enabled." : "Signed in.");
   }
 
+  function progressionReward() {
+    if (practiceMode === "fakeouts") return { xp: 25, credits: 8, reputation: 4 };
+    if (practiceMode === "weakness" || practiceMode === "wait") return { xp: 18, credits: 6, reputation: 3 };
+    if (practiceMode === "clean") return { xp: 10, credits: 3, reputation: 1 };
+    return { xp: 15, credits: 5, reputation: 2 };
+  }
+
   async function submitAnswer(activeScenario = scenario, daily = false) {
     if (!choice) return;
     setReveal(true);
@@ -879,8 +916,9 @@ export default function FuturesAcademy() {
     setPlanFeedback(planMessage);
 
     if (correct) {
-      const pointReward = activeScenario.answer === "wait" ? 25 : 40;
-      setPoints(value => value + pointReward);
+      const reward = progressionReward();
+      setPoints(value => value + reward.credits);
+      setReputation(value => value + reward.reputation);
 
       if (choice !== "wait" && Number.isFinite(estimatedProfit) && estimatedProfit > 0) {
         setPaperBalance(current => {
@@ -904,11 +942,12 @@ export default function FuturesAcademy() {
       });
       if (choice === "wait") setCorrectWaits(v => v + 1);
       if (activeScenario.setup.includes("fakeout")) setFakeoutsFound(v => v + 1);
-      setXp(v => v + activeScenario.xp);
+      setXp(v => v + progressionReward().xp);
       setStreak(v => v + 1);
       setShowCelebration(true);
       window.setTimeout(() => setShowCelebration(false), reducedMotion ? 250 : 1100);
     } else {
+      setReputation(value => Math.max(0, value - 1));
       if (choice !== "wait" && Number.isFinite(estimatedLoss) && estimatedLoss > 0) {
         setPaperBalance(current => current - estimatedLoss);
       } else {
@@ -1029,6 +1068,10 @@ export default function FuturesAcademy() {
   function choosePaperAccount(accountId: string) {
     const account = paperAccounts.find(item => item.id === accountId);
     if (!account) return;
+    if (reputation < account.reputationRequired) {
+      setShopMessage(`Requires ${account.reputationRequired.toLocaleString()} reputation.`);
+      return;
+    }
     setSelectedAccountId(account.id);
     setPaperBalance(account.balance);
     setPeakBalance(account.balance);
@@ -1126,6 +1169,9 @@ export default function FuturesAcademy() {
             </div>
             <div className="hud-card">
               <span>📅 DAILY STREAK</span><strong>🔥 {streak}</strong><small>Keep the chain alive</small>
+            </div>
+            <div className="hud-card reputation-card">
+              <span>⭐ REPUTATION</span><strong>{reputation.toLocaleString()}</strong><small>Cannot be purchased</small>
             </div>
           </div>
 
@@ -1520,7 +1566,7 @@ export default function FuturesAcademy() {
               return (
                 <div className={`rank-node ${unlocked ? "unlocked" : ""} ${active ? "active" : ""}`} key={rank.name}>
                   <div className="rank-medal">{rank.icon}</div>
-                  <div><strong>{rank.name}</strong><span>{rank.min.toLocaleString()} XP required</span></div>
+                  <div><strong>{rank.name}</strong><span>{rank.min.toLocaleString()} XP · {rank.reputation.toLocaleString()} reputation</span></div>
                   <b>{active ? "CURRENT" : unlocked ? "UNLOCKED" : "LOCKED"}</b>
                 </div>
               );
@@ -1533,6 +1579,120 @@ export default function FuturesAcademy() {
               <div><span>↯</span><strong>Harder fakeouts</strong><small>Advanced scenario pool</small></div>
               <div><span>★</span><strong>Profile title</strong><small>Leaderboard recognition</small></div>
             </div>
+          </div>
+        </section>
+      );
+    }
+
+    if (tab === "accounts") {
+      return (
+        <section className="v1-page">
+          <div className="v1-page-header">
+            <div><span className="eyebrow">Academy Bank</span><h1>Account Vault</h1><p>Unlock larger paper accounts by building reputation through consistent practice.</p></div>
+            <div className="reputation-chip">⭐ {reputation.toLocaleString()} reputation</div>
+          </div>
+          <div className="vault-grid">
+            {paperAccounts.map(account => {
+              const unlocked = reputation >= account.reputationRequired;
+              const selected = account.id === selectedAccountId;
+              return (
+                <article className={`vault-card ${unlocked ? "unlocked" : "locked"} ${selected ? "selected" : ""}`} key={account.id}>
+                  <div className="vault-icon">{unlocked ? account.icon : "🔒"}</div>
+                  <span>{unlocked ? "AVAILABLE" : "LOCKED"}</span>
+                  <h2>{account.name}</h2>
+                  <div className="vault-numbers">
+                    <div><small>Balance</small><strong>${account.balance.toLocaleString()}</strong></div>
+                    <div><small>Trailing DD</small><strong>${account.maxDrawdown.toLocaleString()}</strong></div>
+                    <div><small>Reset cost</small><strong>{account.resetCost.toLocaleString()} cr</strong></div>
+                  </div>
+                  <p>{account.description}</p>
+                  <div className="vault-requirement">⭐ {account.reputationRequired.toLocaleString()} reputation required</div>
+                  <button disabled={!unlocked || selected} onClick={() => choosePaperAccount(account.id)}>
+                    {selected ? "Active account" : unlocked ? "Activate account" : "Locked"}
+                  </button>
+                </article>
+              );
+            })}
+          </div>
+        </section>
+      );
+    }
+
+    if (tab === "exams") {
+      const examRequirements = [
+        { name: "Cadet Exam", level: 5, rep: 75, accuracy: 60, scenarios: 10 },
+        { name: "Trader Exam", level: 15, rep: 450, accuracy: 72, scenarios: 20 },
+        { name: "Professional Exam", level: 30, rep: 1800, accuracy: 80, scenarios: 30 },
+        { name: "Elite Exam", level: 50, rep: 3500, accuracy: 85, scenarios: 40 },
+        { name: "Funded Exam", level: 75, rep: 11000, accuracy: 88, scenarios: 50 }
+      ];
+      return (
+        <section className="v1-page">
+          <div className="v1-page-header">
+            <div><span className="eyebrow">Exam Center</span><h1>Promotion Exams</h1><p>Career ranks require XP, reputation, accuracy, and a difficult promotion exam.</p></div>
+          </div>
+          <div className="exam-grid">
+            {examRequirements.map((exam, index) => {
+              const ready = level >= exam.level && reputation >= exam.rep && accuracy >= exam.accuracy;
+              return (
+                <article className={`exam-card ${ready ? "ready" : ""}`} key={exam.name}>
+                  <div className="exam-number">{index + 1}</div>
+                  <h2>{exam.name}</h2>
+                  <ul>
+                    <li>Level {exam.level}</li>
+                    <li>{exam.rep.toLocaleString()} reputation</li>
+                    <li>{exam.accuracy}% lifetime accuracy</li>
+                    <li>{exam.scenarios} exam scenarios</li>
+                  </ul>
+                  <button disabled={!ready}>{ready ? "Begin exam" : "Requirements not met"}</button>
+                </article>
+              );
+            })}
+          </div>
+        </section>
+      );
+    }
+
+    if (tab === "trophies") {
+      return (
+        <section className="v1-page">
+          <div className="v1-page-header">
+            <div><span className="eyebrow">Hall of Achievement</span><h1>Trophy Room</h1><p>Your permanent record of skill milestones and career promotions.</p></div>
+          </div>
+          <div className="trophy-grid">
+            {achievementCatalog.map(item => {
+              const unlocked = unlockedAchievements.some(a => a.id === item.id);
+              return (
+                <article className={`trophy-plinth ${unlocked ? "unlocked" : ""}`} key={item.id}>
+                  <div className="trophy-cup">{unlocked ? "🏆" : "🔒"}</div>
+                  <span>{item.icon}</span>
+                  <h3>{item.title}</h3>
+                  <p>{item.description}</p>
+                </article>
+              );
+            })}
+          </div>
+        </section>
+      );
+    }
+
+    if (tab === "stats") {
+      return (
+        <section className="v1-page">
+          <div className="v1-page-header">
+            <div><span className="eyebrow">Performance Lab</span><h1>Statistics</h1><p>Track the habits that matter more than a simple win rate.</p></div>
+          </div>
+          <div className="v1-stat-grid">
+            <div><span>Lifetime accuracy</span><strong>{accuracy}%</strong></div>
+            <div><span>Total scenarios</span><strong>{totalAttempts}</strong></div>
+            <div><span>Correct decisions</span><strong>{correctAttempts}</strong></div>
+            <div><span>Best combo</span><strong>×{bestCombo}</strong></div>
+            <div><span>Saved mistakes</span><strong>{mistakes.length}</strong></div>
+            <div><span>Fakeouts found</span><strong>{fakeoutsFound}</strong></div>
+            <div><span>Correct waits</span><strong>{correctWaits}</strong></div>
+            <div><span>Paper balance</span><strong>${paperBalance.toLocaleString(undefined,{maximumFractionDigits:0})}</strong></div>
+            <div><span>Academy credits</span><strong>🪙 {points.toLocaleString()}</strong></div>
+            <div><span>Reputation</span><strong>⭐ {reputation.toLocaleString()}</strong></div>
           </div>
         </section>
       );
@@ -1794,44 +1954,61 @@ export default function FuturesAcademy() {
         )}
       </section>
     );
-  }, [tab, scenario, dailyScenario, choice, reveal, xp, streak, role, premium, email, password, authMessage, question, aiAnswer, aiLoading, users, canAdmin, level, practiceMode, accuracy, mistakes, selectedMistake, unlockedAchievements, soundEnabled, reducedMotion, showCelebration, totalAttempts, entryPrice, stopPrice, targetPrice, planFeedback, visibleCandles, replayRunning, replaySpeed, activePlacement, contracts, orderType, liveRiskPoints, liveRewardPoints, liveRR, estimatedLoss, estimatedProfit, lastPlacedLevel, combo, bestCombo, currentRankIndex, currentRank, nextRank, rankProgress, currentMode, dailyProgress, points, selectedAccountId, selectedAccount, paperBalance, peakBalance, trailingDrawdownFloor, drawdownRemaining, accountFailed, ownedShopItems, shopMessage]);
+  }, [tab, scenario, dailyScenario, choice, reveal, xp, streak, role, premium, email, password, authMessage, question, aiAnswer, aiLoading, users, canAdmin, level, practiceMode, accuracy, mistakes, selectedMistake, unlockedAchievements, soundEnabled, reducedMotion, showCelebration, totalAttempts, entryPrice, stopPrice, targetPrice, planFeedback, visibleCandles, replayRunning, replaySpeed, activePlacement, contracts, orderType, liveRiskPoints, liveRewardPoints, liveRR, estimatedLoss, estimatedProfit, lastPlacedLevel, combo, bestCombo, currentRankIndex, currentRank, nextRank, rankProgress, currentMode, dailyProgress, points, selectedAccountId, selectedAccount, paperBalance, peakBalance, trailingDrawdownFloor, drawdownRemaining, accountFailed, ownedShopItems, shopMessage, reputation]);
 
   return (
     <main className={`app-shell app-mode-${practiceMode}`}>
-      <header className="topbar">
+      <header className="v1-topbar">
         <button className="brand brand-button" type="button" onClick={() => setTab("home")}>
           <span className="brand-mark">FA</span>
-          <div><strong>Futures Academy</strong><span>Break · Retest · Master</span></div>
+          <div><strong>Futures Academy</strong><span>Version 1.0 Foundation</span></div>
         </button>
-        <div className="top-stats">
+        <div className="v1-status-strip">
+          <span>⭐ {reputation.toLocaleString()}</span>
           <span>🪙 {points.toLocaleString()}</span>
           <span>LVL {level}</span>
-          <div className="xp-track"><i style={{ width: `${(xp % 500) / 5}%` }} /></div>
-          <b>{xp.toLocaleString()} XP</b>
+          <span>{currentRank.name}</span>
+          <span>{selectedAccount.icon} ${paperBalance.toLocaleString(undefined,{maximumFractionDigits:0})}</span>
         </div>
       </header>
-      <nav className="nav">
-        {[
-          ["home", "🏠 Command Center"],
-          ["train", "📈 Simulator"],
-          ["daily", "🔥 Daily Mission"],
-          ["career", "🏆 Career"],
-          ["mistakes", "🧠 Review"],
-          ["achievements", "🎖️ Badges"],
-          ["leaderboard", "🔥 Streak Leaders"],
-          ["balance", "💰 Balance Leaders"],
-          ["shop", "🛍️ Points Shop"],
-          ["ai", "🤖 AI Coach"],
-          ["profile", "👤 Profile"],
-          ["settings", "⚙️ Settings"],
-          ["admin", "🔐 Admin"]
-        ].map(([id, label]) => (
-          <button key={id} className={tab === id ? "active" : ""} onClick={() => { setTab(id as Tab); setReveal(false); setChoice(null); }}>
-            {label}
-          </button>
-        ))}
-      </nav>
-      {content}
+      <div className="v1-layout">
+        <aside className="v1-sidebar">
+          <div className="sidebar-group">
+            <span>ACADEMY</span>
+            {[
+              ["home","🏛 Command Center"],
+              ["train","📈 Trading Floor"],
+              ["daily","🔥 Daily Mission"],
+              ["career","🎓 Career"],
+              ["exams","📝 Promotion Exams"]
+            ].map(([id,label]) => <button key={id} className={tab===id ? "active":""} onClick={()=>setTab(id as Tab)}>{label}</button>)}
+          </div>
+          <div className="sidebar-group">
+            <span>FACILITIES</span>
+            {[
+              ["accounts","🏦 Account Vault"],
+              ["mistakes","🎬 Replay Theater"],
+              ["ai","🧠 Research Lab"],
+              ["trophies","🏆 Trophy Room"],
+              ["shop","🛍 Marketplace"]
+            ].map(([id,label]) => <button key={id} className={tab===id ? "active":""} onClick={()=>setTab(id as Tab)}>{label}</button>)}
+          </div>
+          <div className="sidebar-group">
+            <span>COMMUNITY</span>
+            {[
+              ["leaderboard","🔥 Streak Leaders"],
+              ["balance","💰 Balance Leaders"],
+              ["stats","📊 Statistics"],
+              ["profile","👤 Profile"]
+            ].map(([id,label]) => <button key={id} className={tab===id ? "active":""} onClick={()=>setTab(id as Tab)}>{label}</button>)}
+          </div>
+          <div className="sidebar-bottom">
+            <button onClick={()=>setTab("settings")}>⚙ Settings</button>
+            <button onClick={()=>setTab("admin")}>🔐 Admin</button>
+          </div>
+        </aside>
+        <section className="v1-content">{content}</section>
+      </div>
       <footer>Educational simulation only — synthetic market data, not live trade signals.</footer>
     </main>
   );

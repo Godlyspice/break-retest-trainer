@@ -270,3 +270,46 @@ This is still an educational simulator using synthetic scenarios. Rank names are
 - Added account icons, profile badges, animated-profile rewards, and profile backgrounds
 - Added smarter entry/stop/target placeholders based on the key level without inserting real values
 - Added point balance to the top HUD
+
+
+# Futures Academy 1.0 Foundation
+
+This release begins the V1 architecture rewrite.
+
+## New foundation
+
+- Permanent Academy sidebar and professional top status bar
+- Command Center
+- Trading Floor
+- Daily Mission
+- Career
+- Promotion Exam Center
+- Account Vault
+- Replay Theater
+- Research Lab / AI Coach
+- Trophy Room
+- Marketplace
+- Community leaderboards
+- Statistics
+- Profile and settings
+
+## Harder progression
+
+- Career ranks now require both XP and Reputation
+- Career XP thresholds extend to 350,000 XP
+- Top rank requires 45,000 Reputation
+- Correct-answer rewards are much lower and vary by training difficulty
+- Incorrect answers remove Reputation
+- Reputation cannot be purchased
+
+## Paper accounts
+
+- Starter: 0 Reputation
+- Growth: 500 Reputation
+- Pro: 2,500 Reputation
+- Elite: 8,000 Reputation
+- Funded Challenge: 20,000 Reputation
+
+## Important
+
+This is the V1 foundation, not the final 1.0 public release. The purpose of this build is to establish a scalable academy structure while preserving the working simulator.
