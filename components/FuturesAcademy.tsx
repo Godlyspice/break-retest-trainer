@@ -809,7 +809,7 @@ export default function FuturesAcademy() {
 
       const { data: profile } = await client
         .from("profiles")
-        .select("display_name, role, premium, xp, streak")
+        .select("display_name, role, premium, xp, streak, credits, reputation")
         .eq("id", user.id)
         .maybeSingle();
 
@@ -828,8 +828,12 @@ export default function FuturesAcademy() {
       setRole(resolvedRole);
       setPremium(resolvedPremium);
 
-      if (typeof profile?.xp === "number") setXp(profile.xp);
-      if (typeof profile?.streak === "number") setStreak(profile.streak);
+      setXp(typeof profile?.xp === "number" ? profile.xp : 0);
+      setStreak(typeof profile?.streak === "number" ? profile.streak : 0);
+      setPoints(typeof profile?.credits === "number" ? profile.credits : 0);
+      setReputation(
+        typeof profile?.reputation === "number" ? profile.reputation : 0
+      );
 
       try {
         const savedGuest = window.localStorage.getItem("futures-academy-guest-v2-fresh");

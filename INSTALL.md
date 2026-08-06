@@ -1,34 +1,20 @@
-# Futures Academy v2.1.5 — Marketplace Expansion
+# Futures Academy v2.1.6 — Full Progress Header Sync
 
-Extract this patch into the project root and replace:
+The owner refresh event was working, which is why XP/Level changed, but the
+authenticated profile query did not include Credits or Reputation.
+
+This patch loads and synchronizes:
+
+- XP
+- Streak
+- Credits / Academy Points
+- Reputation
+
+Extract into the project root and replace:
 
 - components/FuturesAcademy.tsx
 
-New files:
+No Supabase migration is required.
 
-- components/marketplace/Marketplace.tsx
-- components/marketplace/Marketplace.module.css
-- lib/marketplace.ts
-
-## Added
-
-- More than 35 obtainable cosmetics
-- Account icons
-- Profile badges
-- Display titles
-- Profile frames
-- Profile backgrounds
-- Animated-style effects
-- Full interface themes
-- Common, Uncommon, Rare, Epic, and Legendary rarities
-- Level requirements
-- Reputation requirements
-- Premium-only rewards
-- Category filters
-- Search
-- Rarity filter
-- Owned and equipped states
-- One equipped item per cosmetic slot
-- Local inventory persistence
-
-No Supabase migration is required for this update.
+After deployment, adjust your own Credits or Reputation in Admin. The header
+and evaluation unlocks should update immediately.
