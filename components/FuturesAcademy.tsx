@@ -311,7 +311,7 @@ function Chart({
       const y = (v: number) => pad.t + ((max - v) / (max - min)) * plotH;
       const virtualSlots = Math.max(34, Math.min(42, scenario.candles.length));
       const step = (plotW / virtualSlots) * zoom;
-      const chartOffset = Math.max(0, (virtualSlots - displayCandles.length) * step);
+      const chartOffset = 0;
 
       ctx.strokeStyle = "#1d2630";
       ctx.fillStyle = "#7d8996";
@@ -1119,36 +1119,46 @@ export default function FuturesAcademy() {
               <div><span>Instrument</span><strong>MES</strong></div>
               <label>
                 <span className="label-with-help">Contracts <HelpTip title="Contracts" text="The number of MES contracts in the simulated trade. More contracts increase both potential profit and potential loss." /></span>
-                <input type="number" min="1" max="10" value={contracts} onChange={e => setContracts(Math.max(1, Number(e.target.value) || 1))} />
+                <div className="contract-stepper">
+                  <button type="button" onClick={() => setContracts(value => Math.max(1, value - 1))} aria-label="Decrease contracts">−</button>
+                  <input type="number" min="1" max="10" value={contracts} onChange={e => setContracts(Math.max(1, Number(e.target.value) || 1))} />
+                  <button type="button" onClick={() => setContracts(value => Math.min(10, value + 1))} aria-label="Increase contracts">+</button>
+                </div>
               </label>
             </div>
             <div className="order-type-row">
-              <div>
-                <button type="button" className={orderType === "market" ? "active" : ""} onClick={() => setOrderType("market")}>MARKET</button>
+              <button type="button" className={orderType === "market" ? "active" : ""} onClick={() => setOrderType("market")}>
+                <span>MARKET</span>
                 <HelpTip title="Market order" text="Enters at the best available current price. It favors speed over exact entry price." />
-              </div>
-              <div>
-                <button type="button" className={orderType === "limit" ? "active" : ""} onClick={() => setOrderType("limit")}>LIMIT</button>
+              </button>
+              <button type="button" className={orderType === "limit" ? "active" : ""} onClick={() => setOrderType("limit")}>
+                <span>LIMIT</span>
                 <HelpTip title="Limit order" text="Only enters at your chosen price or better. The order may never fill if price does not return to it." />
-              </div>
-              <div>
-                <button type="button" className={orderType === "stop" ? "active" : ""} onClick={() => setOrderType("stop")}>STOP</button>
+              </button>
+              <button type="button" className={orderType === "stop" ? "active" : ""} onClick={() => setOrderType("stop")}>
+                <span>STOP</span>
                 <HelpTip title="Stop entry order" text="Activates after price reaches your trigger. Traders often use it to enter after confirmation or continuation." />
-              </div>
+              </button>
             </div>
             <p className="label">Your decision</p>
             <div className="decision-grid">
-              <div>
-                <button className={`decision buy ${choice === "buy" ? "active" : ""}`} onClick={() => !reveal && setChoice("buy")} type="button">▲ BUY</button>
-                <HelpTip title="Buy" text="Choose Buy when you expect price to move higher after a valid bullish break and retest." />
+              <div className="decision-cell">
+                <button className={`decision buy ${choice === "buy" ? "active" : ""}`} onClick={() => !reveal && setChoice("buy")} type="button">
+                  <span>▲ BUY</span>
+                  <HelpTip title="Buy" text="Choose Buy when you expect price to move higher after a valid bullish break and retest." />
+                </button>
               </div>
-              <div>
-                <button className={`decision sell ${choice === "sell" ? "active" : ""}`} onClick={() => !reveal && setChoice("sell")} type="button">▼ SELL</button>
-                <HelpTip title="Sell" text="Choose Sell when you expect price to move lower after a valid bearish break and retest." />
+              <div className="decision-cell">
+                <button className={`decision sell ${choice === "sell" ? "active" : ""}`} onClick={() => !reveal && setChoice("sell")} type="button">
+                  <span>▼ SELL</span>
+                  <HelpTip title="Sell" text="Choose Sell when you expect price to move lower after a valid bearish break and retest." />
+                </button>
               </div>
-              <div>
-                <button className={`decision wait ${choice === "wait" ? "active" : ""}`} onClick={() => !reveal && setChoice("wait")} type="button">● WAIT</button>
-                <HelpTip title="Wait" text="Choose Wait when the break, retest, or confirmation is missing, unclear, or invalid." />
+              <div className="decision-cell">
+                <button className={`decision wait ${choice === "wait" ? "active" : ""}`} onClick={() => !reveal && setChoice("wait")} type="button">
+                  <span>● WAIT</span>
+                  <HelpTip title="Wait" text="Choose Wait when the break, retest, or confirmation is missing, unclear, or invalid." />
+                </button>
               </div>
             </div>
 

@@ -791,3 +791,85 @@ footer { padding: 8px 12px; text-align: center; color: var(--muted); border-top:
     scroll-behavior: auto !important;
   }
 }
+
+
+/* Layout correction v0.3.4 */
+.order-type-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+.order-type-row > button {
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  position: relative;
+  padding: 9px 7px;
+}
+.order-type-row > button > span {
+  min-width: 0;
+}
+.order-type-row > button .help-wrap {
+  position: static;
+  flex: 0 0 auto;
+}
+.decision-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+.decision-cell {
+  min-width: 0;
+}
+.decision-cell > .decision {
+  width: 100%;
+  min-height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 6px;
+}
+.decision-cell > .decision .help-wrap {
+  flex: 0 0 auto;
+}
+.help-button {
+  width: 18px !important;
+  height: 18px !important;
+  min-width: 18px !important;
+  flex-basis: 18px !important;
+  position: relative !important;
+  inset: auto !important;
+  vertical-align: middle !important;
+}
+.contract-stepper {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) 34px;
+  align-items: stretch;
+  gap: 4px;
+  margin-top: 5px;
+}
+.contract-stepper button {
+  border: 1px solid #2a3a49;
+  background: #14202a;
+  color: #9fd0ff;
+  border-radius: 5px;
+  padding: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+.contract-stepper input {
+  margin: 0 !important;
+  text-align: center;
+  min-width: 0;
+}
+@media(max-width: 520px) {
+  .order-type-row > button,
+  .decision-cell > .decision {
+    gap: 4px;
+    font-size: .78rem;
+  }
+}

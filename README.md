@@ -212,3 +212,12 @@ This is still an educational simulator using synthetic scenarios. Rank names are
 - Added line-placement glow feedback
 - Added incorrect-answer panel shake
 - Added tactile button press feedback
+
+
+## Layout correction v0.3.4
+
+- Left-aligned candle series so new scenarios begin from the chart's left edge
+- Made Buy, Sell, and Wait equal-width and proportional
+- Moved help icons inside Market, Limit, Stop, Buy, Sell, and Wait controls
+- Fixed help icon alignment so icons no longer sit behind or below buttons
+- Added minus and plus contract buttons while retaining direct number input
