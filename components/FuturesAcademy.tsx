@@ -801,9 +801,44 @@ export default function FuturesAcademy() {
   const currentRankIndex = careerRanks.reduce((found, rank, index) => xp >= rank.min && reputation >= rank.reputation ? index : found, 0);
   const currentRank = careerRanks[currentRankIndex];
   const nextRank = careerRanks[currentRankIndex + 1];
-  const rankProgress = nextRank
-    ? Math.min(100, Math.round(((xp - currentRank.min) / (nextRank.min - currentRank.min)) * 100))
+  const xpRankProgress = nextRank
+    ? Math.max(
+        0,
+        Math.min(
+          100,
+          ((xp - currentRank.min) /
+            Math.max(1, nextRank.min - currentRank.min)) *
+            100
+        )
+      )
     : 100;
+
+  const reputationRankProgress = nextRank
+    ? Math.max(
+        0,
+        Math.min(
+          100,
+          ((reputation - currentRank.reputation) /
+            Math.max(
+              1,
+              nextRank.reputation - currentRank.reputation
+            )) *
+            100
+        )
+      )
+    : 100;
+
+  const rankProgress = Math.round(
+    Math.min(xpRankProgress, reputationRankProgress)
+  );
+
+  const xpToNextRank = nextRank
+    ? Math.max(0, nextRank.min - xp)
+    : 0;
+
+  const reputationToNextRank = nextRank
+    ? Math.max(0, nextRank.reputation - reputation)
+    : 0;
   const currentMode = practiceModes.find(mode => mode.id === practiceMode) || practiceModes[0];
   const dailyProgress = Math.min(10, correctAttempts % 11);
   const canAdmin = role === "owner" || role === "admin";
@@ -903,6 +938,33 @@ export default function FuturesAcademy() {
       );
     };
   }, []);
+
+  useEffect(() => {
+    const client = supabase;
+    if (!client || !authUserId || tab !== "career") return;
+
+    let cancelled = false;
+
+    client
+      .from("profiles")
+      .select("xp, streak, credits, reputation")
+      .eq("id", authUserId)
+      .maybeSingle()
+      .then(({ data, error }) => {
+        if (cancelled || error || !data) return;
+
+        setXp(typeof data.xp === "number" ? data.xp : 0);
+        setStreak(typeof data.streak === "number" ? data.streak : 0);
+        setPoints(typeof data.credits === "number" ? data.credits : 0);
+        setReputation(
+          typeof data.reputation === "number" ? data.reputation : 0
+        );
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [tab, authUserId]);
 
   useEffect(() => {
     if (!activeEvaluation) return;
@@ -1828,6 +1890,74 @@ export default function FuturesAcademy() {
             <h2>Rise through the trading ranks</h2>
             <p>Ranks represent training consistency—not real-world trading status or guaranteed profitability.</p>
           </div>
+
+          <div className="career-live-summary">
+            <div>
+              <span>Current rank</span>
+              <strong>{currentRank.name}</strong>
+            </div>
+            <div>
+              <span>Live XP</span>
+              <strong>{xp.toLocaleString()}</strong>
+            </div>
+            <div>
+              <span>Live reputation</span>
+              <strong>{reputation.toLocaleString()}</strong>
+            </div>
+            <div>
+              <span>Next rank</span>
+              <strong>{nextRank?.name || "Maximum rank"}</strong>
+            </div>
+          </div>
+
+          {nextRank && (
+            <div className="career-requirement-card">
+              <div className="career-requirement-top">
+                <div>
+                  <span>Promotion readiness</span>
+                  <strong>{rankProgress}%</strong>
+                </div>
+                <small>Requires both XP and Reputation</small>
+              </div>
+
+              <div className="career-requirement-bars">
+                <div>
+                  <span>
+                    XP · {xp.toLocaleString()} /{" "}
+                    {nextRank.min.toLocaleString()}
+                  </span>
+                  <i>
+                    <em style={{ width: `${xpRankProgress}%` }} />
+                  </i>
+                  <small>
+                    {xpToNextRank
+                      ? `${xpToNextRank.toLocaleString()} XP remaining`
+                      : "XP requirement met"}
+                  </small>
+                </div>
+
+                <div>
+                  <span>
+                    Reputation · {reputation.toLocaleString()} /{" "}
+                    {nextRank.reputation.toLocaleString()}
+                  </span>
+                  <i>
+                    <em
+                      style={{
+                        width: `${reputationRankProgress}%`
+                      }}
+                    />
+                  </i>
+                  <small>
+                    {reputationToNextRank
+                      ? `${reputationToNextRank.toLocaleString()} reputation remaining`
+                      : "Reputation requirement met"}
+                  </small>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="career-path">
             {careerRanks.map((rank, index) => {
               const unlocked = xp >= rank.min && reputation >= rank.reputation;
@@ -2305,7 +2435,9 @@ export default function FuturesAcademy() {
         authUserId={authUserId}
       />
     );
-  }, [tab, scenario, dailyScenario, choice, reveal, xp, streak, role, premium, email, password, authMessage, question, aiAnswer, aiLoading, canAdmin, level, practiceMode, accuracy, mistakes, selectedMistake, unlockedAchievements, soundEnabled, reducedMotion, showCelebration, totalAttempts, entryPrice, stopPrice, targetPrice, planFeedback, visibleCandles, replayRunning, replaySpeed, activePlacement, contracts, orderType, liveRiskPoints, liveRewardPoints, liveRR, estimatedLoss, estimatedProfit, lastPlacedLevel, combo, bestCombo, currentRankIndex, currentRank, nextRank, rankProgress, currentMode, dailyProgress, points, selectedAccountId, selectedAccount, paperBalance, peakBalance, trailingDrawdownFloor, drawdownRemaining, accountFailed, ownedShopItems, equippedShopItems, shopMessage, reputation, membershipLabel,
+  }, [tab, scenario, dailyScenario, choice, reveal, xp, streak, role, premium, email, password, authMessage, question, aiAnswer, aiLoading, canAdmin, level, practiceMode, accuracy, mistakes, selectedMistake, unlockedAchievements, soundEnabled, reducedMotion, showCelebration, totalAttempts, entryPrice, stopPrice, targetPrice, planFeedback, visibleCandles, replayRunning, replaySpeed, activePlacement, contracts, orderType, liveRiskPoints, liveRewardPoints, liveRR, estimatedLoss, estimatedProfit, lastPlacedLevel, combo, bestCombo, currentRankIndex, currentRank, nextRank, rankProgress,
+    xpRankProgress, reputationRankProgress, xpToNextRank,
+    reputationToNextRank, currentMode, dailyProgress, points, selectedAccountId, selectedAccount, paperBalance, peakBalance, trailingDrawdownFloor, drawdownRemaining, accountFailed, ownedShopItems, equippedShopItems, shopMessage, reputation, membershipLabel,
     equippedAccountIcon, equippedBadge, equippedTitle, equippedProfileFrame,
     equippedBackground, equippedEffect, equippedTheme, profileName, profileRole, profilePremium, authUserId, showGuestImport, guestSnapshot, activeEvaluation, activeAccount, applyTradeResult]);
 

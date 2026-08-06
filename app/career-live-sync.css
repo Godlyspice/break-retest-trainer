@@ -1,0 +1,98 @@
+.career-live-summary {
+  max-width: 760px;
+  margin: 15px auto 10px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0,1fr));
+  gap: 8px;
+}
+
+.career-live-summary > div {
+  padding: 11px;
+  display: grid;
+  gap: 4px;
+  border: 1px solid #2b4050;
+  border-radius: 8px;
+  background: #101820;
+}
+
+.career-live-summary span,
+.career-requirement-card span {
+  color: #7f8f9b;
+  font-size: .66rem;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+
+.career-live-summary strong {
+  font-size: .84rem;
+}
+
+.career-requirement-card {
+  max-width: 760px;
+  margin: 0 auto 12px;
+  padding: 13px;
+  border: 1px solid #345168;
+  border-radius: 9px;
+  background: #10202d;
+}
+
+.career-requirement-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.career-requirement-top > div {
+  display: grid;
+  gap: 3px;
+}
+
+.career-requirement-top strong {
+  color: #8fcaff;
+  font-size: 1.15rem;
+}
+
+.career-requirement-top small {
+  color: #8a99a5;
+}
+
+.career-requirement-bars {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.career-requirement-bars > div {
+  display: grid;
+  gap: 5px;
+}
+
+.career-requirement-bars i {
+  height: 7px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #1b2a35;
+}
+
+.career-requirement-bars em {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg,#3c91d4,#37cda0);
+}
+
+.career-requirement-bars small {
+  color: #778793;
+  font-size: .65rem;
+}
+
+@media(max-width:700px) {
+  .career-live-summary {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .career-requirement-bars {
+    grid-template-columns: 1fr;
+  }
+}
