@@ -1,7 +1,7 @@
-# Futures Academy v4.4.1 Changelog
+# Futures Academy v4.4.3 Changelog
 
-- Combined v4.3 and v4.4 into one complete package
-- Included v4.2 expanded classes and animated icon system
-- Fixed `currentClass.perk` compile error
-- Added rendered list for `currentClass.perks`
-- Added current-class perk-list styling
+- Widened desktop sidebar for descriptive navigation
+- Fixed clipped eligibility badges
+- Added responsive sidebar widths
+- Prevented navigation text from pushing status pills outside the panel
+- Preserved mobile bottom navigation

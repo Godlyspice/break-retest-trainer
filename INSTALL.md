@@ -1,34 +1,23 @@
-# Futures Academy v4.4.1 — Combined Fixed Bundle
+# Futures Academy v4.4.3 — Sidebar Badge Fix
 
-This package includes:
+This complete bundle includes v4.4.2 plus the desktop navigation fix.
 
-- v4.2 expanded trader classes and animated icons
-- v4.3 editable profile names
-- v4.4 name selection during Guest, Demo, and account onboarding
-- The compile fix changing `currentClass.perk` to `currentClass.perks`
+## Fixed
+
+- OPEN, NEW, ELIGIBLE, OWNER, and LOCKED badges no longer get cut off.
+- Desktop sidebar width now matches the new icon-and-label design.
+- Navigation text uses the available middle column correctly.
+- Main page content resizes instead of overlapping the sidebar.
+- Medium desktop widths use a slightly smaller but complete sidebar.
+- Mobile bottom navigation remains unchanged.
 
 ## Install
 
-1. Extract this ZIP.
-2. Drag every included folder into the root of your project.
+1. Extract the ZIP.
+2. Drag all folders into the root of your project.
 3. Choose Merge and Replace.
 4. Commit and push:
 
-`Install v4.4.1 combined fixed bundle`
+`Fix sidebar eligibility badge clipping`
 
-## Supabase
-
-Run these SQL files in order if you have not already run them:
-
-1. `supabase/editable_profile_names_v430.sql`
-2. `supabase/name_onboarding_v440.sql`
-
-If you already ran either file successfully, you do not need to run it again.
-
-## Verify
-
-- The project compiles without the `Property 'perk' does not exist` error.
-- Guest and Demo ask for a profile name.
-- New account signup asks for a preferred profile name.
-- Existing users can change their name from Profile.
-- Academy Path shows all expanded classes and multiple perks.
+No Supabase migration is required.

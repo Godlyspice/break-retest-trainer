@@ -5217,3 +5217,199 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+
+/* Futures Academy v4.4.2 — Command Center hero clipping fix */
+.command-center-v220 .cc-hero {
+  height: auto !important;
+  min-height: 390px;
+  overflow: visible !important;
+  align-items: stretch;
+}
+
+.command-center-v220 .cc-hero-copy {
+  min-width: 0;
+  align-self: center;
+  padding-block: 8px;
+}
+
+.command-center-v220 .cc-hero-copy h1 {
+  max-width: 100%;
+  margin-bottom: 15px;
+  overflow: visible;
+  font-size: clamp(2.15rem, 4.1vw, 4rem);
+  line-height: 1.02;
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+
+.command-center-v220 .cc-hero-copy h1 span {
+  display: block;
+  max-width: 100%;
+  padding-bottom: .08em;
+  font-size: clamp(2rem, 3.9vw, 3.85rem);
+  line-height: 1.06;
+  overflow: visible;
+  overflow-wrap: anywhere;
+}
+
+.command-center-v220 .cc-hero-copy > p {
+  max-width: 720px;
+  margin-bottom: 0;
+  overflow: visible;
+}
+
+.command-center-v220 .cc-hero-actions,
+.command-center-v220 .cc-principles {
+  position: relative;
+  z-index: 3;
+}
+
+@media (max-width: 1100px) {
+  .command-center-v220 .cc-hero {
+    min-height: auto;
+  }
+
+  .command-center-v220 .cc-hero-copy h1 {
+    font-size: clamp(2rem, 5.6vw, 3.5rem);
+  }
+
+  .command-center-v220 .cc-hero-copy h1 span {
+    font-size: clamp(1.9rem, 5.3vw, 3.3rem);
+  }
+}
+
+@media (max-width: 720px) {
+  .command-center-v220 .cc-hero {
+    overflow: hidden !important;
+  }
+
+  .command-center-v220 .cc-hero-copy {
+    padding-block: 2px;
+  }
+
+  .command-center-v220 .cc-hero-copy h1 {
+    font-size: clamp(1.85rem, 10vw, 2.75rem);
+    line-height: 1.04;
+  }
+
+  .command-center-v220 .cc-hero-copy h1 span {
+    font-size: clamp(1.75rem, 9.5vw, 2.6rem);
+    line-height: 1.08;
+  }
+
+  .command-center-v220 .cc-hero-copy > p {
+    font-size: .82rem;
+    line-height: 1.55;
+  }
+}
+
+
+/* Futures Academy v4.4.3 — Desktop sidebar badge and spacing fix */
+@media (min-width: 821px) {
+  .v1-layout {
+    grid-template-columns: 268px minmax(0, 1fr) !important;
+  }
+
+  .v3-sidebar,
+  .v1-sidebar {
+    width: 268px !important;
+    min-width: 268px !important;
+    max-width: 268px !important;
+    overflow-x: hidden;
+  }
+
+  .v3-sidebar .sidebar-group,
+  .v3-sidebar .sidebar-bottom {
+    min-width: 0;
+  }
+
+  .v3-sidebar .sidebar-group > button,
+  .v3-sidebar .sidebar-bottom > button {
+    width: calc(100% - 14px);
+    min-width: 0;
+    margin-inline: 7px;
+    padding: 8px 8px;
+    grid-template-columns: 42px minmax(0, 1fr) max-content !important;
+    column-gap: 8px;
+    overflow: visible;
+  }
+
+  .v3-sidebar .sidebar-group > span {
+    display: block;
+    padding-inline: 14px;
+  }
+
+  .v3-nav-icon {
+    width: 40px;
+    min-width: 40px;
+  }
+
+  .v3-nav-copy {
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .v3-nav-copy strong,
+  .v3-nav-copy small {
+    display: block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .v3-eligibility {
+    min-width: max-content;
+    max-width: none;
+    justify-self: end;
+    flex-shrink: 0;
+    padding: 4px 6px;
+    white-space: nowrap;
+    transform: none !important;
+  }
+
+  .v1-content {
+    min-width: 0;
+    overflow-x: hidden;
+  }
+}
+
+/* Give medium desktop widths a slightly narrower but still complete sidebar. */
+@media (min-width: 821px) and (max-width: 1180px) {
+  .v1-layout {
+    grid-template-columns: 250px minmax(0, 1fr) !important;
+  }
+
+  .v3-sidebar,
+  .v1-sidebar {
+    width: 250px !important;
+    min-width: 250px !important;
+    max-width: 250px !important;
+  }
+
+  .v3-sidebar .sidebar-group > button,
+  .v3-sidebar .sidebar-bottom > button {
+    grid-template-columns: 40px minmax(0, 1fr) max-content !important;
+    column-gap: 7px;
+  }
+
+  .v3-nav-copy small {
+    font-size: .51rem;
+  }
+
+  .v3-eligibility {
+    padding-inline: 5px;
+    font-size: .45rem;
+  }
+}
+
+/* Mobile still uses the labeled bottom dock, not the desktop sidebar. */
+@media (max-width: 820px) {
+  .v3-sidebar,
+  .v1-sidebar {
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+  }
+}
