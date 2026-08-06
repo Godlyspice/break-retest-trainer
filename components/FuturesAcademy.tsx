@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { hasSupabase, supabase } from "@/lib/supabase-browser";
 
 type Role = "user" | "moderator" | "admin" | "owner";
-type Tab = "home" | "train" | "daily" | "career" | "accounts" | "exams" | "mistakes" | "achievements" | "trophies" | "leaderboard" | "balance" | "shop" | "stats" | "ai" | "profile" | "settings" | "admin";
+type Tab = "home" | "train" | "daily" | "career" | "accounts" | "exams" | "handbook" | "mistakes" | "achievements" | "trophies" | "leaderboard" | "balance" | "shop" | "stats" | "ai" | "profile" | "settings" | "admin";
 type Candle = { open: number; high: number; low: number; close: number; volume: number };
 type Scenario = {
   id: string;
@@ -757,6 +757,11 @@ function Chart({
 
 export default function FuturesAcademy() {
   const [tab, setTab] = useState<Tab>("home");
+  const [identityMode, setIdentityMode] = useState<"landing" | "guest" | "demo" | "account">("landing");
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [tourStep, setTourStep] = useState(0);
+  const [guestPrompt, setGuestPrompt] = useState("");
+  const [handbookQuery, setHandbookQuery] = useState("");
   const [scenario, setScenario] = useState(() => generateScenario());
   const [dailyScenario] = useState(() => generateScenario(true));
   const [choice, setChoice] = useState<"buy" | "sell" | "wait" | null>(null);
@@ -845,6 +850,36 @@ export default function FuturesAcademy() {
   }, []);
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
+    const saved = window.localStorage.getItem("futures-academy-guest");
+    if (!saved) return;
+    try {
+      const guest = JSON.parse(saved);
+      if (guest.identityMode === "guest") {
+        setIdentityMode("guest");
+        setXp(guest.xp ?? 1240);
+        setPoints(guest.points ?? 950);
+        setReputation(guest.reputation ?? 120);
+        setPaperBalance(guest.paperBalance ?? 25000);
+        setPeakBalance(guest.peakBalance ?? 25000);
+        setSelectedAccountId("starter");
+      }
+    } catch {}
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || identityMode !== "guest") return;
+    window.localStorage.setItem("futures-academy-guest", JSON.stringify({
+      identityMode,
+      xp,
+      points,
+      reputation,
+      paperBalance,
+      peakBalance
+    }));
+  }, [identityMode, xp, points, reputation, paperBalance, peakBalance]);
+
+  useEffect(() => {
     if (!replayRunning) return;
     const timer = window.setInterval(() => {
       setVisibleCandles(current => {
@@ -870,6 +905,39 @@ export default function FuturesAcademy() {
     const { error } = await action;
     setAuthMessage(error ? error.message : mode === "signup" ? "Account created. Check your email if confirmation is enabled." : "Signed in.");
   }
+
+  function enterGuestMode() {
+    setIdentityMode("guest");
+    setSelectedAccountId("starter");
+    setPaperBalance(10000);
+    setPeakBalance(10000);
+    setShowOnboarding(true);
+    setTourStep(0);
+  }
+
+  function enterDemoMode() {
+    setIdentityMode("demo");
+    setSelectedAccountId("starter");
+    setPaperBalance(10000);
+    setPeakBalance(10000);
+    setPracticeMode("clean");
+    setTab("train");
+    setShowOnboarding(true);
+    setTourStep(0);
+  }
+
+  function enterAccountMode() {
+    setIdentityMode("account");
+    setTab("profile");
+  }
+
+  const tourSteps = [
+    { title: "Welcome to Futures Academy", text: "This quick tour shows the chart, trade plan, replay, and paper-account rules." },
+    { title: "Read the chart first", text: "Identify the key level, then decide whether price has broken, retested, and confirmed." },
+    { title: "Choose Buy, Sell, or Wait", text: "Wait is a valid answer whenever the setup is incomplete, unclear, or invalid." },
+    { title: "Build the trade plan", text: "Set entry, stop-loss, and take-profit. The simulator calculates risk and reward automatically." },
+    { title: "Protect the paper account", text: "Your paper balance and trailing drawdown remain visible in the sticky account bar." }
+  ];
 
   function progressionReward() {
     if (practiceMode === "fakeouts") return { xp: 25, credits: 8, reputation: 4 };
@@ -1068,6 +1136,10 @@ export default function FuturesAcademy() {
   function choosePaperAccount(accountId: string) {
     const account = paperAccounts.find(item => item.id === accountId);
     if (!account) return;
+    if ((identityMode === "guest" || identityMode === "demo") && account.id !== "starter") {
+      setGuestPrompt("Create a free account to unlock additional paper accounts and cloud saving.");
+      return;
+    }
     if (reputation < account.reputationRequired) {
       setShopMessage(`Requires ${account.reputationRequired.toLocaleString()} reputation.`);
       return;
@@ -1514,7 +1586,13 @@ export default function FuturesAcademy() {
               <span>Academy points</span>
               <strong>🪙 {points.toLocaleString()}</strong>
             </div>
-            <button className="hud-reset-button" type="button" onClick={resetPaperAccount}>
+            <button className="hud-reset-button" type="button" onClick={() => {
+              if (identityMode === "demo") {
+                setGuestPrompt("Demo mode cannot reset accounts. Continue as Guest or create an account.");
+                return;
+              }
+              resetPaperAccount();
+            }}>
               Reset · {selectedAccount.resetCost} pts
             </button>
           </div>
@@ -1579,6 +1657,45 @@ export default function FuturesAcademy() {
               <div><span>↯</span><strong>Harder fakeouts</strong><small>Advanced scenario pool</small></div>
               <div><span>★</span><strong>Profile title</strong><small>Leaderboard recognition</small></div>
             </div>
+          </div>
+        </section>
+      );
+    }
+
+    if (tab === "handbook") {
+      const topics = [
+        { title: "What is MES?", icon: "📘", text: "MES is the Micro E-mini S&P 500 futures contract. In this simulator, one point is treated as $5 per contract." },
+        { title: "Break and retest", icon: "📈", text: "A valid setup usually includes a meaningful break, a return to the level, and confirmation that the level is holding or rejecting." },
+        { title: "Market order", icon: "⚡", text: "A market order prioritizes immediate execution instead of an exact entry price." },
+        { title: "Limit order", icon: "🎯", text: "A limit order waits for your chosen price or better. It may never fill." },
+        { title: "Stop order", icon: "🚦", text: "A stop entry activates after price reaches a trigger, often after confirmation." },
+        { title: "Stop-loss", icon: "🛡️", text: "The stop-loss exits the simulated trade when the setup fails and limits the planned loss." },
+        { title: "Take-profit", icon: "💰", text: "The take-profit closes the simulated trade at your planned reward level." },
+        { title: "Reward-to-risk", icon: "⚖️", text: "Reward-to-risk compares the planned gain with the planned loss. A 2:1 plan seeks two units of reward per unit risked." },
+        { title: "Trailing drawdown", icon: "📉", text: "The drawdown floor can rise as the paper account reaches new peaks. Reaching it fails the current paper account." },
+        { title: "Why Wait matters", icon: "⏳", text: "Not trading a weak setup is part of disciplined trading. Wait is often the best decision." }
+      ];
+      const visibleTopics = topics.filter(topic =>
+        `${topic.title} ${topic.text}`.toLowerCase().includes(handbookQuery.toLowerCase())
+      );
+      return (
+        <section className="v1-page handbook-page">
+          <div className="v1-page-header">
+            <div><span className="eyebrow">New trader guide</span><h1>Academy Handbook</h1><p>Simple explanations without overwhelming terminology.</p></div>
+          </div>
+          <div className="handbook-search">
+            <span>🔎</span>
+            <input value={handbookQuery} onChange={e => setHandbookQuery(e.target.value)} placeholder="Search: stop-loss, limit order, drawdown..." />
+          </div>
+          <div className="handbook-grid">
+            {visibleTopics.map(topic => (
+              <article className="handbook-card" key={topic.title}>
+                <div>{topic.icon}</div>
+                <h2>{topic.title}</h2>
+                <p>{topic.text}</p>
+                <button type="button" onClick={() => setTab("train")}>Practice this concept →</button>
+              </article>
+            ))}
           </div>
         </section>
       );
@@ -1804,6 +1921,18 @@ export default function FuturesAcademy() {
     }
 
     if (tab === "shop") {
+      if (identityMode === "guest" || identityMode === "demo") {
+        return (
+          <section className="v1-page locked-v1-page">
+            <div className="locked-feature-card">
+              <div>🛍️</div>
+              <h1>Marketplace requires a free account</h1>
+              <p>Create an account to save purchases, use cosmetics, and sync inventory across devices.</p>
+              <button type="button" onClick={() => { setIdentityMode("account"); setTab("profile"); }}>Create free account</button>
+            </div>
+          </section>
+        );
+      }
       return (
         <section className="page-section">
           <div className="section-heading">
@@ -1956,6 +2085,26 @@ export default function FuturesAcademy() {
     );
   }, [tab, scenario, dailyScenario, choice, reveal, xp, streak, role, premium, email, password, authMessage, question, aiAnswer, aiLoading, users, canAdmin, level, practiceMode, accuracy, mistakes, selectedMistake, unlockedAchievements, soundEnabled, reducedMotion, showCelebration, totalAttempts, entryPrice, stopPrice, targetPrice, planFeedback, visibleCandles, replayRunning, replaySpeed, activePlacement, contracts, orderType, liveRiskPoints, liveRewardPoints, liveRR, estimatedLoss, estimatedProfit, lastPlacedLevel, combo, bestCombo, currentRankIndex, currentRank, nextRank, rankProgress, currentMode, dailyProgress, points, selectedAccountId, selectedAccount, paperBalance, peakBalance, trailingDrawdownFloor, drawdownRemaining, accountFailed, ownedShopItems, shopMessage, reputation]);
 
+  if (identityMode === "landing") {
+    return (
+      <main className="welcome-screen">
+        <div className="welcome-art" aria-hidden="true">
+          <span>📈</span><span>🎯</span><span>🏆</span>
+        </div>
+        <section className="welcome-card">
+          <div className="welcome-logo">FA</div>
+          <span className="eyebrow">Interactive futures practice</span>
+          <h1>Futures Academy</h1>
+          <p>Learn break-and-retest trading through replay, paper accounts, progression, and guided practice.</p>
+          <button className="welcome-primary" type="button" onClick={enterGuestMode}>👤 Continue as Guest</button>
+          <button className="welcome-secondary" type="button" onClick={enterDemoMode}>▶ Try a Quick Demo</button>
+          <button className="welcome-secondary" type="button" onClick={enterAccountMode}>⭐ Create Free Account / Sign In</button>
+          <small>Guest progress is stored only on this device. Guests do not appear on leaderboards.</small>
+        </section>
+      </main>
+    );
+  }
+
   return (
     <main className={`app-shell app-mode-${practiceMode}`}>
       <header className="v1-topbar">
@@ -1969,6 +2118,7 @@ export default function FuturesAcademy() {
           <span>LVL {level}</span>
           <span>{currentRank.name}</span>
           <span>{selectedAccount.icon} ${paperBalance.toLocaleString(undefined,{maximumFractionDigits:0})}</span>
+          <span>{identityMode === "guest" ? "👤 Guest Trader" : identityMode === "demo" ? "🎮 Demo" : "⭐ Academy Member"}</span>
         </div>
       </header>
       <div className="v1-layout">
@@ -1979,6 +2129,7 @@ export default function FuturesAcademy() {
               ["home","🏛 Command Center"],
               ["train","📈 Trading Floor"],
               ["daily","🔥 Daily Mission"],
+              ["handbook","📖 Handbook"],
               ["career","🎓 Career"],
               ["exams","📝 Promotion Exams"]
             ].map(([id,label]) => <button key={id} className={tab===id ? "active":""} onClick={()=>setTab(id as Tab)}>{label}</button>)}
@@ -1988,7 +2139,6 @@ export default function FuturesAcademy() {
             {[
               ["accounts","🏦 Account Vault"],
               ["mistakes","🎬 Replay Theater"],
-              ["ai","🧠 Research Lab"],
               ["trophies","🏆 Trophy Room"],
               ["shop","🛍 Marketplace"]
             ].map(([id,label]) => <button key={id} className={tab===id ? "active":""} onClick={()=>setTab(id as Tab)}>{label}</button>)}
@@ -2009,6 +2159,34 @@ export default function FuturesAcademy() {
         </aside>
         <section className="v1-content">{content}</section>
       </div>
+      {showOnboarding && (
+        <div className="tour-overlay">
+          <section className="tour-card">
+            <span className="tour-step">STEP {tourStep + 1} OF {tourSteps.length}</span>
+            <div className="tour-icon">{["🏛️","📈","🎯","🛡️","🏦"][tourStep]}</div>
+            <h2>{tourSteps[tourStep].title}</h2>
+            <p>{tourSteps[tourStep].text}</p>
+            <div className="tour-actions">
+              <button type="button" className="secondary" onClick={() => setShowOnboarding(false)}>Skip</button>
+              <button type="button" className="primary" onClick={() => {
+                if (tourStep >= tourSteps.length - 1) {
+                  setShowOnboarding(false);
+                  setTab("home");
+                } else {
+                  setTourStep(step => step + 1);
+                }
+              }}>{tourStep >= tourSteps.length - 1 ? "Enter Academy" : "Next"}</button>
+            </div>
+          </section>
+        </div>
+      )}
+      {guestPrompt && (
+        <div className="guest-prompt">
+          <span>🔒 {guestPrompt}</span>
+          <button type="button" onClick={() => { setGuestPrompt(""); setIdentityMode("account"); setTab("profile"); }}>Create account</button>
+          <button type="button" onClick={() => setGuestPrompt("")}>Not now</button>
+        </div>
+      )}
       <footer>Educational simulation only — synthetic market data, not live trade signals.</footer>
     </main>
   );

@@ -313,3 +313,19 @@ This release begins the V1 architecture rewrite.
 ## Important
 
 This is the V1 foundation, not the final 1.0 public release. The purpose of this build is to establish a scalable academy structure while preserving the working simulator.
+
+
+# Futures Academy V1.1 — Guest and Onboarding
+
+- New welcome screen
+- Continue as Guest
+- Quick Demo
+- Create Account / Sign In path
+- Guest progress saved locally on the current device
+- Guest accounts restricted to Starter paper account
+- Guests excluded from Marketplace and future leaderboard submissions
+- First-time guided tour
+- Academy Handbook with searchable beginner explanations
+- AI Coach removed from the current navigation
+- Sticky paper-account HUD on desktop so balance and trailing drawdown stay visible
+- Guest conversion prompts for locked features

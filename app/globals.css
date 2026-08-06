@@ -1861,3 +1861,170 @@ footer { padding: 8px 12px; text-align: center; color: var(--muted); border-top:
   .v1-page { padding: 15px 10px 70px; }
   .hud-grid { grid-template-columns: repeat(2,1fr); }
 }
+
+
+/* V1.1 guest and onboarding */
+.welcome-screen {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 22px;
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 20% 15%,rgba(57,139,234,.24),transparent 30%),
+    radial-gradient(circle at 85% 80%,rgba(95,209,161,.15),transparent 28%),
+    linear-gradient(135deg,#08101a,#090d13 55%,#111a24);
+}
+.welcome-art span {
+  position: absolute;
+  font-size: 11rem;
+  opacity: .035;
+}
+.welcome-art span:nth-child(1) { left: 6%; top: 10%; transform: rotate(-10deg); }
+.welcome-art span:nth-child(2) { right: 8%; top: 18%; transform: rotate(12deg); }
+.welcome-art span:nth-child(3) { right: 25%; bottom: -4%; }
+.welcome-card {
+  width: min(520px,100%);
+  padding: 34px;
+  display: grid;
+  gap: 12px;
+  text-align: center;
+  border: 1px solid #38516a;
+  border-radius: 18px;
+  background: rgba(12,20,29,.96);
+  box-shadow: 0 30px 90px rgba(0,0,0,.5);
+  z-index: 1;
+}
+.welcome-logo {
+  width: 70px;
+  height: 70px;
+  display: grid;
+  place-items: center;
+  margin: auto;
+  border-radius: 16px;
+  background: linear-gradient(145deg,#4da3ff,#1f6fc2);
+  color: white;
+  font-size: 1.4rem;
+  font-weight: 900;
+}
+.welcome-card h1 { margin: 0; font-size: 2.6rem; }
+.welcome-card p { color: #aab8c5; line-height: 1.55; }
+.welcome-card button { padding: 13px; border-radius: 8px; font-weight: 900; }
+.welcome-primary { border: 0; background: linear-gradient(135deg,#257ed8,#15599b); color: white; }
+.welcome-secondary { border: 1px solid #344858; background: #121d27; color: white; }
+.welcome-card small { color: #738391; line-height: 1.4; }
+.tour-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 20000;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(2,6,10,.78);
+  backdrop-filter: blur(5px);
+}
+.tour-card {
+  width: min(470px,100%);
+  padding: 25px;
+  text-align: center;
+  border: 1px solid #4b6d8a;
+  border-radius: 15px;
+  background: #101a23;
+  box-shadow: 0 25px 75px rgba(0,0,0,.56);
+}
+.tour-step { color: #6db6ff; font-size: .68rem; letter-spacing: .12em; }
+.tour-icon { margin: 14px 0 6px; font-size: 3rem; }
+.tour-card h2 { margin: 8px 0; }
+.tour-card p { color: #a8b5c1; line-height: 1.5; }
+.tour-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 18px; }
+.guest-prompt {
+  position: fixed;
+  z-index: 19000;
+  left: 50%;
+  bottom: 18px;
+  transform: translateX(-50%);
+  width: min(650px,calc(100% - 24px));
+  padding: 12px;
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 8px;
+  align-items: center;
+  border: 1px solid #625331;
+  border-radius: 10px;
+  background: #241f14;
+  color: #efd17d;
+  box-shadow: 0 15px 45px rgba(0,0,0,.5);
+}
+.guest-prompt button { padding: 8px 10px; border: 1px solid #605334; border-radius: 6px; background: #332b18; color: white; }
+.handbook-search {
+  max-width: 900px;
+  margin: 0 auto 18px;
+  padding: 8px 12px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 8px;
+  align-items: center;
+  border: 1px solid #2c4051;
+  border-radius: 9px;
+  background: #101820;
+}
+.handbook-search input { border: 0; background: transparent; }
+.handbook-grid {
+  max-width: 1180px;
+  margin: auto;
+  display: grid;
+  grid-template-columns: repeat(3,minmax(0,1fr));
+  gap: 11px;
+}
+.handbook-card {
+  min-height: 235px;
+  padding: 17px;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #293946;
+  border-radius: 11px;
+  background: #101820;
+}
+.handbook-card > div { font-size: 1.8rem; }
+.handbook-card h2 { font-size: 1.05rem; }
+.handbook-card p { color: var(--muted); line-height: 1.5; flex: 1; }
+.handbook-card button { border: 0; background: transparent; color: #73baff; text-align: left; padding: 0; }
+.locked-v1-page { display: grid; place-items: center; }
+.locked-feature-card {
+  max-width: 510px;
+  padding: 30px;
+  text-align: center;
+  border: 1px solid #364a59;
+  border-radius: 14px;
+  background: #101820;
+}
+.locked-feature-card > div { font-size: 3rem; }
+.locked-feature-card p { color: var(--muted); }
+.locked-feature-card button { padding: 11px 14px; border: 0; border-radius: 7px; background: #287fd5; color: white; font-weight: 800; }
+
+/* Keep paper balance visible without scrolling. */
+.account-hud {
+  position: sticky;
+  bottom: 0;
+  z-index: 900;
+  box-shadow: 0 -10px 28px rgba(0,0,0,.34);
+}
+.simulator-screen {
+  padding-bottom: 0;
+}
+.v1-content {
+  overflow: visible;
+}
+
+@media(max-width:900px) {
+  .handbook-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .account-hud {
+    position: static;
+  }
+}
+@media(max-width:600px) {
+  .handbook-grid { grid-template-columns: 1fr; }
+  .guest-prompt { grid-template-columns: 1fr 1fr; }
+  .guest-prompt span { grid-column: 1 / -1; }
+}
