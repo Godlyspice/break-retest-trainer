@@ -1370,3 +1370,186 @@ footer { padding: 8px 12px; text-align: center; color: var(--muted); border-top:
     50% { transform: translateY(-4px); }
   }
 }
+
+
+/* Economy and paper account system v0.4.0 */
+.paper-account-section {
+  max-width: 1280px;
+  margin: 0 auto 18px;
+}
+.points-pill {
+  padding: 8px 12px;
+  border: 1px solid #6d5830;
+  border-radius: 999px;
+  background: #2a2213;
+  color: #f5ce73;
+  font-weight: 800;
+  font-size: .78rem;
+}
+.paper-account-grid {
+  display: grid;
+  grid-template-columns: repeat(3,1fr);
+  gap: 10px;
+}
+.paper-account-card {
+  padding: 14px;
+  display: grid;
+  grid-template-columns: 50px 1fr auto;
+  gap: 10px;
+  align-items: center;
+  border: 1px solid #293845;
+  border-radius: 10px;
+  background: #101820;
+  color: white;
+  text-align: left;
+}
+.paper-account-card.active {
+  border-color: #5eacfa;
+  background: linear-gradient(120deg,#152c41,#101820);
+  box-shadow: 0 0 22px rgba(57,139,234,.12);
+}
+.account-icon {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: #172431;
+  font-size: 1.35rem;
+}
+.paper-account-card div {
+  display: grid;
+  gap: 2px;
+}
+.paper-account-card small {
+  color: var(--muted);
+}
+.paper-account-card em {
+  color: #f0ca74;
+  font-style: normal;
+  font-size: .72rem;
+}
+.account-hud {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr 1fr 1.5fr 1fr auto;
+  gap: 0;
+  border-top: 1px solid var(--border);
+  background: #0d141b;
+}
+.account-hud-item {
+  min-height: 70px;
+  padding: 11px 14px;
+  display: grid;
+  align-content: center;
+  gap: 4px;
+  border-right: 1px solid var(--border);
+}
+.account-hud-item span {
+  color: var(--muted);
+  font-size: .68rem;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+.account-hud-item strong {
+  font-size: .88rem;
+}
+.drawdown-track {
+  height: 6px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: #2b1a1e;
+}
+.drawdown-track i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg,#dd5669,#f2b35e);
+}
+.hud-reset-button {
+  margin: 12px;
+  padding: 9px 12px;
+  border: 1px solid #6d5830;
+  border-radius: 7px;
+  background: #2a2213;
+  color: #f2cd79;
+  font-weight: 800;
+}
+.account-failed-banner {
+  padding: 12px 16px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  border-top: 1px solid #8a3b49;
+  background: #35171e;
+  color: #ffb0bc;
+}
+.account-failed-banner span {
+  color: #d8a5ad;
+  font-size: .8rem;
+}
+.shop-grid {
+  display: grid;
+  grid-template-columns: repeat(3,1fr);
+  gap: 12px;
+}
+.shop-card {
+  padding: 17px;
+  display: grid;
+  gap: 7px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--panel);
+}
+.shop-card.owned {
+  border-color: #3f785f;
+  background: #111e18;
+}
+.shop-icon {
+  width: 58px;
+  height: 58px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: #182532;
+  font-size: 1.8rem;
+}
+.shop-card > span {
+  color: #74b8ff;
+  font-size: .7rem;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+.shop-card h3 {
+  margin: 0 0 8px;
+}
+.shop-card button {
+  padding: 10px;
+  border: 1px solid #3c5266;
+  border-radius: 6px;
+  background: #172432;
+  color: white;
+}
+.shop-card button:disabled {
+  color: #86d7b8;
+  border-color: #3d725d;
+  background: #153326;
+}
+.shop-message {
+  margin-bottom: 12px;
+  padding: 11px 13px;
+  border: 1px solid #66522c;
+  border-radius: 7px;
+  background: #282113;
+  color: #f1cc78;
+}
+@media(max-width: 950px) {
+  .paper-account-grid { grid-template-columns: 1fr; }
+  .account-hud { grid-template-columns: repeat(3,1fr); }
+  .hud-reset-button { grid-column: 1 / -1; }
+  .shop-grid { grid-template-columns: repeat(2,1fr); }
+}
+@media(max-width: 600px) {
+  .account-hud { grid-template-columns: 1fr 1fr; }
+  .shop-grid { grid-template-columns: 1fr; }
+  .paper-account-card { grid-template-columns: 48px 1fr; }
+  .paper-account-card em { grid-column: 2; }
+}

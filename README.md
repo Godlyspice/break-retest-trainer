@@ -255,3 +255,18 @@ This is still an educational simulator using synthetic scenarios. Rank names are
 - Added mode-specific decorative candlestick artwork
 - Kept backgrounds low-opacity so charts and controls remain readable
 - Added gentle motion that respects reduced-motion preferences
+
+
+## Economy and paper account system v0.4.0
+
+- Added selectable Starter, Growth, and Pro paper accounts
+- Added simulated account balance, peak balance, and trailing drawdown
+- Correct simulator decisions award Academy points and simulated paper profits
+- Incorrect decisions reduce the paper balance
+- Hitting trailing drawdown marks the paper account as failed
+- Account resets cost Academy points
+- Added balance leaderboard alongside streak leaderboard
+- Added Academy points shop
+- Added account icons, profile badges, animated-profile rewards, and profile backgrounds
+- Added smarter entry/stop/target placeholders based on the key level without inserting real values
+- Added point balance to the top HUD

@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { hasSupabase, supabase } from "@/lib/supabase-browser";
 
 type Role = "user" | "moderator" | "admin" | "owner";
-type Tab = "home" | "train" | "daily" | "career" | "mistakes" | "achievements" | "leaderboard" | "ai" | "profile" | "settings" | "admin";
+type Tab = "home" | "train" | "daily" | "career" | "mistakes" | "achievements" | "leaderboard" | "balance" | "shop" | "ai" | "profile" | "settings" | "admin";
 type Candle = { open: number; high: number; low: number; close: number; volume: number };
 type Scenario = {
   id: string;
@@ -14,6 +14,14 @@ type Scenario = {
   candles: Candle[];
   xp: number;
 };
+
+const demoBalanceLeaders = [
+  { name: "ChartFalcon", balance: 58740, account: "Pro Account" },
+  { name: "RetestRanger", balance: 55210, account: "Pro Account" },
+  { name: "MESMaster", balance: 31840, account: "Growth Account" },
+  { name: "CandleKnight", balance: 28750, account: "Growth Account" },
+  { name: "Demo Trader", balance: 25240, account: "Growth Account" }
+];
 
 const demoLeaders = [
   { name: "CandleKnight", xp: 4820, streak: 18 },
@@ -94,6 +102,47 @@ const careerRanks = [
   { name: "Funded Operator", min: 9000, icon: "V" },
   { name: "Market Veteran", min: 15000, icon: "VI" }
 ];
+
+
+const paperAccounts = [
+  {
+    id: "starter",
+    name: "Starter Account",
+    balance: 10000,
+    maxDrawdown: 600,
+    resetCost: 350,
+    icon: "🟦",
+    description: "Lower balance and tighter limits for focused practice."
+  },
+  {
+    id: "growth",
+    name: "Growth Account",
+    balance: 25000,
+    maxDrawdown: 1500,
+    resetCost: 700,
+    icon: "🟩",
+    description: "Balanced account for regular simulator sessions."
+  },
+  {
+    id: "pro",
+    name: "Pro Account",
+    balance: 50000,
+    maxDrawdown: 2500,
+    resetCost: 1200,
+    icon: "🟪",
+    description: "Larger account with stricter point costs and progression."
+  }
+];
+
+const shopCatalog = [
+  { id: "icon_bull", type: "Account icon", name: "Bull Crest", price: 450, icon: "🐂" },
+  { id: "icon_bear", type: "Account icon", name: "Bear Crest", price: 450, icon: "🐻" },
+  { id: "badge_risk", type: "Profile badge", name: "Risk Manager", price: 700, icon: "🛡️" },
+  { id: "badge_patience", type: "Profile badge", name: "Patience Pro", price: 700, icon: "⏳" },
+  { id: "avatar_glow", type: "Animated profile", name: "Neon Pulse", price: 1500, icon: "✨" },
+  { id: "background_floor", type: "Profile background", name: "Trading Floor", price: 1200, icon: "🏙️" }
+];
+
 
 
 
@@ -711,6 +760,13 @@ export default function FuturesAcademy() {
   const [correctAttempts, setCorrectAttempts] = useState(0);
   const [combo, setCombo] = useState(0);
   const [bestCombo, setBestCombo] = useState(6);
+  const [points, setPoints] = useState(950);
+  const [selectedAccountId, setSelectedAccountId] = useState("growth");
+  const [paperBalance, setPaperBalance] = useState(25000);
+  const [peakBalance, setPeakBalance] = useState(25000);
+  const [ownedShopItems, setOwnedShopItems] = useState<string[]>([]);
+  const [shopMessage, setShopMessage] = useState("");
+
   const [correctWaits, setCorrectWaits] = useState(0);
   const [fakeoutsFound, setFakeoutsFound] = useState(0);
   const [mistakes, setMistakes] = useState<Array<{ scenario: Scenario; selected: string; createdAt: string }>>([]);
@@ -733,6 +789,14 @@ export default function FuturesAcademy() {
     item.id === "streak_7" ? streak >= item.requirement :
     correctWaits >= item.requirement
   );
+  const selectedAccount = paperAccounts.find(account => account.id === selectedAccountId) || paperAccounts[1];
+  const trailingDrawdownFloor = Math.max(
+    selectedAccount.balance - selectedAccount.maxDrawdown,
+    peakBalance - selectedAccount.maxDrawdown
+  );
+  const drawdownRemaining = Math.max(0, paperBalance - trailingDrawdownFloor);
+  const accountFailed = paperBalance <= trailingDrawdownFloor;
+
   const currentRankIndex = careerRanks.reduce((found, rank, index) => xp >= rank.min ? index : found, 0);
   const currentRank = careerRanks[currentRankIndex];
   const nextRank = careerRanks[currentRankIndex + 1];
@@ -815,6 +879,23 @@ export default function FuturesAcademy() {
     setPlanFeedback(planMessage);
 
     if (correct) {
+      const pointReward = activeScenario.answer === "wait" ? 25 : 40;
+      setPoints(value => value + pointReward);
+
+      if (choice !== "wait" && Number.isFinite(estimatedProfit) && estimatedProfit > 0) {
+        setPaperBalance(current => {
+          const next = current + estimatedProfit;
+          setPeakBalance(peak => Math.max(peak, next));
+          return next;
+        });
+      } else {
+        setPaperBalance(current => {
+          const next = current + 10;
+          setPeakBalance(peak => Math.max(peak, next));
+          return next;
+        });
+      }
+
       setCorrectAttempts(v => v + 1);
       setCombo(current => {
         const next = current + 1;
@@ -828,6 +909,11 @@ export default function FuturesAcademy() {
       setShowCelebration(true);
       window.setTimeout(() => setShowCelebration(false), reducedMotion ? 250 : 1100);
     } else {
+      if (choice !== "wait" && Number.isFinite(estimatedLoss) && estimatedLoss > 0) {
+        setPaperBalance(current => current - estimatedLoss);
+      } else {
+        setPaperBalance(current => current - 25);
+      }
       setStreak(0);
       setCombo(0);
       setMistakes(current => [
@@ -940,6 +1026,38 @@ export default function FuturesAcademy() {
     setPlanFeedback("");
   }
 
+  function choosePaperAccount(accountId: string) {
+    const account = paperAccounts.find(item => item.id === accountId);
+    if (!account) return;
+    setSelectedAccountId(account.id);
+    setPaperBalance(account.balance);
+    setPeakBalance(account.balance);
+    setShopMessage("");
+  }
+
+  function resetPaperAccount() {
+    if (points < selectedAccount.resetCost) {
+      setShopMessage(`You need ${selectedAccount.resetCost - points} more points to reset this account.`);
+      return;
+    }
+    setPoints(value => value - selectedAccount.resetCost);
+    setPaperBalance(selectedAccount.balance);
+    setPeakBalance(selectedAccount.balance);
+    setShopMessage(`${selectedAccount.name} reset successfully.`);
+  }
+
+  function buyShopItem(itemId: string) {
+    const item = shopCatalog.find(product => product.id === itemId);
+    if (!item || ownedShopItems.includes(itemId)) return;
+    if (points < item.price) {
+      setShopMessage(`You need ${item.price - points} more points for ${item.name}.`);
+      return;
+    }
+    setPoints(value => value - item.price);
+    setOwnedShopItems(current => [...current, itemId]);
+    setShopMessage(`${item.name} unlocked.`);
+  }
+
   const content = useMemo(() => {
     if (tab === "home") {
       return (
@@ -968,6 +1086,31 @@ export default function FuturesAcademy() {
               <p>{nextRank ? `${nextRank.min - xp} XP to ${nextRank.name}` : "Maximum rank reached"}</p>
             </div>
           </div>
+
+          <section className="paper-account-section">
+            <div className="section-heading">
+              <div><span className="eyebrow">Paper trading</span><h2>Choose your training account</h2></div>
+              <div className="points-pill">🪙 {points.toLocaleString()} points</div>
+            </div>
+            <div className="paper-account-grid">
+              {paperAccounts.map(account => (
+                <button
+                  type="button"
+                  key={account.id}
+                  className={`paper-account-card ${selectedAccountId === account.id ? "active" : ""}`}
+                  onClick={() => choosePaperAccount(account.id)}
+                >
+                  <span className="account-icon">{account.icon}</span>
+                  <div>
+                    <strong>{account.name}</strong>
+                    <small>${account.balance.toLocaleString()} balance</small>
+                    <small>${account.maxDrawdown.toLocaleString()} trailing drawdown</small>
+                  </div>
+                  <em>{account.resetCost} reset pts</em>
+                </button>
+              ))}
+            </div>
+          </section>
 
           <div className="hud-grid">
             <div className="hud-card accent-card">
@@ -1214,7 +1357,17 @@ export default function FuturesAcademy() {
                         inputMode="decimal"
                         value={value}
                         onChange={e => setter(e.target.value)}
-                        placeholder="Price"
+                        placeholder={
+                          kind === "entry"
+                            ? `Near key level ${scenario.level.toFixed(2)}`
+                            : kind === "stop"
+                            ? choice === "buy"
+                              ? `Below ${scenario.level.toFixed(2)}`
+                              : `Above ${scenario.level.toFixed(2)}`
+                            : choice === "buy"
+                            ? `Above ${scenario.level.toFixed(2)}`
+                            : `Below ${scenario.level.toFixed(2)}`
+                        }
                         disabled={reveal}
                       />
                       <div className="tick-row">
@@ -1291,6 +1444,40 @@ export default function FuturesAcademy() {
             )}
           </aside>
           </div>
+          <div className="account-hud">
+            <div className="account-hud-item">
+              <span>Paper account</span>
+              <strong>{selectedAccount.icon} {selectedAccount.name}</strong>
+            </div>
+            <div className="account-hud-item">
+              <span>Balance</span>
+              <strong>${paperBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
+            </div>
+            <div className="account-hud-item">
+              <span>Peak balance</span>
+              <strong>${peakBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
+            </div>
+            <div className="account-hud-item drawdown-item">
+              <span>Trailing drawdown</span>
+              <strong>${drawdownRemaining.toFixed(2)} remaining</strong>
+              <div className="drawdown-track">
+                <i style={{ width: `${Math.max(0, Math.min(100, (drawdownRemaining / selectedAccount.maxDrawdown) * 100))}%` }} />
+              </div>
+            </div>
+            <div className="account-hud-item">
+              <span>Academy points</span>
+              <strong>🪙 {points.toLocaleString()}</strong>
+            </div>
+            <button className="hud-reset-button" type="button" onClick={resetPaperAccount}>
+              Reset · {selectedAccount.resetCost} pts
+            </button>
+          </div>
+          {accountFailed && (
+            <div className="account-failed-banner">
+              <strong>Trailing drawdown reached</strong>
+              <span>Earn points in the simulator or use your existing points to reset this paper account.</span>
+            </div>
+          )}
         </section>
       );
     }
@@ -1436,6 +1623,53 @@ export default function FuturesAcademy() {
       );
     }
 
+    if (tab === "balance") {
+      return (
+        <section className="page-section">
+          <div className="section-heading">
+            <div><span className="eyebrow">Paper accounts</span><h2>Balance leaderboard</h2></div>
+            <div className="points-pill">Current: ${paperBalance.toLocaleString(undefined, { maximumFractionDigits: 2 })}</div>
+          </div>
+          <div className="leaderboard">
+            {demoBalanceLeaders.map((leader, index) => (
+              <div className={`leader ${index < 3 ? "podium" : ""}`} key={leader.name}>
+                <span className="rank">#{index + 1}</span>
+                <div><strong>{leader.name}</strong><span>{leader.account}</span></div>
+                <b>${leader.balance.toLocaleString()}</b>
+              </div>
+            ))}
+          </div>
+        </section>
+      );
+    }
+
+    if (tab === "shop") {
+      return (
+        <section className="page-section">
+          <div className="section-heading">
+            <div><span className="eyebrow">Rewards</span><h2>Academy points shop</h2></div>
+            <div className="points-pill">🪙 {points.toLocaleString()} points</div>
+          </div>
+          {shopMessage && <div className="shop-message">{shopMessage}</div>}
+          <div className="shop-grid">
+            {shopCatalog.map(item => {
+              const owned = ownedShopItems.includes(item.id);
+              return (
+                <article className={`shop-card ${owned ? "owned" : ""}`} key={item.id}>
+                  <div className="shop-icon">{item.icon}</div>
+                  <span>{item.type}</span>
+                  <h3>{item.name}</h3>
+                  <button type="button" disabled={owned} onClick={() => buyShopItem(item.id)}>
+                    {owned ? "Owned" : `Buy · ${item.price} pts`}
+                  </button>
+                </article>
+              );
+            })}
+          </div>
+        </section>
+      );
+    }
+
     if (tab === "ai") {
       return (
         <section className="page-section ai-layout">
@@ -1560,7 +1794,7 @@ export default function FuturesAcademy() {
         )}
       </section>
     );
-  }, [tab, scenario, dailyScenario, choice, reveal, xp, streak, role, premium, email, password, authMessage, question, aiAnswer, aiLoading, users, canAdmin, level, practiceMode, accuracy, mistakes, selectedMistake, unlockedAchievements, soundEnabled, reducedMotion, showCelebration, totalAttempts, entryPrice, stopPrice, targetPrice, planFeedback, visibleCandles, replayRunning, replaySpeed, activePlacement, contracts, orderType, liveRiskPoints, liveRewardPoints, liveRR, estimatedLoss, estimatedProfit, lastPlacedLevel, combo, bestCombo, currentRankIndex, currentRank, nextRank, rankProgress, currentMode, dailyProgress]);
+  }, [tab, scenario, dailyScenario, choice, reveal, xp, streak, role, premium, email, password, authMessage, question, aiAnswer, aiLoading, users, canAdmin, level, practiceMode, accuracy, mistakes, selectedMistake, unlockedAchievements, soundEnabled, reducedMotion, showCelebration, totalAttempts, entryPrice, stopPrice, targetPrice, planFeedback, visibleCandles, replayRunning, replaySpeed, activePlacement, contracts, orderType, liveRiskPoints, liveRewardPoints, liveRR, estimatedLoss, estimatedProfit, lastPlacedLevel, combo, bestCombo, currentRankIndex, currentRank, nextRank, rankProgress, currentMode, dailyProgress, points, selectedAccountId, selectedAccount, paperBalance, peakBalance, trailingDrawdownFloor, drawdownRemaining, accountFailed, ownedShopItems, shopMessage]);
 
   return (
     <main className={`app-shell app-mode-${practiceMode}`}>
@@ -1570,6 +1804,7 @@ export default function FuturesAcademy() {
           <div><strong>Futures Academy</strong><span>Break · Retest · Master</span></div>
         </button>
         <div className="top-stats">
+          <span>🪙 {points.toLocaleString()}</span>
           <span>LVL {level}</span>
           <div className="xp-track"><i style={{ width: `${(xp % 500) / 5}%` }} /></div>
           <b>{xp.toLocaleString()} XP</b>
@@ -1583,7 +1818,9 @@ export default function FuturesAcademy() {
           ["career", "🏆 Career"],
           ["mistakes", "🧠 Review"],
           ["achievements", "🎖️ Badges"],
-          ["leaderboard", "🥇 Leaders"],
+          ["leaderboard", "🔥 Streak Leaders"],
+          ["balance", "💰 Balance Leaders"],
+          ["shop", "🛍️ Points Shop"],
           ["ai", "🤖 AI Coach"],
           ["profile", "👤 Profile"],
           ["settings", "⚙️ Settings"],
