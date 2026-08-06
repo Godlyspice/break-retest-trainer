@@ -704,11 +704,11 @@ export default function FuturesAcademy() {
   const [orderType, setOrderType] = useState<"market" | "limit" | "stop">("market");
   const [contracts, setContracts] = useState(1);
   const [reveal, setReveal] = useState(false);
-  const [xp, setXp] = useState(1240);
-  const [streak, setStreak] = useState(3);
+  const [xp, setXp] = useState(0);
+  const [streak, setStreak] = useState(0);
   const [role, setRole] = useState<Role>("owner");
   const [premium, setPremium] = useState(true);
-  const [email, setEmail] = useState("owner@example.com");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [authMessage, setAuthMessage] = useState("");
   const [question, setQuestion] = useState("");
@@ -720,12 +720,12 @@ export default function FuturesAcademy() {
   const [totalAttempts, setTotalAttempts] = useState(0);
   const [correctAttempts, setCorrectAttempts] = useState(0);
   const [combo, setCombo] = useState(0);
-  const [bestCombo, setBestCombo] = useState(6);
-  const [points, setPoints] = useState(950);
-  const [reputation, setReputation] = useState(120);
-  const [selectedAccountId, setSelectedAccountId] = useState("growth");
-  const [paperBalance, setPaperBalance] = useState(25000);
-  const [peakBalance, setPeakBalance] = useState(25000);
+  const [bestCombo, setBestCombo] = useState(0);
+  const [points, setPoints] = useState(0);
+  const [reputation, setReputation] = useState(0);
+  const [selectedAccountId, setSelectedAccountId] = useState("starter");
+  const [paperBalance, setPaperBalance] = useState(10000);
+  const [peakBalance, setPeakBalance] = useState(10000);
   const [ownedShopItems, setOwnedShopItems] = useState<string[]>([]);
   const [shopMessage, setShopMessage] = useState("");
 
@@ -807,6 +807,14 @@ export default function FuturesAcademy() {
         setProfilePremium(false);
         setRole("user");
         setPremium(false);
+        setXp(0);
+        setStreak(0);
+        setPoints(0);
+        setReputation(0);
+        setTotalAttempts(0);
+        setCorrectAttempts(0);
+        setCombo(0);
+        setBestCombo(0);
         setAuthReady(true);
         return;
       }
@@ -818,7 +826,7 @@ export default function FuturesAcademy() {
 
       const { data: profile } = await client
         .from("profiles")
-        .select("display_name, role, premium, xp, streak")
+        .select("display_name, role, premium, xp, streak, credits, reputation")
         .eq("id", user.id)
         .maybeSingle();
 
@@ -837,11 +845,15 @@ export default function FuturesAcademy() {
       setRole(resolvedRole);
       setPremium(resolvedPremium);
 
-      if (typeof profile?.xp === "number") setXp(profile.xp);
-      if (typeof profile?.streak === "number") setStreak(profile.streak);
+      setXp(typeof profile?.xp === "number" ? profile.xp : 0);
+      setStreak(typeof profile?.streak === "number" ? profile.streak : 0);
+      setPoints(typeof profile?.credits === "number" ? profile.credits : 0);
+      setReputation(
+        typeof profile?.reputation === "number" ? profile.reputation : 0
+      );
 
       try {
-        const savedGuest = window.localStorage.getItem("futures-academy-guest");
+        const savedGuest = window.localStorage.getItem("futures-academy-guest-v2-fresh");
         if (savedGuest) {
           const parsed = JSON.parse(savedGuest);
           setGuestSnapshot(parsed);
@@ -873,17 +885,17 @@ export default function FuturesAcademy() {
 
   useEffect(() => {
     if (typeof window === "undefined" || !authReady || authUserId) return;
-    const saved = window.localStorage.getItem("futures-academy-guest");
+    const saved = window.localStorage.getItem("futures-academy-guest-v2-fresh");
     if (!saved) return;
     try {
       const guest = JSON.parse(saved);
       if (guest.identityMode === "guest") {
         setIdentityMode("guest");
-        setXp(guest.xp ?? 1240);
-        setPoints(guest.points ?? 950);
-        setReputation(guest.reputation ?? 120);
-        setPaperBalance(guest.paperBalance ?? 25000);
-        setPeakBalance(guest.peakBalance ?? 25000);
+        setXp(guest.xp ?? 0);
+        setPoints(guest.points ?? 0);
+        setReputation(guest.reputation ?? 0);
+        setPaperBalance(guest.paperBalance ?? 10000);
+        setPeakBalance(guest.peakBalance ?? 10000);
         setSelectedAccountId("starter");
       }
     } catch {}
@@ -891,7 +903,7 @@ export default function FuturesAcademy() {
 
   useEffect(() => {
     if (typeof window === "undefined" || identityMode !== "guest") return;
-    window.localStorage.setItem("futures-academy-guest", JSON.stringify({
+    window.localStorage.setItem("futures-academy-guest-v2-fresh", JSON.stringify({
       identityMode,
       xp,
       points,
@@ -963,14 +975,14 @@ export default function FuturesAcademy() {
         .eq("id", authUserId);
     }
 
-    window.localStorage.removeItem("futures-academy-guest");
+    window.localStorage.removeItem("futures-academy-guest-v2-fresh");
     setGuestSnapshot(null);
     setShowGuestImport(false);
   }
 
   function discardGuestProgress() {
     if (typeof window !== "undefined") {
-      window.localStorage.removeItem("futures-academy-guest");
+      window.localStorage.removeItem("futures-academy-guest-v2-fresh");
     }
     setGuestSnapshot(null);
     setShowGuestImport(false);
@@ -978,6 +990,17 @@ export default function FuturesAcademy() {
 
   function enterGuestMode() {
     setIdentityMode("guest");
+    setXp(0);
+    setStreak(0);
+    setPoints(0);
+    setReputation(0);
+    setTotalAttempts(0);
+    setCorrectAttempts(0);
+    setCombo(0);
+    setBestCombo(0);
+    setCorrectWaits(0);
+    setFakeoutsFound(0);
+    setMistakes([]);
     setSelectedAccountId("starter");
     setPaperBalance(10000);
     setPeakBalance(10000);
@@ -987,6 +1010,17 @@ export default function FuturesAcademy() {
 
   function enterDemoMode() {
     setIdentityMode("demo");
+    setXp(0);
+    setStreak(0);
+    setPoints(0);
+    setReputation(0);
+    setTotalAttempts(0);
+    setCorrectAttempts(0);
+    setCombo(0);
+    setBestCombo(0);
+    setCorrectWaits(0);
+    setFakeoutsFound(0);
+    setMistakes([]);
     setSelectedAccountId("starter");
     setPaperBalance(10000);
     setPeakBalance(10000);
