@@ -2387,7 +2387,10 @@ export default function FuturesAcademy() {
               const active = index === currentRankIndex;
               return (
                 <div className={`rank-node ${unlocked ? "unlocked" : ""} ${active ? "active" : ""}`} key={rank.name}>
-                  <div className="rank-medal">{rank.icon}</div>
+                  <div className={`rank-medal career-rank-emblem rank-emblem-${index + 1}`}>
+                    <AcademyIcon name="rank" size={30} framed />
+                    <span>{rank.icon}</span>
+                  </div>
                   <div><strong>{rank.name}</strong><span>{rank.min.toLocaleString()} XP · {rank.reputation.toLocaleString()} reputation</span></div>
                   <b>{active ? "CURRENT" : unlocked ? "UNLOCKED" : "LOCKED"}</b>
                 </div>
@@ -2899,8 +2902,14 @@ export default function FuturesAcademy() {
           <div><strong>Futures Academy</strong><span>v3 Academy RPG</span></div>
         </button>
         <div className="v1-status-strip">
-          <span className="v41-header-pill v41-pill-violet"><AcademyIcon name="reputation" size={16} /> {reputation.toLocaleString()}</span>
-          <span className="v41-header-pill v41-pill-cyan"><AcademyIcon name="points" size={16} /> {points.toLocaleString()}</span>
+          <span className="v41-header-pill v41-pill-violet" title="Reputation">
+            <AcademyIcon name="reputation" size={18} framed />
+            <b>{reputation.toLocaleString()}</b>
+          </span>
+          <span className="v41-header-pill v41-pill-cyan" title="Academy Points">
+            <AcademyIcon name="points" size={18} framed />
+            <b>{points.toLocaleString()}</b>
+          </span>
           <span>LVL {level}</span>
           <span>{currentRank.name}</span>
           <RankEmblem level={level} label={currentRank.name} compact />

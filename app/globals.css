@@ -4760,3 +4760,185 @@ body {
     height: 38px !important;
   }
 }
+
+
+/* Futures Academy v4.2 — animated emblems and header icon fix */
+.v41-header-pill {
+  min-height: 34px;
+  padding: 4px 9px 4px 4px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 7px !important;
+  overflow: visible !important;
+}
+
+.v41-header-pill .academy-icon-shell {
+  width: 28px !important;
+  height: 28px !important;
+  min-width: 28px !important;
+  padding: 6px !important;
+  display: inline-grid !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  color: var(--icon-main) !important;
+  filter:
+    drop-shadow(0 0 5px var(--icon-main))
+    drop-shadow(0 0 10px var(--icon-soft)) !important;
+}
+
+.v41-header-pill .academy-icon-shell svg {
+  width: 100% !important;
+  height: 100% !important;
+  display: block !important;
+  stroke: currentColor !important;
+  opacity: 1 !important;
+}
+
+.v41-header-pill b {
+  color: #eaf4ff;
+  font-size: .69rem;
+}
+
+.v41-pill-violet .academy-icon-shell {
+  --icon-main: #b65cff;
+  --icon-soft: rgba(182, 92, 255, .30);
+}
+
+.v41-pill-cyan .academy-icon-shell {
+  --icon-main: #00dfff;
+  --icon-soft: rgba(0, 223, 255, .28);
+}
+
+.v3-sidebar button:hover .academy-icon-framed,
+.v3-sidebar button.active .academy-icon-framed,
+.v3-mobile-dock button.active .academy-icon-framed {
+  animation: navIconEnergy 1.8s ease-in-out infinite;
+}
+
+.v3-sidebar button:nth-child(2n) .academy-icon-framed {
+  animation-delay: -.45s;
+}
+
+.v3-sidebar button:nth-child(3n) .academy-icon-framed {
+  animation-delay: -.9s;
+}
+
+.career-rank-emblem {
+  width: 50px !important;
+  height: 54px !important;
+  position: relative;
+  overflow: visible !important;
+  border: 0 !important;
+  background: transparent !important;
+}
+
+.career-rank-emblem .academy-icon-shell {
+  position: absolute;
+  inset: 2px;
+  width: 46px !important;
+  height: 50px !important;
+  color: #59667a;
+  opacity: .58;
+}
+
+.career-rank-emblem > span {
+  position: relative;
+  z-index: 4;
+  color: #afbdd0;
+  font-size: .71rem;
+  font-weight: 900;
+  text-shadow: 0 0 8px currentColor;
+}
+
+.rank-node.unlocked .career-rank-emblem .academy-icon-shell {
+  color: #4f9dff;
+  opacity: 1;
+}
+
+.rank-node.active .career-rank-emblem .academy-icon-shell {
+  color: #b24dff;
+  animation:
+    rankShieldPulse 2.2s ease-in-out infinite,
+    rankShieldFloat 4s ease-in-out infinite;
+}
+
+.rank-node.active .career-rank-emblem > span {
+  color: #ffffff;
+  font-size: .82rem;
+}
+
+.rank-node.active {
+  border-color: rgba(170, 72, 255, .72) !important;
+  box-shadow:
+    0 0 0 1px rgba(159, 62, 255, .14),
+    0 0 26px rgba(121, 48, 255, .13);
+}
+
+.handbook-card > div:first-child,
+.reward-grid > div > span,
+.program-icon,
+.cc-action-icon,
+.metric-icon,
+.achievement-icon {
+  animation: tabIconFloat 4s ease-in-out infinite;
+  filter: drop-shadow(0 0 8px rgba(88, 154, 255, .22));
+}
+
+.handbook-card:nth-child(2n) > div:first-child,
+.reward-grid > div:nth-child(2n) > span,
+.program-card:nth-child(2n) .program-icon {
+  animation-delay: -1.2s;
+}
+
+.handbook-card:nth-child(3n) > div:first-child,
+.reward-grid > div:nth-child(3n) > span,
+.program-card:nth-child(3n) .program-icon {
+  animation-delay: -2.4s;
+}
+
+@keyframes navIconEnergy {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+    filter: drop-shadow(0 0 5px var(--icon-main));
+  }
+  50% {
+    transform: translateY(-2px) scale(1.06);
+    filter:
+      drop-shadow(0 0 7px var(--icon-main))
+      drop-shadow(0 0 15px var(--icon-soft));
+  }
+}
+
+@keyframes rankShieldPulse {
+  0%, 100% {
+    filter: drop-shadow(0 0 5px #9e4cff);
+  }
+  50% {
+    filter:
+      drop-shadow(0 0 9px #c167ff)
+      drop-shadow(0 0 19px rgba(79, 85, 255, .60));
+  }
+}
+
+@keyframes rankShieldFloat {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-3px) rotate(1deg); }
+}
+
+@keyframes tabIconFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+@media(prefers-reduced-motion: reduce) {
+  .academy-icon-framed,
+  .career-rank-emblem .academy-icon-shell,
+  .handbook-card > div:first-child,
+  .reward-grid > div > span,
+  .program-icon,
+  .cc-action-icon,
+  .metric-icon,
+  .achievement-icon {
+    animation: none !important;
+  }
+}

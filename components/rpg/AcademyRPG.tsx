@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import styles from "./AcademyRPG.module.css";
+import { AcademyIcon } from "@/components/icons/AcademyIcon";
 
 type TraderClassId =
   | "price_action"
@@ -27,44 +28,231 @@ const traderClasses = [
   {
     id: "price_action" as TraderClassId,
     icon: "🕯️",
+    iconName: "pattern",
+    tone: "cyan",
     name: "Price Action Specialist",
+    difficulty: 2,
     description:
-      "Focuses on candle closes, key levels, retests, and clean chart structure.",
-    perk: "+10% XP from Confirmation Lab",
+      "Masters candle closes, structural breaks, retests, and reactions around key levels.",
+    perks: [
+      "+10% XP from Confirmation Lab",
+      "+5% Pattern Recognition rewards",
+      "Exclusive Price Action quests",
+      "Retest Specialist profile badge"
+    ],
     requiredLevel: 1,
     requiredReputation: 0
   },
   {
     id: "risk_manager" as TraderClassId,
     icon: "🛡️",
+    iconName: "risk",
+    tone: "cyan",
     name: "Risk Manager",
+    difficulty: 3,
     description:
-      "Specializes in drawdown protection, consistency, and disciplined account survival.",
-    perk: "+1 Reputation for correct Wait decisions",
-    requiredLevel: 5,
-    requiredReputation: 500
+      "Builds account survival through drawdown control, consistency, and planned risk.",
+    perks: [
+      "+2 Reputation for correct Wait decisions",
+      "+10% XP from risk lessons",
+      "Drawdown Defender questline",
+      "Risk Manager title unlock"
+    ],
+    requiredLevel: 8,
+    requiredReputation: 1200
   },
   {
-    id: "breakout_hunter" as TraderClassId,
+    id: "pattern_hunter" as TraderClassId,
+    icon: "〽️",
+    iconName: "pattern",
+    tone: "violet",
+    name: "Pattern Hunter",
+    difficulty: 4,
+    description:
+      "Specializes in recognizing clean setups, failed structures, and repeating formations.",
+    perks: [
+      "+15% XP from Pattern Lab",
+      "Advanced formation scenarios",
+      "Pattern Hunter emblem",
+      "+5% daily quest rewards"
+    ],
+    requiredLevel: 14,
+    requiredReputation: 3500
+  },
+  {
+    id: "breakout_trader" as TraderClassId,
     icon: "⚡",
-    name: "Breakout Hunter",
+    iconName: "trade",
+    tone: "gold",
+    name: "Breakout Trader",
+    difficulty: 5,
     description:
-      "Trains fast recognition of valid breaks, traps, momentum, and failed continuation.",
-    perk: "+15% XP in Fakeout Arena",
-    requiredLevel: 10,
-    requiredReputation: 1500
+      "Trains momentum confirmation, expansion entries, fakeout defense, and continuation.",
+    perks: [
+      "+20% XP in Fakeout Arena",
+      "Momentum challenge series",
+      "Breakout chart atmosphere",
+      "+10% Reputation from exams"
+    ],
+    requiredLevel: 20,
+    requiredReputation: 7000
   },
   {
-    id: "patient_trader" as TraderClassId,
-    icon: "⏳",
-    name: "Patient Trader",
+    id: "swing_strategist" as TraderClassId,
+    icon: "🌿",
+    iconName: "career",
+    tone: "green",
+    name: "Swing Strategist",
+    difficulty: 5,
     description:
-      "Rewards selective execution, no-trade recognition, and confirmation before entry.",
-    perk: "Daily streak protection once per week",
-    requiredLevel: 15,
-    requiredReputation: 3000
+      "Focuses on higher-timeframe context, patient entries, and extended reward targets.",
+    perks: [
+      "+15% XP from trend scenarios",
+      "Higher-timeframe Handbook track",
+      "Swing Strategist title",
+      "One weekly streak shield"
+    ],
+    requiredLevel: 27,
+    requiredReputation: 12000
+  },
+  {
+    id: "scalper_elite" as TraderClassId,
+    icon: "🔻",
+    iconName: "trade",
+    tone: "red",
+    name: "Scalper Elite",
+    difficulty: 7,
+    description:
+      "Demands fast execution, precise stops, high accuracy, and strict overtrading control.",
+    perks: [
+      "Elite rapid-decision scenarios",
+      "+20% XP with 80%+ accuracy",
+      "Scalper Elite frame",
+      "Precision Execution quests",
+      "Reduced mistake penalty once daily"
+    ],
+    requiredLevel: 35,
+    requiredReputation: 22000
+  },
+  {
+    id: "trend_follower" as TraderClassId,
+    icon: "📈",
+    iconName: "statistics",
+    tone: "blue",
+    name: "Trend Follower",
+    difficulty: 6,
+    description:
+      "Studies continuation, pullbacks, trend health, and when momentum has actually failed.",
+    perks: [
+      "+20% XP from trend drills",
+      "Trend Continuation exam",
+      "Dynamic chart theme",
+      "+10 points on perfect sessions",
+      "Trend Follower badge"
+    ],
+    requiredLevel: 42,
+    requiredReputation: 35000
+  },
+  {
+    id: "capital_protector" as TraderClassId,
+    icon: "🏅",
+    iconName: "evaluation",
+    tone: "gold",
+    name: "Capital Protector",
+    difficulty: 8,
+    description:
+      "An advanced account-preservation path built around consistency and evaluation longevity.",
+    perks: [
+      "+25% Reputation from clean evaluation days",
+      "Capital Protection questline",
+      "Legendary shield emblem",
+      "Evaluation recovery lesson",
+      "Exclusive gold account frame"
+    ],
+    requiredLevel: 50,
+    requiredReputation: 55000
+  },
+  {
+    id: "psychology_master" as TraderClassId,
+    icon: "🧠",
+    iconName: "psychology",
+    tone: "violet",
+    name: "Psychology Master",
+    difficulty: 8,
+    description:
+      "Develops emotional control, patience, recovery, and disciplined decision consistency.",
+    perks: [
+      "+25% XP from psychology lessons",
+      "Tilt Recovery challenge",
+      "Two monthly streak shields",
+      "Psychology Master aura",
+      "+15% Wait-decision Reputation"
+    ],
+    requiredLevel: 60,
+    requiredReputation: 80000
+  },
+  {
+    id: "volatility_specialist" as TraderClassId,
+    icon: "〽",
+    iconName: "streak",
+    tone: "purple",
+    name: "Volatility Specialist",
+    difficulty: 9,
+    description:
+      "Handles rapid expansion, shifting ranges, false momentum, and unstable market structure.",
+    perks: [
+      "Extreme-volatility scenario pool",
+      "+30% XP from Master difficulty",
+      "Volatility Specialist title",
+      "Animated violet profile effect",
+      "Exclusive seasonal missions",
+      "+15% exam Reputation"
+    ],
+    requiredLevel: 72,
+    requiredReputation: 120000
+  },
+  {
+    id: "news_analyst" as TraderClassId,
+    icon: "📰",
+    iconName: "handbook",
+    tone: "blue",
+    name: "News Analyst",
+    difficulty: 9,
+    description:
+      "Studies event risk, reaction behavior, volatility spikes, and when staying out is mandatory.",
+    perks: [
+      "Event-Risk Handbook branch",
+      "News Reaction simulator",
+      "+30% XP for correct no-trade choices",
+      "Analyst terminal theme",
+      "Economic-event quests",
+      "News Analyst badge"
+    ],
+    requiredLevel: 85,
+    requiredReputation: 165000
+  },
+  {
+    id: "algo_developer" as TraderClassId,
+    icon: "⚙️",
+    iconName: "settings",
+    tone: "cyan",
+    name: "Algo Developer",
+    difficulty: 10,
+    description:
+      "The endgame path for rule-based systems, data discipline, testing, and repeatable execution.",
+    perks: [
+      "Rule Builder training branch",
+      "Advanced statistics challenges",
+      "+35% XP from perfect rule adherence",
+      "Algo Developer interface theme",
+      "Eight exclusive class quests",
+      "Legendary animated profile emblem",
+      "Seasonal research rewards"
+    ],
+    requiredLevel: 100,
+    requiredReputation: 250000
   }
-];
+]
 
 const skillTracks: SkillTrack[] = [
   {
@@ -297,7 +485,9 @@ export default function AcademyRPG({
         </div>
 
         <div className={styles.identityCard}>
-          <div className={styles.classIcon}>{currentClass.icon}</div>
+          <div className={`${styles.classIcon} ${styles[`tone_${currentClass.tone}`]}`}>
+            <AcademyIcon name={currentClass.iconName as any} size={42} framed />
+          </div>
           <small>ACTIVE TRADER CLASS</small>
           <strong>{currentClass.name}</strong>
           <p>{currentClass.perk}</p>
@@ -359,16 +549,43 @@ export default function AcademyRPG({
                 key={traderClass.id}
               >
                 <div className={styles.classTop}>
-                  <div>{traderClass.icon}</div>
+                  <div className={`${styles.classEmblem} ${styles[`tone_${traderClass.tone}`]}`}>
+                    <AcademyIcon
+                      name={traderClass.iconName as any}
+                      size={30}
+                      framed
+                    />
+                  </div>
                   <span>
                     {eligible ? "ELIGIBLE" : "LOCKED"}
                   </span>
                 </div>
                 <h3>{traderClass.name}</h3>
                 <p>{traderClass.description}</p>
+                <div className={styles.difficulty}>
+                  <small>DIFFICULTY</small>
+                  <div>
+                    {Array.from({ length: 10 }).map((_, dot) => (
+                      <i
+                        key={dot}
+                        className={
+                          dot < traderClass.difficulty
+                            ? styles.difficultyActive
+                            : ""
+                        }
+                      />
+                    ))}
+                  </div>
+                  <strong>{traderClass.difficulty}/10</strong>
+                </div>
+
                 <div className={styles.perk}>
-                  <small>CLASS PERK</small>
-                  <strong>{traderClass.perk}</strong>
+                  <small>{traderClass.perks.length} CLASS PERKS</small>
+                  <ul>
+                    {traderClass.perks.map(perk => (
+                      <li key={perk}>✦ {perk}</li>
+                    ))}
+                  </ul>
                 </div>
                 <div className={styles.requirements}>
                   <span
