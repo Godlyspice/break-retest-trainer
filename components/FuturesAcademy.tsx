@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { hasSupabase, supabase } from "@/lib/supabase-browser";
 import OwnerDashboard from "@/components/admin/OwnerDashboard";
+import Marketplace from "@/components/marketplace/Marketplace";
+import { marketplaceCatalog, type MarketplaceItem } from "@/lib/marketplace";
 import AccountSelector from "@/components/evaluations/AccountSelector";
 import EvaluationHUD from "@/components/evaluations/EvaluationHUD";
 import PatternRecognition from "@/components/handbook/PatternRecognition";
@@ -83,16 +85,6 @@ const practiceModes = [
     callout: "A skipped bad trade is a successful decision."
   }
 ];
-
-const shopCatalog = [
-  { id: "icon_bull", type: "Account icon", name: "Bull Crest", price: 450, icon: "🐂" },
-  { id: "icon_bear", type: "Account icon", name: "Bear Crest", price: 450, icon: "🐻" },
-  { id: "badge_risk", type: "Profile badge", name: "Risk Manager", price: 700, icon: "🛡️" },
-  { id: "badge_patience", type: "Profile badge", name: "Patience Pro", price: 700, icon: "⏳" },
-  { id: "avatar_glow", type: "Animated profile", name: "Neon Pulse", price: 1500, icon: "✨" },
-  { id: "background_floor", type: "Profile background", name: "Trading Floor", price: 1200, icon: "🏙️" }
-];
-
 
 
 
@@ -728,6 +720,9 @@ export default function FuturesAcademy() {
   const [paperBalance, setPaperBalance] = useState(10000);
   const [peakBalance, setPeakBalance] = useState(10000);
   const [ownedShopItems, setOwnedShopItems] = useState<string[]>([]);
+  const [equippedShopItems, setEquippedShopItems] = useState<
+    Partial<Record<MarketplaceItem["slot"], string>>
+  >({});
   const [shopMessage, setShopMessage] = useState("");
 
   const {
@@ -911,6 +906,32 @@ export default function FuturesAcademy() {
       peakBalance
     }));
   }, [identityMode, xp, points, reputation, paperBalance, peakBalance]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const savedOwned = window.localStorage.getItem(
+        "futures-academy-marketplace-owned"
+      );
+      const savedEquipped = window.localStorage.getItem(
+        "futures-academy-marketplace-equipped"
+      );
+      if (savedOwned) setOwnedShopItems(JSON.parse(savedOwned));
+      if (savedEquipped) setEquippedShopItems(JSON.parse(savedEquipped));
+    } catch {}
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem(
+      "futures-academy-marketplace-owned",
+      JSON.stringify(ownedShopItems)
+    );
+    window.localStorage.setItem(
+      "futures-academy-marketplace-equipped",
+      JSON.stringify(equippedShopItems)
+    );
+  }, [ownedShopItems, equippedShopItems]);
 
   useEffect(() => {
     if (!replayRunning) return;
@@ -1279,16 +1300,45 @@ export default function FuturesAcademy() {
     setShopMessage(`${selectedAccount.name} reset successfully.`);
   }
 
-  function buyShopItem(itemId: string) {
-    const item = shopCatalog.find(product => product.id === itemId);
-    if (!item || ownedShopItems.includes(itemId)) return;
-    if (points < item.price) {
-      setShopMessage(`You need ${item.price - points} more points for ${item.name}.`);
+  function buyShopItem(item: MarketplaceItem) {
+    if (ownedShopItems.includes(item.id)) return;
+
+    if (item.premiumOnly && !profilePremium) {
+      setShopMessage(`${item.name} requires Premium.`);
       return;
     }
+
+    if (item.minLevel && level < item.minLevel) {
+      setShopMessage(`${item.name} requires Level ${item.minLevel}.`);
+      return;
+    }
+
+    if (item.minReputation && reputation < item.minReputation) {
+      setShopMessage(
+        `${item.name} requires ${item.minReputation.toLocaleString()} reputation.`
+      );
+      return;
+    }
+
+    if (points < item.price) {
+      setShopMessage(
+        `You need ${(item.price - points).toLocaleString()} more points for ${item.name}.`
+      );
+      return;
+    }
+
     setPoints(value => value - item.price);
-    setOwnedShopItems(current => [...current, itemId]);
+    setOwnedShopItems(current => [...current, item.id]);
     setShopMessage(`${item.name} unlocked.`);
+  }
+
+  function equipShopItem(item: MarketplaceItem) {
+    if (!ownedShopItems.includes(item.id)) return;
+    setEquippedShopItems(current => ({
+      ...current,
+      [item.slot]: item.id
+    }));
+    setShopMessage(`${item.name} equipped.`);
   }
 
   const content = useMemo(() => {
@@ -2039,34 +2089,37 @@ export default function FuturesAcademy() {
             <div className="locked-feature-card">
               <div>🛍️</div>
               <h1>Marketplace requires a free account</h1>
-              <p>Create an account to save purchases, use cosmetics, and sync inventory across devices.</p>
-              <button type="button" onClick={() => { setIdentityMode("account"); setTab("profile"); }}>Create free account</button>
+              <p>
+                Create an account to save purchases, equip cosmetics,
+                and sync inventory across devices.
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setIdentityMode("account");
+                  setTab("profile");
+                }}
+              >
+                Create free account
+              </button>
             </div>
           </section>
         );
       }
+
       return (
         <section className="page-section">
-          <div className="section-heading">
-            <div><span className="eyebrow">Rewards</span><h2>Academy points shop</h2></div>
-            <div className="points-pill">🪙 {points.toLocaleString()} points</div>
-          </div>
-          {shopMessage && <div className="shop-message">{shopMessage}</div>}
-          <div className="shop-grid">
-            {shopCatalog.map(item => {
-              const owned = ownedShopItems.includes(item.id);
-              return (
-                <article className={`shop-card ${owned ? "owned" : ""}`} key={item.id}>
-                  <div className="shop-icon">{item.icon}</div>
-                  <span>{item.type}</span>
-                  <h3>{item.name}</h3>
-                  <button type="button" disabled={owned} onClick={() => buyShopItem(item.id)}>
-                    {owned ? "Owned" : `Buy · ${item.price} pts`}
-                  </button>
-                </article>
-              );
-            })}
-          </div>
+          <Marketplace
+            points={points}
+            level={level}
+            reputation={reputation}
+            premium={profilePremium}
+            ownedItems={ownedShopItems}
+            equippedItems={equippedShopItems}
+            message={shopMessage}
+            onBuy={buyShopItem}
+            onEquip={equipShopItem}
+          />
         </section>
       );
     }
@@ -2176,7 +2229,7 @@ export default function FuturesAcademy() {
         authUserId={authUserId}
       />
     );
-  }, [tab, scenario, dailyScenario, choice, reveal, xp, streak, role, premium, email, password, authMessage, question, aiAnswer, aiLoading, canAdmin, level, practiceMode, accuracy, mistakes, selectedMistake, unlockedAchievements, soundEnabled, reducedMotion, showCelebration, totalAttempts, entryPrice, stopPrice, targetPrice, planFeedback, visibleCandles, replayRunning, replaySpeed, activePlacement, contracts, orderType, liveRiskPoints, liveRewardPoints, liveRR, estimatedLoss, estimatedProfit, lastPlacedLevel, combo, bestCombo, currentRankIndex, currentRank, nextRank, rankProgress, currentMode, dailyProgress, points, selectedAccountId, selectedAccount, paperBalance, peakBalance, trailingDrawdownFloor, drawdownRemaining, accountFailed, ownedShopItems, shopMessage, reputation, membershipLabel, profileName, profileRole, profilePremium, authUserId, showGuestImport, guestSnapshot, activeEvaluation, activeAccount, applyTradeResult]);
+  }, [tab, scenario, dailyScenario, choice, reveal, xp, streak, role, premium, email, password, authMessage, question, aiAnswer, aiLoading, canAdmin, level, practiceMode, accuracy, mistakes, selectedMistake, unlockedAchievements, soundEnabled, reducedMotion, showCelebration, totalAttempts, entryPrice, stopPrice, targetPrice, planFeedback, visibleCandles, replayRunning, replaySpeed, activePlacement, contracts, orderType, liveRiskPoints, liveRewardPoints, liveRR, estimatedLoss, estimatedProfit, lastPlacedLevel, combo, bestCombo, currentRankIndex, currentRank, nextRank, rankProgress, currentMode, dailyProgress, points, selectedAccountId, selectedAccount, paperBalance, peakBalance, trailingDrawdownFloor, drawdownRemaining, accountFailed, ownedShopItems, equippedShopItems, shopMessage, reputation, membershipLabel, profileName, profileRole, profilePremium, authUserId, showGuestImport, guestSnapshot, activeEvaluation, activeAccount, applyTradeResult]);
 
   if (identityMode === "landing") {
     return (

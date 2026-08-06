@@ -1,0 +1,294 @@
+.marketplace {
+  max-width: 1320px;
+  margin: 0 auto;
+}
+
+.hero {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: flex-start;
+  margin-bottom: 13px;
+}
+
+.hero > div:first-child > span {
+  color: #67aff5;
+  font-size: .68rem;
+  letter-spacing: .13em;
+  font-weight: 900;
+}
+
+.hero h2 {
+  margin: 4px 0;
+}
+
+.hero p {
+  max-width: 760px;
+  margin: 0;
+  color: #8796a2;
+}
+
+.balance {
+  padding: 10px 13px;
+  border: 1px solid #69552c;
+  border-radius: 999px;
+  background: #2b2313;
+  color: #f1cf79;
+  white-space: nowrap;
+  font-weight: 850;
+}
+
+.message {
+  margin-bottom: 10px;
+  padding: 10px 12px;
+  border: 1px solid #35536a;
+  border-radius: 7px;
+  background: #102235;
+  color: #bde0fb;
+}
+
+.controls {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) 180px;
+  gap: 8px;
+  margin-bottom: 9px;
+}
+
+.search {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 7px;
+  align-items: center;
+  padding: 8px 11px;
+  border: 1px solid #2e4352;
+  border-radius: 7px;
+  background: #0d151c;
+}
+
+.search input {
+  border: 0;
+  background: transparent;
+  min-width: 0;
+}
+
+.controls select {
+  border: 1px solid #2e4352;
+  border-radius: 7px;
+  background: #101a22;
+  color: white;
+}
+
+.categories {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 9px;
+}
+
+.categories button {
+  padding: 7px 9px;
+  border: 1px solid #2c4150;
+  border-radius: 999px;
+  background: #101920;
+  color: #8fa0ac;
+  font-size: .68rem;
+}
+
+.categories .activeCategory {
+  border-color: #448dcc;
+  background: #173550;
+  color: #c6e7ff;
+}
+
+.summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 10px;
+  color: #7d8d98;
+  font-size: .7rem;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0,1fr));
+  gap: 9px;
+}
+
+.card {
+  min-width: 0;
+  padding: 13px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  border: 1px solid #293b48;
+  border-radius: 10px;
+  background:
+    linear-gradient(145deg,rgba(32,52,67,.32),rgba(11,18,24,.96)),
+    #101820;
+}
+
+.cardTop {
+  display: grid;
+  grid-template-columns: 40px minmax(0,1fr) auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.icon {
+  width: 39px;
+  height: 39px;
+  display: grid;
+  place-items: center;
+  border-radius: 9px;
+  background: #172735;
+  font-size: 1.2rem;
+}
+
+.cardTop span {
+  color: #738491;
+  font-size: .59rem;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+.cardTop h3 {
+  margin: 2px 0 0;
+  font-size: .88rem;
+}
+
+.cardTop b {
+  padding: 4px 6px;
+  border-radius: 999px;
+  font-size: .55rem;
+}
+
+.card > p {
+  min-height: 38px;
+  margin: 0;
+  color: #8d9aa5;
+  font-size: .69rem;
+  line-height: 1.4;
+}
+
+.meta {
+  min-height: 23px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.meta span {
+  padding: 3px 5px;
+  border: 1px solid #344856;
+  border-radius: 999px;
+  color: #9aabb7;
+  font-size: .57rem;
+}
+
+.card button {
+  width: 100%;
+  min-height: 39px;
+  margin-top: auto;
+  border-radius: 7px;
+  font-weight: 800;
+}
+
+.buyButton {
+  border: 1px solid #327fba;
+  background: #17466b;
+  color: #c7e8ff;
+}
+
+.equipButton {
+  border: 1px solid #477855;
+  background: #173923;
+  color: #a8e4b8;
+}
+
+.equippedButton {
+  border: 1px solid #486d5a;
+  background: #102b1d;
+  color: #7fd5a0;
+}
+
+.lockedButton {
+  border: 1px solid #3a4146;
+  background: #171c20;
+  color: #6f7a82;
+}
+
+.owned {
+  box-shadow: inset 0 0 0 1px rgba(78,174,121,.18);
+}
+
+.common .cardTop b {
+  background: #27313a;
+  color: #c3cbd1;
+}
+
+.uncommon .cardTop b {
+  background: #163326;
+  color: #8be0b0;
+}
+
+.rare .cardTop b {
+  background: #152f48;
+  color: #8acbff;
+}
+
+.epic {
+  border-color: #55427c;
+}
+
+.epic .cardTop b {
+  background: #2d2148;
+  color: #c8a6ff;
+}
+
+.legendary {
+  border-color: #76602c;
+  background:
+    radial-gradient(circle at 100% 0,rgba(232,185,62,.09),transparent 35%),
+    #101820;
+}
+
+.legendary .cardTop b {
+  background: #352a12;
+  color: #f2d071;
+}
+
+.empty {
+  padding: 35px;
+  border: 1px dashed #364b59;
+  border-radius: 10px;
+  color: #7f8e99;
+  text-align: center;
+}
+
+@media(max-width:1100px) {
+  .grid {
+    grid-template-columns: repeat(3,minmax(0,1fr));
+  }
+}
+
+@media(max-width:800px) {
+  .grid {
+    grid-template-columns: repeat(2,minmax(0,1fr));
+  }
+}
+
+@media(max-width:560px) {
+  .hero {
+    display: grid;
+  }
+
+  .balance {
+    width: fit-content;
+  }
+
+  .controls,
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
