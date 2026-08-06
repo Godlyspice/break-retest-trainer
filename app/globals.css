@@ -2028,3 +2028,115 @@ footer { padding: 8px 12px; text-align: center; color: var(--muted); border-top:
   .guest-prompt { grid-template-columns: 1fr 1fr; }
   .guest-prompt span { grid-column: 1 / -1; }
 }
+
+
+/* Authentication synchronization v1.1.1 */
+.profile-card.profile-owner {
+  border-color: #8a6f2f;
+  background:
+    radial-gradient(circle at 50% 0,rgba(245,200,91,.12),transparent 35%),
+    #101820;
+  box-shadow: 0 0 28px rgba(230,183,70,.08);
+}
+.owner-badge {
+  color: #ffe195 !important;
+  border-color: #8a6f2f !important;
+  background: #332812 !important;
+}
+.signed-in-card {
+  min-height: 180px;
+  padding: 18px;
+  display: grid;
+  grid-template-columns: 58px minmax(0,1fr) auto;
+  gap: 14px;
+  align-items: center;
+  border: 1px solid #2d465a;
+  border-radius: 10px;
+  background:
+    linear-gradient(125deg,rgba(23,43,59,.82),rgba(12,19,26,.96));
+}
+.signed-in-icon {
+  width: 54px;
+  height: 54px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #1c3852;
+  color: #ffdb77;
+  font-size: 1.65rem;
+}
+.signed-in-copy {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+.signed-in-copy > span,
+.signed-in-copy > small {
+  color: var(--muted);
+}
+.signed-in-copy > strong {
+  font-size: 1.15rem;
+}
+.signed-in-copy > small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.signed-in-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 7px;
+}
+.signed-in-tags b {
+  padding: 5px 7px;
+  border: 1px solid #35526a;
+  border-radius: 999px;
+  background: #142331;
+  color: #a9d5ff;
+  font-size: .66rem;
+}
+.sign-out-button {
+  padding: 9px 12px;
+  border: 1px solid #74404a;
+  border-radius: 7px;
+  background: #321820;
+  color: #ffacb8;
+}
+.guest-import-card {
+  max-width: 520px;
+}
+.guest-import-stats {
+  display: grid;
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  gap: 7px;
+  margin: 16px 0 4px;
+}
+.guest-import-stats span {
+  padding: 9px;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  border: 1px solid #2b4051;
+  border-radius: 6px;
+  background: #0c141b;
+  color: var(--muted);
+  font-size: .76rem;
+}
+.guest-import-stats strong {
+  color: white;
+}
+@media(max-width:650px) {
+  .signed-in-card {
+    grid-template-columns: 50px 1fr;
+  }
+  .sign-out-button {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+}
+
+.profile-membership {
+  margin-top: -3px;
+  color: var(--muted);
+  font-size: .72rem;
+}

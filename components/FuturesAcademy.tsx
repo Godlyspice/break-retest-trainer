@@ -762,6 +762,13 @@ export default function FuturesAcademy() {
   const [tourStep, setTourStep] = useState(0);
   const [guestPrompt, setGuestPrompt] = useState("");
   const [handbookQuery, setHandbookQuery] = useState("");
+  const [authUserId, setAuthUserId] = useState<string | null>(null);
+  const [profileName, setProfileName] = useState("Demo Trader");
+  const [profileRole, setProfileRole] = useState<"user" | "moderator" | "admin" | "owner">("user");
+  const [profilePremium, setProfilePremium] = useState(false);
+  const [authReady, setAuthReady] = useState(false);
+  const [showGuestImport, setShowGuestImport] = useState(false);
+  const [guestSnapshot, setGuestSnapshot] = useState<any>(null);
   const [scenario, setScenario] = useState(() => generateScenario());
   const [dailyScenario] = useState(() => generateScenario(true));
   const [choice, setChoice] = useState<"buy" | "sell" | "wait" | null>(null);
@@ -824,6 +831,14 @@ export default function FuturesAcademy() {
     item.id === "streak_7" ? streak >= item.requirement :
     correctWaits >= item.requirement
   );
+  const membershipLabel =
+    profileRole === "owner" ? "👑 Academy Founder" :
+    profileRole === "admin" ? "🛡️ Administrator" :
+    profileRole === "moderator" ? "🧭 Moderator" :
+    identityMode === "guest" ? "👤 Guest Trader" :
+    identityMode === "demo" ? "🎮 Demo" :
+    "⭐ Academy Member";
+
   const selectedAccount = paperAccounts.find(account => account.id === selectedAccountId) || paperAccounts[1];
   const trailingDrawdownFloor = Math.max(
     selectedAccount.balance - selectedAccount.maxDrawdown,
@@ -843,14 +858,82 @@ export default function FuturesAcademy() {
   const canAdmin = role === "owner" || role === "admin";
 
   useEffect(() => {
-    if (!supabase) return;
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session?.user.email) setEmail(data.session.user.email);
+    if (!supabase) {
+      setAuthReady(true);
+      return;
+    }
+
+    let mounted = true;
+
+    const loadAuthenticatedProfile = async (session: any) => {
+      if (!mounted) return;
+
+      if (!session?.user) {
+        setAuthUserId(null);
+        setProfileName("Demo Trader");
+        setProfileRole("user");
+        setProfilePremium(false);
+        setRole("user");
+        setPremium(false);
+        setAuthReady(true);
+        return;
+      }
+
+      const user = session.user;
+      setAuthUserId(user.id);
+      setEmail(user.email || "");
+      setIdentityMode("account");
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("display_name, role, premium, xp, streak")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if (!mounted) return;
+
+      setProfileName(
+        profile?.display_name ||
+        user.user_metadata?.display_name ||
+        user.email?.split("@")[0] ||
+        "Academy Member"
+      );
+      const resolvedRole = (profile?.role || "user") as "user" | "moderator" | "admin" | "owner";
+      const resolvedPremium = Boolean(profile?.premium);
+      setProfileRole(resolvedRole);
+      setProfilePremium(resolvedPremium);
+      setRole(resolvedRole);
+      setPremium(resolvedPremium);
+
+      if (typeof profile?.xp === "number") setXp(profile.xp);
+      if (typeof profile?.streak === "number") setStreak(profile.streak);
+
+      try {
+        const savedGuest = window.localStorage.getItem("futures-academy-guest");
+        if (savedGuest) {
+          const parsed = JSON.parse(savedGuest);
+          setGuestSnapshot(parsed);
+          setShowGuestImport(true);
+        }
+      } catch {}
+
+      setAuthReady(true);
+    };
+
+    supabase.auth.getSession().then(({ data }) => loadAuthenticatedProfile(data.session));
+
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      loadAuthenticatedProfile(session);
     });
+
+    return () => {
+      mounted = false;
+      listener.subscription.unsubscribe();
+    };
   }, []);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    if (typeof window === "undefined" || !authReady || authUserId) return;
     const saved = window.localStorage.getItem("futures-academy-guest");
     if (!saved) return;
     try {
@@ -865,7 +948,7 @@ export default function FuturesAcademy() {
         setSelectedAccountId("starter");
       }
     } catch {}
-  }, []);
+  }, [authReady, authUserId]);
 
   useEffect(() => {
     if (typeof window === "undefined" || identityMode !== "guest") return;
@@ -904,6 +987,54 @@ export default function FuturesAcademy() {
         : supabase.auth.signInWithPassword({ email, password });
     const { error } = await action;
     setAuthMessage(error ? error.message : mode === "signup" ? "Account created. Check your email if confirmation is enabled." : "Signed in.");
+  }
+
+  async function signOutAccount() {
+    if (!supabase) return;
+    await supabase.auth.signOut();
+    setAuthUserId(null);
+    setIdentityMode("landing");
+    setProfileName("Demo Trader");
+    setProfileRole("user");
+    setProfilePremium(false);
+    setRole("user");
+    setPremium(false);
+    setTab("home");
+  }
+
+  async function importGuestProgress() {
+    if (!guestSnapshot) {
+      setShowGuestImport(false);
+      return;
+    }
+
+    setXp(Math.max(xp, guestSnapshot.xp ?? 0));
+    setPoints(Math.max(points, guestSnapshot.points ?? 0));
+    setReputation(Math.max(reputation, guestSnapshot.reputation ?? 0));
+    setPaperBalance(Math.max(paperBalance, guestSnapshot.paperBalance ?? 0));
+    setPeakBalance(Math.max(peakBalance, guestSnapshot.peakBalance ?? 0));
+
+    if (supabase && authUserId) {
+      await supabase
+        .from("profiles")
+        .update({
+          xp: Math.max(xp, guestSnapshot.xp ?? 0),
+          streak
+        })
+        .eq("id", authUserId);
+    }
+
+    window.localStorage.removeItem("futures-academy-guest");
+    setGuestSnapshot(null);
+    setShowGuestImport(false);
+  }
+
+  function discardGuestProgress() {
+    if (typeof window !== "undefined") {
+      window.localStorage.removeItem("futures-academy-guest");
+    }
+    setGuestSnapshot(null);
+    setShowGuestImport(false);
   }
 
   function enterGuestMode() {
@@ -1982,25 +2113,53 @@ export default function FuturesAcademy() {
     if (tab === "profile") {
       return (
         <section className="page-section profile-grid">
-          <div className="profile-card">
-            <div className="avatar">DT</div>
-            <h2>Demo Trader</h2>
-            <span className="premium-badge">{premium ? "PREMIUM" : "FREE"}</span>
+          <div className={`profile-card ${profileRole === "owner" ? "profile-owner" : ""}`}>
+            <div className="avatar">
+              {profileName.split(/\s+/).map(part => part[0]).join("").slice(0,2).toUpperCase() || "FA"}
+            </div>
+            <h2>{profileName}</h2>
+            <span className={`premium-badge ${profileRole === "owner" ? "owner-badge" : ""}`}>
+              {profileRole === "owner" ? "👑 OWNER" : profilePremium ? "PREMIUM" : "FREE MEMBER"}
+            </span>
+            <small className="profile-membership">{membershipLabel}</small>
             <div className="profile-stats">
               <div><strong>{level}</strong><span>Level</span></div>
               <div><strong>{xp}</strong><span>Total XP</span></div>
-              <div><strong>{streak}</strong><span>Streak</span></div><div><strong>{accuracy}%</strong><span>Accuracy</span></div><div><strong>{mistakes.length}</strong><span>Mistakes saved</span></div>
+              <div><strong>{streak}</strong><span>Streak</span></div>
+              <div><strong>{accuracy}%</strong><span>Accuracy</span></div>
+              <div><strong>{mistakes.length}</strong><span>Mistakes saved</span></div>
             </div>
           </div>
           <div className="auth-card">
             <h2>Account access</h2>
-            <label>Email<input value={email} onChange={e => setEmail(e.target.value)} type="email" /></label>
-            <label>Password<input value={password} onChange={e => setPassword(e.target.value)} type="password" /></label>
-            <div className="auth-buttons">
-              <button className="primary" onClick={() => auth("signin")}>Sign in</button>
-              <button className="secondary" onClick={() => auth("signup")}>Create account</button>
-            </div>
-            <p className="muted">{authMessage || (hasSupabase ? "Supabase accounts are enabled." : "Demo mode: no database keys configured.")}</p>
+            {authUserId ? (
+              <div className="signed-in-card">
+                <div className="signed-in-icon">
+                  {profileRole === "owner" ? "👑" : profilePremium ? "⭐" : "✓"}
+                </div>
+                <div className="signed-in-copy">
+                  <span>Signed in as</span>
+                  <strong>{profileName}</strong>
+                  <small>{email}</small>
+                  <div className="signed-in-tags">
+                    <b>{membershipLabel}</b>
+                    {profilePremium && <b>Premium</b>}
+                    <b>Email verified</b>
+                  </div>
+                </div>
+                <button type="button" className="sign-out-button" onClick={signOutAccount}>Sign out</button>
+              </div>
+            ) : (
+              <>
+                <label>Email<input value={email} onChange={e => setEmail(e.target.value)} type="email" /></label>
+                <label>Password<input value={password} onChange={e => setPassword(e.target.value)} type="password" /></label>
+                <div className="auth-buttons">
+                  <button className="primary" onClick={() => auth("signin")}>Sign in</button>
+                  <button className="secondary" onClick={() => auth("signup")}>Create account</button>
+                </div>
+                <p className="muted">{authMessage || (hasSupabase ? "Supabase accounts are enabled." : "Demo mode: no database keys configured.")}</p>
+              </>
+            )}
           </div>
         </section>
       );
@@ -2083,7 +2242,7 @@ export default function FuturesAcademy() {
         )}
       </section>
     );
-  }, [tab, scenario, dailyScenario, choice, reveal, xp, streak, role, premium, email, password, authMessage, question, aiAnswer, aiLoading, users, canAdmin, level, practiceMode, accuracy, mistakes, selectedMistake, unlockedAchievements, soundEnabled, reducedMotion, showCelebration, totalAttempts, entryPrice, stopPrice, targetPrice, planFeedback, visibleCandles, replayRunning, replaySpeed, activePlacement, contracts, orderType, liveRiskPoints, liveRewardPoints, liveRR, estimatedLoss, estimatedProfit, lastPlacedLevel, combo, bestCombo, currentRankIndex, currentRank, nextRank, rankProgress, currentMode, dailyProgress, points, selectedAccountId, selectedAccount, paperBalance, peakBalance, trailingDrawdownFloor, drawdownRemaining, accountFailed, ownedShopItems, shopMessage, reputation]);
+  }, [tab, scenario, dailyScenario, choice, reveal, xp, streak, role, premium, email, password, authMessage, question, aiAnswer, aiLoading, users, canAdmin, level, practiceMode, accuracy, mistakes, selectedMistake, unlockedAchievements, soundEnabled, reducedMotion, showCelebration, totalAttempts, entryPrice, stopPrice, targetPrice, planFeedback, visibleCandles, replayRunning, replaySpeed, activePlacement, contracts, orderType, liveRiskPoints, liveRewardPoints, liveRR, estimatedLoss, estimatedProfit, lastPlacedLevel, combo, bestCombo, currentRankIndex, currentRank, nextRank, rankProgress, currentMode, dailyProgress, points, selectedAccountId, selectedAccount, paperBalance, peakBalance, trailingDrawdownFloor, drawdownRemaining, accountFailed, ownedShopItems, shopMessage, reputation, membershipLabel, profileName, profileRole, profilePremium, authUserId, showGuestImport, guestSnapshot]);
 
   if (identityMode === "landing") {
     return (
@@ -2118,7 +2277,7 @@ export default function FuturesAcademy() {
           <span>LVL {level}</span>
           <span>{currentRank.name}</span>
           <span>{selectedAccount.icon} ${paperBalance.toLocaleString(undefined,{maximumFractionDigits:0})}</span>
-          <span>{identityMode === "guest" ? "👤 Guest Trader" : identityMode === "demo" ? "🎮 Demo" : "⭐ Academy Member"}</span>
+          <span>{membershipLabel}</span>
         </div>
       </header>
       <div className="v1-layout">
@@ -2159,6 +2318,29 @@ export default function FuturesAcademy() {
         </aside>
         <section className="v1-content">{content}</section>
       </div>
+      {showGuestImport && authUserId && (
+        <div className="tour-overlay">
+          <section className="tour-card guest-import-card">
+            <span className="tour-step">GUEST PROGRESS FOUND</span>
+            <div className="tour-icon">💾</div>
+            <h2>Keep your guest progress?</h2>
+            <p>
+              We found guest progress on this device. Importing keeps the higher XP,
+              credits, reputation, and paper balance values.
+            </p>
+            <div className="guest-import-stats">
+              <span>XP <strong>{guestSnapshot?.xp ?? 0}</strong></span>
+              <span>Credits <strong>{guestSnapshot?.points ?? 0}</strong></span>
+              <span>Reputation <strong>{guestSnapshot?.reputation ?? 0}</strong></span>
+              <span>Balance <strong>${Number(guestSnapshot?.paperBalance ?? 0).toLocaleString()}</strong></span>
+            </div>
+            <div className="tour-actions">
+              <button type="button" className="secondary" onClick={discardGuestProgress}>Start fresh</button>
+              <button type="button" className="primary" onClick={importGuestProgress}>Import progress</button>
+            </div>
+          </section>
+        </div>
+      )}
       {showOnboarding && (
         <div className="tour-overlay">
           <section className="tour-card">

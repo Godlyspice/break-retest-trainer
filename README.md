@@ -329,3 +329,24 @@ This is the V1 foundation, not the final 1.0 public release. The purpose of this
 - AI Coach removed from the current navigation
 - Sticky paper-account HUD on desktop so balance and trailing drawdown stay visible
 - Guest conversion prompts for locked features
+
+
+# Futures Academy v1.1.1 — Authentication Sync
+
+- Authenticated Supabase sessions now override guest/demo identity everywhere
+- Profile card uses the real display name and dynamic initials
+- Owner accounts show an Academy Founder / Owner badge
+- Premium status comes from the Supabase profile
+- Login form is replaced with signed-in account details after authentication
+- Added a real Sign Out button
+- Guest local storage can no longer override an authenticated account
+- Added guest-progress import or discard prompt after signing in
+- Profile XP and streak load from Supabase
+- Email verification and membership status are shown clearly
+
+
+## v1.1.1 hotfix
+
+- Corrected the exact current profile-page component
+- Signed-in users now see account details instead of the email/password form
+- Owner and premium state now synchronize with the existing admin permission system
