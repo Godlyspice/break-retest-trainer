@@ -897,7 +897,9 @@ export default function FuturesAcademy() {
   const canAdmin = role === "owner" || role === "admin";
 
   useEffect(() => {
-    if (!supabase) {
+    const client = supabase;
+
+    if (!client) {
       setAuthReady(true);
       return;
     }
