@@ -700,3 +700,16 @@
     min-height: auto;
   }
 }
+.currentClassPerks{
+  margin:10px 0 0;
+  padding:0;
+  list-style:none;
+  display:grid;
+  gap:6px;
+}
+
+.currentClassPerks li{
+  color:#b9d5ff;
+  font-size:.7rem;
+  line-height:1.4;
+}
