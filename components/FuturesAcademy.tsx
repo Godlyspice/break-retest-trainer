@@ -12,9 +12,12 @@ import PatternRecognition from "@/components/handbook/PatternRecognition";
 import EmptyLeaderboard from "@/components/leaderboards/EmptyLeaderboard";
 import { careerRanks, evaluationAccounts } from "@/lib/evaluations";
 import { useEvaluation } from "@/hooks/useEvaluation";
+import AcademyRPG from "@/components/rpg/AcademyRPG";
+import { AcademyIcon } from "@/components/icons/AcademyIcon";
+import { RankEmblem } from "@/components/ui/NeonUI";
 
 type Role = "user" | "moderator" | "admin" | "owner";
-type Tab = "home" | "train" | "daily" | "career" | "accounts" | "exams" | "handbook" | "mistakes" | "achievements" | "trophies" | "leaderboard" | "balance" | "shop" | "stats" | "ai" | "profile" | "settings" | "admin";
+type Tab = "home" | "academy" | "train" | "daily" | "career" | "accounts" | "exams" | "handbook" | "mistakes" | "achievements" | "trophies" | "leaderboard" | "balance" | "shop" | "stats" | "ai" | "profile" | "settings" | "admin";
 type Candle = { open: number; high: number; low: number; close: number; volume: number };
 type Scenario = {
   id: string;
@@ -30,7 +33,7 @@ const achievementCatalog = [
   { id: "fakeout_finder", title: "Fakeout Finder", description: "Correctly identify 10 failed breaks.", icon: "↩", requirement: 10 },
   { id: "retest_rookie", title: "Retest Rookie", description: "Complete 25 scenarios.", icon: "R", requirement: 25 },
   { id: "retest_master", title: "Retest Master", description: "Complete 100 scenarios.", icon: "M", requirement: 100 },
-  { id: "streak_7", title: "Seven-Day Discipline", description: "Reach a 7-day challenge streak.", icon: "🔥", requirement: 7 },
+  { id: "streak_7", title: "Seven-Day Discipline", description: "Reach a 7-day challenge streak.", icon: "daily", requirement: 7 },
   { id: "patient_trader", title: "Patience Pays", description: "Choose Wait correctly 20 times.", icon: "⏳", requirement: 20 }
 ];
 
@@ -39,7 +42,7 @@ const practiceModes = [
     id: "mixed",
     label: "Main Simulator",
     short: "MIXED",
-    icon: "📈",
+    icon: "trade",
     difficulty: "Adaptive",
     reward: "40–100 XP",
     description: "Every break-and-retest situation is mixed together. No hints about what comes next.",
@@ -671,6 +674,7 @@ function Chart({
 
 export default function FuturesAcademy() {
   const [tab, setTab] = useState<Tab>("home");
+  const [mobileAcademyMenuOpen, setMobileAcademyMenuOpen] = useState(false);
   const [identityMode, setIdentityMode] = useState<"landing" | "guest" | "demo" | "account">("landing");
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [tourStep, setTourStep] = useState(0);
@@ -1439,104 +1443,506 @@ export default function FuturesAcademy() {
 
   const content = useMemo(() => {
     if (tab === "home") {
+      const commandBalance =
+        activeEvaluation?.currentBalance ?? paperBalance;
+      const commandStartingBalance =
+        activeEvaluation?.startingBalance ?? selectedAccount.balance;
+      const commandProfit =
+        commandBalance - commandStartingBalance;
+      const commandTargetProgress = activeAccount
+        ? Math.max(
+            0,
+            Math.min(
+              100,
+              (commandProfit / activeAccount.profitTarget) * 100
+            )
+          )
+        : 0;
+      const commandConsistency =
+        activeEvaluation &&
+        activeEvaluation.totalProfit > 0 &&
+        activeEvaluation.bestDayProfit > 0
+          ? (activeEvaluation.bestDayProfit /
+              activeEvaluation.totalProfit) *
+            100
+          : 0;
+
       return (
-        <section className="command-center">
-          <div className="hero-panel hero-illustrated">
-            <div className="hero-copy">
-              <span className="hero-kicker">TRADING COMMAND CENTER</span>
-              <h1>Welcome back, Trader.</h1>
-              <p>Master break-and-retest decisions through missions, replay, and focused review.</p>
-              <div className="hero-motto">🕯️ Read the candle. 🧠 Trust the setup. 🎯 Execute the plan.</div>
-              <div className="hero-actions">
-                <button className="launch-button" type="button" onClick={() => setTab("train")}>
-                  <span>▶</span>
-                  <div><strong>Continue simulator</strong><small>{currentMode.label} · MES replay</small></div>
+        <section className="command-center command-center-v220">
+          <div className="cc-hero">
+            <div className="cc-hero-grid" aria-hidden="true" />
+            <div className="cc-hero-glow cc-hero-glow-one" aria-hidden="true" />
+            <div className="cc-hero-glow cc-hero-glow-two" aria-hidden="true" />
+
+            <div className="cc-hero-copy">
+              <div className="cc-live-line">
+                <span className="cc-live-dot" />
+                <b>ACADEMY OPERATIONS ONLINE</b>
+                <em>{new Date().toLocaleDateString(undefined, {
+                  month: "short",
+                  day: "numeric"
+                })}</em>
+              </div>
+
+              <span className="hero-kicker">
+                FUTURES ACADEMY COMMAND CENTER
+              </span>
+
+              <h1>
+                Welcome back,
+                <span>{profileName || "Trader"}.</span>
+              </h1>
+
+              <p>
+                Build pattern recognition, protect your evaluation,
+                and advance through the Academy one disciplined
+                decision at a time.
+              </p>
+
+              <div className="cc-hero-actions">
+                <button
+                  className="cc-primary-launch"
+                  type="button"
+                  onClick={() => setTab("train")}
+                >
+                  <span className="cc-launch-icon">▶</span>
+                  <span>
+                    <strong>Continue simulator</strong>
+                    <small>
+                      {currentMode.label} · MES decision replay
+                    </small>
+                  </span>
+                  <b>OPEN</b>
                 </button>
-                <button className="ghost-launch" type="button" onClick={() => setTab("daily")}>Open daily mission</button>
+
+                <button
+                  className="cc-secondary-launch"
+                  type="button"
+                  onClick={() => setTab("daily")}
+                >
+                  <span>🔥</span>
+                  <span>
+                    <strong>Daily mission</strong>
+                    <small>{dailyProgress}/10 completed today</small>
+                  </span>
+                </button>
+
+                <button
+                  className="cc-icon-launch"
+                  type="button"
+                  onClick={() => setTab("handbook")}
+                  aria-label="Open handbook"
+                >
+                  <span>📘</span>
+                  <small>Handbook</small>
+                </button>
+              </div>
+
+              <div className="cc-principles">
+                <span>🕯 Read the candle</span>
+                <span>🧠 Confirm the setup</span>
+                <span>🛡 Protect the account</span>
               </div>
             </div>
-            <div className="rank-orbit">
-              <div className="rank-ring">
-                <span>{currentRank.icon}</span>
-                <strong>{currentRank.name}</strong>
-                <small>Career rank</small>
+
+            <div className="cc-rank-console">
+              <div className="cc-rank-orbit">
+                <div className="cc-orbit-ring cc-orbit-ring-one" />
+                <div className="cc-orbit-ring cc-orbit-ring-two" />
+                <div className="cc-rank-core">
+                  <span>{currentRank.icon}</span>
+                  <strong>{currentRank.name}</strong>
+                  <small>CAREER RANK</small>
+                </div>
               </div>
-              <div className="rank-progress"><i style={{ width: `${rankProgress}%` }} /></div>
-              <p>{nextRank ? `${Math.max(0, nextRank.min - xp).toLocaleString()} XP and ${Math.max(0, nextRank.reputation - reputation).toLocaleString()} reputation to ${nextRank.name}` : "Maximum rank reached"}</p>
+
+              <div className="cc-rank-readout">
+                <div>
+                  <span>Promotion readiness</span>
+                  <strong>{rankProgress}%</strong>
+                </div>
+                <i>
+                  <em style={{ width: `${rankProgress}%` }} />
+                </i>
+                <p>
+                  {nextRank
+                    ? `${Math.max(
+                        0,
+                        nextRank.min - xp
+                      ).toLocaleString()} XP · ${Math.max(
+                        0,
+                        nextRank.reputation - reputation
+                      ).toLocaleString()} reputation remaining`
+                    : "Maximum Academy rank reached"}
+                </p>
+              </div>
             </div>
+          </div>
+
+          <div className="cc-overview-grid">
+            <article className="cc-evaluation-overview">
+              <div className="cc-card-heading">
+                <div>
+                  <span className="cc-card-eyebrow">
+                    ACTIVE EVALUATION
+                  </span>
+                  <h2>
+                    {activeAccount?.name ||
+                      selectedAccount.name}
+                  </h2>
+                </div>
+                <b
+                  className={`cc-status-pill cc-status-${
+                    activeEvaluation?.status || "ready"
+                  }`}
+                >
+                  {(activeEvaluation?.status || "ready").toUpperCase()}
+                </b>
+              </div>
+
+              <div className="cc-balance-display">
+                <span>Current paper balance</span>
+                <strong>
+                  $
+                  {commandBalance.toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                  })}
+                </strong>
+                <em
+                  className={
+                    commandProfit >= 0
+                      ? "cc-profit-positive"
+                      : "cc-profit-negative"
+                  }
+                >
+                  {commandProfit >= 0 ? "+" : "-"}$
+                  {Math.abs(commandProfit).toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                  })}{" "}
+                  from start
+                </em>
+              </div>
+
+              <div className="cc-evaluation-meters">
+                <div>
+                  <div>
+                    <span>Profit target</span>
+                    <strong>
+                      {commandTargetProgress.toFixed(0)}%
+                    </strong>
+                  </div>
+                  <i>
+                    <em
+                      style={{
+                        width: `${commandTargetProgress}%`
+                      }}
+                    />
+                  </i>
+                  <small>
+                    $
+                    {Math.max(
+                      0,
+                      (activeAccount?.profitTarget ||
+                        selectedAccount.profitTarget) -
+                        commandProfit
+                    ).toLocaleString()}{" "}
+                    remaining
+                  </small>
+                </div>
+
+                <div>
+                  <div>
+                    <span>Drawdown safety</span>
+                    <strong>
+                      ${drawdownRemaining.toLocaleString(undefined, {
+                        maximumFractionDigits: 0
+                      })}
+                    </strong>
+                  </div>
+                  <i className="cc-drawdown-meter">
+                    <em
+                      style={{
+                        width: `${Math.max(
+                          0,
+                          Math.min(
+                            100,
+                            (drawdownRemaining /
+                              selectedAccount.maxDrawdown) *
+                              100
+                          )
+                        )}%`
+                      }}
+                    />
+                  </i>
+                  <small>
+                    Floor at $
+                    {trailingDrawdownFloor.toLocaleString(undefined, {
+                      maximumFractionDigits: 0
+                    })}
+                  </small>
+                </div>
+              </div>
+
+              <div className="cc-rule-strip">
+                <span>
+                  <b>⚖</b>
+                  <small>Consistency</small>
+                  <strong>
+                    {commandConsistency.toFixed(1)}% /{" "}
+                    {selectedAccount.consistencyPercent}%
+                  </strong>
+                </span>
+                <span>
+                  <b>📊</b>
+                  <small>Contracts</small>
+                  <strong>
+                    {selectedAccount.maxContracts} MES
+                  </strong>
+                </span>
+                <span>
+                  <b>🛑</b>
+                  <small>Daily loss</small>
+                  <strong>
+                    $
+                    {selectedAccount.dailyLossLimit.toLocaleString()}
+                  </strong>
+                </span>
+              </div>
+
+              <button
+                type="button"
+                className="cc-manage-evaluation"
+                onClick={() => setTab("accounts")}
+              >
+                Manage evaluation →
+              </button>
+            </article>
+
+            <article className="cc-daily-briefing">
+              <div className="cc-card-heading">
+                <div>
+                  <span className="cc-card-eyebrow">
+                    TODAY'S BRIEFING
+                  </span>
+                  <h2>Confirmation Under Pressure</h2>
+                </div>
+                <span className="cc-briefing-icon">🔥</span>
+              </div>
+
+              <p>
+                Complete 10 mixed scenarios while maintaining at
+                least 70% accuracy. Waiting on weak setups counts as
+                disciplined execution.
+              </p>
+
+              <div className="cc-daily-ring">
+                <div
+                  className="cc-ring-progress"
+                  style={{
+                    background: `conic-gradient(#55b7ff ${
+                      dailyProgress * 10
+                    }%, #1b2b37 0)`
+                  }}
+                >
+                  <div>
+                    <strong>{dailyProgress}</strong>
+                    <span>OF 10</span>
+                  </div>
+                </div>
+
+                <div className="cc-daily-rewards">
+                  <span>
+                    <small>Reward</small>
+                    <strong>+600 XP</strong>
+                  </span>
+                  <span>
+                    <small>Bonus</small>
+                    <strong>+25 points</strong>
+                  </span>
+                  <span>
+                    <small>Difficulty</small>
+                    <strong>Adaptive</strong>
+                  </span>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                className="cc-daily-button"
+                onClick={() => setTab("daily")}
+              >
+                Enter today's mission
+              </button>
+            </article>
+
+            <article className="cc-account-snapshot">
+              <div className="cc-card-heading">
+                <div>
+                  <span className="cc-card-eyebrow">
+                    TRADER SNAPSHOT
+                  </span>
+                  <h2>Your current standing</h2>
+                </div>
+                <span className="cc-snapshot-avatar">
+                  {equippedAccountIcon?.icon ||
+                    (profileRole === "owner" ? "👑" : "FA")}
+                </span>
+              </div>
+
+              <div className="cc-snapshot-stats">
+                <div>
+                  <span>Level</span>
+                  <strong>{level}</strong>
+                  <small>{xp.toLocaleString()} XP</small>
+                </div>
+                <div>
+                  <span>Reputation</span>
+                  <strong>{reputation.toLocaleString()}</strong>
+                  <small>{currentRank.name}</small>
+                </div>
+                <div>
+                  <span>Accuracy</span>
+                  <strong>{accuracy}%</strong>
+                  <small>{totalAttempts} decisions</small>
+                </div>
+                <div>
+                  <span>Streak</span>
+                  <strong>{streak}</strong>
+                  <small>daily chain</small>
+                </div>
+              </div>
+
+              <div className="cc-snapshot-footer">
+                <span>
+                  <small>Academy points</small>
+                  <strong>🪙 {points.toLocaleString()}</strong>
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setTab("profile")}
+                >
+                  View profile
+                </button>
+              </div>
+            </article>
+          </div>
+
+          <div className="cc-quick-actions">
+            <button
+              type="button"
+              onClick={() => setTab("mistakes")}
+            >
+              <span className="cc-action-icon cc-action-red">↩</span>
+              <span>
+                <strong>Review mistakes</strong>
+                <small>
+                  {mistakes.length
+                    ? `${mistakes.length} charts need review`
+                    : "No saved mistakes"}
+                </small>
+              </span>
+              <b>→</b>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setTab("career")}
+            >
+              <span className="cc-action-icon cc-action-blue">◆</span>
+              <span>
+                <strong>Career progression</strong>
+                <small>
+                  {nextRank
+                    ? `Advance toward ${nextRank.name}`
+                    : "Maximum rank achieved"}
+                </small>
+              </span>
+              <b>→</b>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setTab("shop")}
+            >
+              <span className="cc-action-icon cc-action-gold">✦</span>
+              <span>
+                <strong>Marketplace</strong>
+                <small>
+                  Spend {points.toLocaleString()} available points
+                </small>
+              </span>
+              <b>→</b>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setTab("stats")}
+            >
+              <span className="cc-action-icon cc-action-green">▥</span>
+              <span>
+                <strong>Performance analytics</strong>
+                <small>Inspect accuracy and decision history</small>
+              </span>
+              <b>→</b>
+            </button>
           </div>
 
           <AccountSelector
             points={points}
             reputation={reputation}
-            activeAccountId={activeEvaluation?.accountId || selectedAccountId}
+            activeAccountId={
+              activeEvaluation?.accountId || selectedAccountId
+            }
             identityMode={identityMode}
-            onStart={async account => launchEvaluation(account.id)}
+            onStart={async account =>
+              launchEvaluation(account.id)
+            }
           />
 
-          <div className="hud-grid">
-            <div className="hud-card accent-card">
-              <span>⭐ LEVEL</span><strong>{level}</strong>
-              <div className="mini-track"><i style={{ width: `${(xp % 500) / 5}%` }} /></div>
-              <small>{xp.toLocaleString()} total XP</small>
-            </div>
-            <div className="hud-card fire-card">
-              <span>🔥 COMBO</span><strong>×{combo}</strong><small>Best ×{bestCombo}</small>
-            </div>
-            <div className="hud-card">
-              <span>🎯 ACCURACY</span><strong>{accuracy}%</strong><small>{correctAttempts}/{totalAttempts} correct</small>
-            </div>
-            <div className="hud-card">
-              <span>📅 DAILY STREAK</span><strong>🔥 {streak}</strong><small>Keep the chain alive</small>
-            </div>
-            <div className="hud-card reputation-card">
-              <span>⭐ REPUTATION</span><strong>{reputation.toLocaleString()}</strong><small>Cannot be purchased</small>
-            </div>
-          </div>
-
-          <div className="mission-grid">
-            <article className="mission-card daily-mission">
-              <div className="mission-top"><span>🔥 DAILY MISSION</span><b>ONE DAY LEFT</b></div>
-              <h2>Confirmation Under Pressure</h2>
-              <p>Complete 10 mixed scenarios with at least 70% accuracy.</p>
-              <div className="mission-progress-label"><span>{dailyProgress}/10 completed</span><strong>+600 XP</strong></div>
-              <div className="mission-track"><i style={{ width: `${dailyProgress * 10}%` }} /></div>
-              <button type="button" onClick={() => setTab("daily")}>Enter mission</button>
-            </article>
-
-            <article className="mission-card simulator-mission">
-              <div className="mission-top"><span>📊 MAIN SIMULATOR</span><b>UNLIMITED</b></div>
-              <h2>Mixed Market Operations</h2>
-              <p>Breaks, retests, fakeouts, and no-trade situations with no advance warning.</p>
-              <div className="difficulty-row"><span>Difficulty</span><strong>★★★★☆</strong></div>
-              <button type="button" onClick={() => { changePracticeMode("mixed"); setTab("train"); }}>Launch replay</button>
-            </article>
-
-            <article className="mission-card review-mission">
-              <div className="mission-top"><span>🧠 REVIEW CENTER</span><b>{mistakes.length} SAVED</b></div>
-              <h2>Eliminate Repeat Mistakes</h2>
-              <p>Replay the exact charts that trapped you and study the numbered explanation lanes.</p>
-              <div className="difficulty-row"><span>Priority</span><strong>{mistakes.length ? "HIGH" : "CLEAR"}</strong></div>
-              <button type="button" onClick={() => setTab("mistakes")}>Review mistakes</button>
-            </article>
-          </div>
-
-          <div className="program-section">
+          <div className="program-section cc-program-section">
             <div className="section-heading">
-              <div><span className="eyebrow">Choose your operation</span><h2>Training programs</h2></div>
-              <button className="text-button" type="button" onClick={() => setTab("career")}>View career path →</button>
+              <div>
+                <span className="eyebrow">
+                  SPECIALIZED OPERATIONS
+                </span>
+                <h2>Choose a training program</h2>
+                <p className="muted">
+                  Every mode targets a different trading weakness.
+                </p>
+              </div>
+              <button
+                className="text-button"
+                type="button"
+                onClick={() => setTab("career")}
+              >
+                View career path →
+              </button>
             </div>
-            <div className="program-grid">
-              {practiceModes.map(mode => (
+
+            <div className="program-grid cc-program-grid">
+              {practiceModes.map((mode, index) => (
                 <button
                   type="button"
                   key={mode.id}
                   className={`program-card program-${mode.id}`}
-                  onClick={() => { changePracticeMode(mode.id); setTab("train"); }}
+                  onClick={() => {
+                    changePracticeMode(mode.id);
+                    setTab("train");
+                  }}
                 >
+                  <span className="cc-program-number">
+                    0{index + 1}
+                  </span>
                   <span className="program-icon">{mode.icon}</span>
-                  <div><b>{mode.short}</b><strong>{mode.label}</strong><small>{mode.description}</small></div>
+                  <div>
+                    <b>{mode.short}</b>
+                    <strong>{mode.label}</strong>
+                    <small>{mode.description}</small>
+                  </div>
                   <em>{mode.reward}</em>
+                  <i>LAUNCH →</i>
                 </button>
               ))}
             </div>
@@ -1859,6 +2265,23 @@ export default function FuturesAcademy() {
       );
     }
 
+    if (tab === "academy") {
+      return (
+        <AcademyRPG
+          level={level}
+          xp={xp}
+          reputation={reputation}
+          points={points}
+          attempts={totalAttempts}
+          correctWaits={correctWaits}
+          evaluationActive={Boolean(activeEvaluation)}
+          onPractice={() => setTab("train")}
+          onCareer={() => setTab("career")}
+          onMarketplace={() => setTab("shop")}
+        />
+      );
+    }
+
     if (tab === "daily") {
       return (
         <section className="page-section">
@@ -1986,12 +2409,12 @@ export default function FuturesAcademy() {
     if (tab === "handbook") {
       const topics = [
         { title: "What is MES?", icon: "📘", text: "MES is the Micro E-mini S&P 500 futures contract. In this simulator, one point is treated as $5 per contract." },
-        { title: "Break and retest", icon: "📈", text: "A valid setup usually includes a meaningful break, a return to the level, and confirmation that the level is holding or rejecting." },
+        { title: "Break and retest", icon: "trade", text: "A valid setup usually includes a meaningful break, a return to the level, and confirmation that the level is holding or rejecting." },
         { title: "Market order", icon: "⚡", text: "A market order prioritizes immediate execution instead of an exact entry price." },
         { title: "Limit order", icon: "🎯", text: "A limit order waits for your chosen price or better. It may never fill." },
         { title: "Stop order", icon: "🚦", text: "A stop entry activates after price reaches a trigger, often after confirmation." },
         { title: "Stop-loss", icon: "🛡️", text: "The stop-loss exits the simulated trade when the setup fails and limits the planned loss." },
-        { title: "Take-profit", icon: "💰", text: "The take-profit closes the simulated trade at your planned reward level." },
+        { title: "Take-profit", icon: "points", text: "The take-profit closes the simulated trade at your planned reward level." },
         { title: "Reward-to-risk", icon: "⚖️", text: "Reward-to-risk compares the planned gain with the planned loss. A 2:1 plan seeks two units of reward per unit risked." },
         { title: "Trailing drawdown", icon: "📉", text: "The drawdown floor can rise as the paper account reaches new peaks. Reaching it fails the current paper account." },
         { title: "Why Wait matters", icon: "⏳", text: "Not trading a weak setup is part of disciplined trading. Wait is often the best decision." }
@@ -2109,7 +2532,7 @@ export default function FuturesAcademy() {
               const unlocked = unlockedAchievements.some(a => a.id === item.id);
               return (
                 <article className={`trophy-plinth ${unlocked ? "unlocked" : ""}`} key={item.id}>
-                  <div className="trophy-cup">{unlocked ? "🏆" : "🔒"}</div>
+                  <div className="trophy-cup">{unlocked ? "trophy" : "🔒"}</div>
                   <span>{item.icon}</span>
                   <h3>{item.title}</h3>
                   <p>{item.description}</p>
@@ -2220,7 +2643,7 @@ export default function FuturesAcademy() {
           <EmptyLeaderboard
             title="No traders have qualified yet"
             description="The streak leaderboard will populate when real Academy members complete eligible sessions."
-            icon="🔥"
+            icon="daily"
             actionLabel="Start practicing"
             onAction={() => setTab("train")}
           />
@@ -2238,7 +2661,7 @@ export default function FuturesAcademy() {
           <EmptyLeaderboard
             title="No balance leaders yet"
             description="Only real members with eligible active evaluations will appear here. Be the first trader to claim the top spot."
-            icon="💰"
+            icon="points"
             actionLabel="Open an evaluation"
             onAction={() => setTab("home")}
           />
@@ -2465,6 +2888,7 @@ export default function FuturesAcademy() {
     <main
       className={[
         "app-shell",
+        "v4-visual-system",
         `app-mode-${practiceMode}`,
         cosmeticClass(equippedTheme?.id)
       ].filter(Boolean).join(" ")}
@@ -2472,13 +2896,14 @@ export default function FuturesAcademy() {
       <header className="v1-topbar">
         <button className="brand brand-button" type="button" onClick={() => setTab("home")}>
           <span className="brand-mark">FA</span>
-          <div><strong>Futures Academy</strong><span>Version 1.0 Foundation</span></div>
+          <div><strong>Futures Academy</strong><span>v3 Academy RPG</span></div>
         </button>
         <div className="v1-status-strip">
           <span>⭐ {reputation.toLocaleString()}</span>
           <span>🪙 {points.toLocaleString()}</span>
           <span>LVL {level}</span>
           <span>{currentRank.name}</span>
+          <RankEmblem level={level} label={currentRank.name} compact />
           <span>{selectedAccount.icon} ${paperBalance.toLocaleString(undefined,{maximumFractionDigits:0})}</span>
           {equippedTitle && (
             <span>{equippedTitle.icon} {equippedTitle.name}</span>
@@ -2491,43 +2916,217 @@ export default function FuturesAcademy() {
         </div>
       </header>
       <div className="v1-layout">
-        <aside className="v1-sidebar">
+        <aside className="v1-sidebar v3-sidebar">
           <div className="sidebar-group">
             <span>ACADEMY</span>
             {[
-              ["home","🏛 Command Center"],
-              ["train","📈 Trading Floor"],
-              ["daily","🔥 Daily Mission"],
-              ["handbook","📖 Handbook"],
-              ["career","🎓 Career"],
-              ["exams","📝 Promotion Exams"]
-            ].map(([id,label]) => <button key={id} className={tab===id ? "active":""} onClick={()=>setTab(id as Tab)}>{label}</button>)}
+              ["home","command","Command Center","Overview and active evaluation","OPEN"],
+              ["academy","academy","Academy Path","Classes, skills, and quests","NEW"],
+              ["train","trade","Trading Floor","Interactive chart simulator","OPEN"],
+              ["daily","daily","Daily Mission","Daily rewards and streak progress","OPEN"],
+              ["handbook","handbook","Handbook","Lessons and pattern recognition","OPEN"],
+              ["career","career","Career","Ranks, XP, and reputation","OPEN"],
+              ["exams","evaluation","Promotion Exams","Rank advancement tests", level >= 5 ? "ELIGIBLE" : "LVL 5"]
+            ].map(([id,icon,label,description,eligibility]) => (
+              <button
+                key={id}
+                className={tab===id ? "active":""}
+                onClick={() => setTab(id as Tab)}
+              >
+                <span className="v3-nav-icon"><AcademyIcon name={icon as any} size={21} /></span>
+                <span className="v3-nav-copy">
+                  <strong>{label}</strong>
+                  <small>{description}</small>
+                </span>
+                <em className={`v3-eligibility ${
+                  eligibility === "OPEN" || eligibility === "ELIGIBLE" || eligibility === "NEW"
+                    ? "eligible"
+                    : "locked"
+                }`}>
+                  {eligibility}
+                </em>
+              </button>
+            ))}
           </div>
+
           <div className="sidebar-group">
             <span>FACILITIES</span>
             {[
-              ["accounts","🏦 Account Vault"],
-              ["mistakes","🎬 Replay Theater"],
-              ["trophies","🏆 Trophy Room"],
-              ["shop","🛍 Marketplace"]
-            ].map(([id,label]) => <button key={id} className={tab===id ? "active":""} onClick={()=>setTab(id as Tab)}>{label}</button>)}
+              ["accounts","evaluation","Account Vault","Evaluations and account rules","OPEN"],
+              ["mistakes","replay","Replay Theater","Review saved mistakes","OPEN"],
+              ["trophies","trophy","Trophy Room","Achievements and collections","OPEN"],
+              ["shop","marketplace","Marketplace","Cosmetics and rewards",
+                identityMode === "account" ? "ELIGIBLE" : "ACCOUNT"]
+            ].map(([id,icon,label,description,eligibility]) => (
+              <button
+                key={id}
+                className={tab===id ? "active":""}
+                onClick={() => setTab(id as Tab)}
+              >
+                <span className="v3-nav-icon"><AcademyIcon name={icon as any} size={21} /></span>
+                <span className="v3-nav-copy">
+                  <strong>{label}</strong>
+                  <small>{description}</small>
+                </span>
+                <em className={`v3-eligibility ${
+                  eligibility === "OPEN" || eligibility === "ELIGIBLE"
+                    ? "eligible"
+                    : "locked"
+                }`}>
+                  {eligibility}
+                </em>
+              </button>
+            ))}
           </div>
+
           <div className="sidebar-group">
             <span>COMMUNITY</span>
             {[
-              ["leaderboard","🔥 Streak Leaders"],
-              ["balance","💰 Balance Leaders"],
-              ["stats","📊 Statistics"],
-              ["profile","👤 Profile"]
-            ].map(([id,label]) => <button key={id} className={tab===id ? "active":""} onClick={()=>setTab(id as Tab)}>{label}</button>)}
+              ["leaderboard","daily","Streak Leaders","Longest discipline streaks","OPEN"],
+              ["balance","points","Balance Leaders","Highest eligible balances","OPEN"],
+              ["stats","statistics","Statistics","Your performance analytics","OPEN"],
+              ["profile","profile","Profile","Identity and equipped rewards","OPEN"]
+            ].map(([id,icon,label,description,eligibility]) => (
+              <button
+                key={id}
+                className={tab===id ? "active":""}
+                onClick={() => setTab(id as Tab)}
+              >
+                <span className="v3-nav-icon"><AcademyIcon name={icon as any} size={21} /></span>
+                <span className="v3-nav-copy">
+                  <strong>{label}</strong>
+                  <small>{description}</small>
+                </span>
+                <em className="v3-eligibility eligible">{eligibility}</em>
+              </button>
+            ))}
           </div>
+
           <div className="sidebar-bottom">
-            <button onClick={()=>setTab("settings")}>⚙ Settings</button>
-            <button onClick={()=>setTab("admin")}>🔐 Admin</button>
+            <button onClick={()=>setTab("settings")}>
+              <span className="v3-nav-icon">⚙️</span>
+              <span className="v3-nav-copy">
+                <strong>Settings</strong>
+                <small>Account and preferences</small>
+              </span>
+            </button>
+            <button onClick={()=>setTab("admin")}>
+              <span className="v3-nav-icon">🔐</span>
+              <span className="v3-nav-copy">
+                <strong>Admin</strong>
+                <small>Owner operations console</small>
+              </span>
+              <em className={`v3-eligibility ${
+                profileRole === "owner" ? "eligible" : "locked"
+              }`}>
+                {profileRole === "owner" ? "OWNER" : "LOCKED"}
+              </em>
+            </button>
           </div>
         </aside>
         <section className="v1-content">{content}</section>
       </div>
+      <nav className="v3-mobile-dock" aria-label="Mobile navigation">
+        {[
+          ["home","command","Home"],
+          ["train","trade","Trade"],
+          ["academy","academy","Academy"],
+          ["career","career","Career"]
+        ].map(([id,icon,label]) => (
+          <button
+            type="button"
+            key={id}
+            className={tab === id ? "active" : ""}
+            onClick={() => {
+              setTab(id as Tab);
+              setMobileAcademyMenuOpen(false);
+            }}
+          >
+            <span><AcademyIcon name={icon as any} size={20} /></span>
+            <small>{label}</small>
+          </button>
+        ))}
+        <button
+          type="button"
+          className={mobileAcademyMenuOpen ? "active" : ""}
+          onClick={() => setMobileAcademyMenuOpen(value => !value)}
+        >
+          <span>☰</span>
+          <small>More</small>
+        </button>
+      </nav>
+
+      {mobileAcademyMenuOpen && (
+        <div
+          className="v3-mobile-menu-backdrop"
+          onPointerDown={event => {
+            if (event.currentTarget === event.target) {
+              setMobileAcademyMenuOpen(false);
+            }
+          }}
+        >
+          <section className="v3-mobile-menu">
+            <div className="v3-mobile-menu-header">
+              <div>
+                <span>EXPLORE THE ACADEMY</span>
+                <h2>Where do you want to go?</h2>
+                <p>
+                  Every destination includes a label, purpose, and
+                  eligibility status.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setMobileAcademyMenuOpen(false)}
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="v3-mobile-menu-grid">
+              {[
+                ["daily","daily","Daily Mission","Earn daily XP and points","OPEN"],
+                ["handbook","handbook","Handbook","Learn patterns and terminology","OPEN"],
+                ["accounts","evaluation","Account Vault","Manage evaluation accounts","OPEN"],
+                ["mistakes","replay","Replay Theater","Review incorrect decisions","OPEN"],
+                ["trophies","trophy","Trophy Room","View achievements and collections","OPEN"],
+                ["shop","marketplace","Marketplace","Buy and equip cosmetics",
+                  identityMode === "account" ? "ELIGIBLE" : "ACCOUNT"],
+                ["stats","statistics","Statistics","Analyze performance history","OPEN"],
+                ["profile","profile","Profile","View identity and rewards","OPEN"],
+                ["settings","settings","Settings","Manage account preferences","OPEN"],
+                ["admin","admin","Admin","Owner management console",
+                  profileRole === "owner" ? "OWNER" : "LOCKED"]
+              ].map(([id,icon,label,description,eligibility]) => (
+                <button
+                  type="button"
+                  key={id}
+                  onClick={() => {
+                    setTab(id as Tab);
+                    setMobileAcademyMenuOpen(false);
+                  }}
+                >
+                  <span className="v3-mobile-menu-icon"><AcademyIcon name={icon as any} size={22} /></span>
+                  <span>
+                    <strong>{label}</strong>
+                    <small>{description}</small>
+                  </span>
+                  <em className={
+                    eligibility === "OPEN" ||
+                    eligibility === "ELIGIBLE" ||
+                    eligibility === "OWNER"
+                      ? "eligible"
+                      : "locked"
+                  }>
+                    {eligibility}
+                  </em>
+                </button>
+              ))}
+            </div>
+          </section>
+        </div>
+      )}
+
       {showGuestImport && authUserId && (
         <div className="tour-overlay">
           <section className="tour-card guest-import-card">
@@ -2555,7 +3154,7 @@ export default function FuturesAcademy() {
         <div className="tour-overlay">
           <section className="tour-card">
             <span className="tour-step">STEP {tourStep + 1} OF {tourSteps.length}</span>
-            <div className="tour-icon">{["🏛️","📈","🎯","🛡️","🏦"][tourStep]}</div>
+            <div className="tour-icon">{["🏛️","trade","🎯","🛡️","evaluation"][tourStep]}</div>
             <h2>{tourSteps[tourStep].title}</h2>
             <p>{tourSteps[tourStep].text}</p>
             <div className="tour-actions">

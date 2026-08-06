@@ -1,0 +1,561 @@
+.page {
+  max-width: 1320px;
+  margin: 0 auto;
+}
+
+.hero {
+  min-height: 355px;
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: minmax(0,1.5fr) minmax(280px,.65fr);
+  gap: 25px;
+  align-items: center;
+  padding: clamp(25px,4vw,48px);
+  border: 1px solid #3a5870;
+  border-radius: 17px;
+  background:
+    radial-gradient(circle at 75% 25%,rgba(63,170,225,.16),transparent 28%),
+    linear-gradient(130deg,#102433,#0a141c 68%);
+}
+
+.heroGrid {
+  position: absolute;
+  inset: 0;
+  opacity: .11;
+  background-image:
+    linear-gradient(rgba(88,177,235,.25) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(88,177,235,.25) 1px,transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+}
+
+.hero > div:not(.heroGrid) {
+  position: relative;
+  z-index: 2;
+}
+
+.eyebrow,
+.sectionHeading > div > span,
+.collectionCallout > div > span {
+  color: #68bdf5;
+  font-size: .66rem;
+  font-weight: 900;
+  letter-spacing: .14em;
+}
+
+.hero h1 {
+  max-width: 780px;
+  margin: 8px 0 12px;
+  font-size: clamp(2rem,4vw,3.7rem);
+  line-height: 1;
+  letter-spacing: -.04em;
+}
+
+.hero p,
+.sectionHeading p,
+.collectionCallout p {
+  color: #91a3b0;
+  line-height: 1.55;
+}
+
+.heroActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.heroActions button,
+.collectionCallout button {
+  padding: 11px 14px;
+  border: 1px solid #3d85b5;
+  border-radius: 8px;
+  background: #164467;
+  color: #c8eaff;
+  font-weight: 800;
+}
+
+.heroActions button + button {
+  border-color: #3a5060;
+  background: #15232d;
+  color: #a9bdca;
+}
+
+.identityCard {
+  padding: 24px;
+  display: grid;
+  justify-items: center;
+  gap: 7px;
+  border: 1px solid #46687f;
+  border-radius: 15px;
+  background: rgba(8,18,25,.68);
+  text-align: center;
+}
+
+.classIcon {
+  width: 88px;
+  height: 88px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #4d83a4;
+  border-radius: 50%;
+  background: #173245;
+  font-size: 2.2rem;
+  box-shadow: 0 0 35px rgba(69,165,220,.2);
+}
+
+.identityCard small {
+  color: #6f8ea2;
+  font-size: .57rem;
+  letter-spacing: .11em;
+}
+
+.identityCard > strong {
+  font-size: 1rem;
+}
+
+.identityCard > p {
+  margin: 0;
+  color: #7cc7f2;
+  font-size: .66rem;
+}
+
+.identityCard > div:last-child {
+  display: flex;
+  gap: 6px;
+}
+
+.identityCard > div:last-child span {
+  padding: 5px 7px;
+  border: 1px solid #345166;
+  border-radius: 999px;
+  color: #9eb9ca;
+  font-size: .6rem;
+}
+
+.statStrip {
+  margin: 11px 0 18px;
+  display: grid;
+  grid-template-columns: repeat(4,1fr);
+  gap: 8px;
+}
+
+.statStrip > div {
+  padding: 13px;
+  display: grid;
+  gap: 4px;
+  border: 1px solid #293f4d;
+  border-radius: 9px;
+  background: #101a21;
+}
+
+.statStrip span {
+  color: #758997;
+  font-size: .58rem;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+}
+
+.statStrip strong {
+  font-size: 1.05rem;
+}
+
+.section {
+  margin-top: 24px;
+}
+
+.sectionHeading {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: end;
+  margin-bottom: 11px;
+}
+
+.sectionHeading h2,
+.collectionCallout h2 {
+  margin: 4px 0;
+}
+
+.sectionHeading p,
+.collectionCallout p {
+  margin: 0;
+}
+
+.sectionHeading > b {
+  padding: 6px 9px;
+  border: 1px solid #356080;
+  border-radius: 999px;
+  background: #132d41;
+  color: #8fd0fb;
+  font-size: .63rem;
+}
+
+.classGrid {
+  display: grid;
+  grid-template-columns: repeat(4,minmax(0,1fr));
+  gap: 9px;
+}
+
+.classCard {
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  border: 1px solid #2b414f;
+  border-radius: 11px;
+  background: linear-gradient(145deg,#13222c,#0d161d);
+}
+
+.classCard.selected {
+  border-color: #4e9bd0;
+  box-shadow: inset 0 0 0 1px rgba(76,158,213,.18);
+}
+
+.classCard.locked {
+  opacity: .62;
+}
+
+.classTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.classTop > div {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: #193044;
+  font-size: 1.3rem;
+}
+
+.classTop span {
+  padding: 4px 6px;
+  border-radius: 999px;
+  background: #15372a;
+  color: #83ddaf;
+  font-size: .52rem;
+}
+
+.locked .classTop span {
+  background: #30261a;
+  color: #d6b774;
+}
+
+.classCard h3 {
+  margin: 0;
+  font-size: .9rem;
+}
+
+.classCard > p {
+  min-height: 63px;
+  margin: 0;
+  color: #8495a1;
+  font-size: .68rem;
+  line-height: 1.45;
+}
+
+.perk {
+  padding: 8px;
+  display: grid;
+  gap: 3px;
+  border: 1px solid #294253;
+  border-radius: 7px;
+  background: #0c171e;
+}
+
+.perk small {
+  color: #64859b;
+  font-size: .52rem;
+}
+
+.perk strong {
+  color: #a9d5ef;
+  font-size: .64rem;
+}
+
+.requirements {
+  display: flex;
+  gap: 5px;
+}
+
+.requirements span,
+.nodeCopy > div span {
+  padding: 4px 6px;
+  border: 1px solid #4b3f31;
+  border-radius: 999px;
+  color: #b69c75;
+  font-size: .56rem;
+}
+
+.requirements .met,
+.nodeCopy > div .met {
+  border-color: #35634e;
+  color: #7ccba4;
+}
+
+.classCard button,
+.nodeCopy button {
+  width: 100%;
+  margin-top: auto;
+  padding: 8px;
+  border: 1px solid #3c789f;
+  border-radius: 7px;
+  background: #153b56;
+  color: #bce4fd;
+  font-size: .65rem;
+  font-weight: 800;
+}
+
+.classCard button:disabled,
+.nodeCopy button:disabled {
+  border-color: #343e44;
+  background: #171e23;
+  color: #69767e;
+}
+
+.skillGrid {
+  display: grid;
+  grid-template-columns: repeat(3,minmax(0,1fr));
+  gap: 10px;
+}
+
+.skillTrack {
+  padding: 15px;
+  border: 1px solid #2d4351;
+  border-radius: 12px;
+  background: #101920;
+}
+
+.skillHeader {
+  display: grid;
+  grid-template-columns: 43px 1fr;
+  gap: 9px;
+  align-items: center;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #273946;
+}
+
+.skillHeader > span {
+  width: 41px;
+  height: 41px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: #193044;
+  font-size: 1.25rem;
+}
+
+.skillHeader h3 {
+  margin: 0;
+  font-size: .9rem;
+}
+
+.skillHeader p {
+  margin: 3px 0 0;
+  color: #7d909c;
+  font-size: .63rem;
+}
+
+.nodeList {
+  padding-top: 12px;
+  display: grid;
+  gap: 0;
+}
+
+.node {
+  display: grid;
+  grid-template-columns: 28px 1fr;
+  gap: 8px;
+  min-height: 118px;
+}
+
+.nodeLine {
+  display: grid;
+  grid-template-rows: 28px 1fr;
+  justify-items: center;
+}
+
+.nodeLine > span {
+  width: 27px;
+  height: 27px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #4a6171;
+  border-radius: 50%;
+  background: #15242e;
+  color: #8fa6b5;
+  font-size: .62rem;
+}
+
+.nodeLine i {
+  width: 1px;
+  height: 100%;
+  background: #304452;
+}
+
+.nodeUnlocked .nodeLine > span {
+  border-color: #3d9c76;
+  background: #173b2e;
+  color: #8ee0b9;
+}
+
+.nodeLocked {
+  opacity: .56;
+}
+
+.nodeCopy {
+  padding-bottom: 12px;
+}
+
+.nodeCopy > small {
+  color: #5e9dca;
+  font-size: .51rem;
+  letter-spacing: .09em;
+}
+
+.nodeCopy > strong {
+  display: block;
+  margin: 2px 0;
+  font-size: .75rem;
+}
+
+.nodeCopy > p {
+  margin: 0 0 7px;
+  color: #778a96;
+  font-size: .61rem;
+}
+
+.nodeCopy > div {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 7px;
+}
+
+.questGrid {
+  display: grid;
+  grid-template-columns: repeat(3,minmax(0,1fr));
+  gap: 9px;
+}
+
+.questCard {
+  padding: 14px;
+  display: grid;
+  grid-template-columns: 43px 1fr;
+  gap: 10px;
+  border: 1px solid #2c414f;
+  border-radius: 11px;
+  background: linear-gradient(145deg,#13212a,#0d161c);
+}
+
+.questIcon {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: #193044;
+  font-size: 1.25rem;
+}
+
+.questCopy > span {
+  color: #5b9ccb;
+  font-size: .52rem;
+  letter-spacing: .09em;
+}
+
+.questCopy h3 {
+  margin: 2px 0;
+  font-size: .8rem;
+}
+
+.questCopy p {
+  margin: 0;
+  color: #7d909c;
+  font-size: .63rem;
+}
+
+.questProgress {
+  grid-column: 1 / -1;
+}
+
+.questProgress > div {
+  display: flex;
+  justify-content: space-between;
+  color: #788b97;
+  font-size: .6rem;
+}
+
+.questProgress i {
+  height: 6px;
+  margin: 6px 0;
+  display: block;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #1a2a34;
+}
+
+.questProgress em {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg,#419be0,#4ed3b1);
+}
+
+.questProgress small {
+  color: #d0b76c;
+  font-size: .58rem;
+}
+
+.collectionCallout {
+  margin-top: 25px;
+  padding: 22px;
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: center;
+  border: 1px solid #685a32;
+  border-radius: 13px;
+  background:
+    radial-gradient(circle at 100% 0,rgba(230,189,74,.13),transparent 32%),
+    #171a18;
+}
+
+@media(max-width:1050px) {
+  .classGrid {
+    grid-template-columns: repeat(2,minmax(0,1fr));
+  }
+
+  .skillGrid,
+  .questGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media(max-width:720px) {
+  .hero {
+    grid-template-columns: 1fr;
+  }
+
+  .statStrip {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .collectionCallout {
+    display: grid;
+  }
+}
+
+@media(max-width:500px) {
+  .classGrid,
+  .statStrip {
+    grid-template-columns: 1fr;
+  }
+
+  .sectionHeading {
+    display: grid;
+  }
+}
