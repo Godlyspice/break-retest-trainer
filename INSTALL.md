@@ -1,28 +1,15 @@
-# Futures Academy v2.1.2 — New User Zero Defaults
+# Futures Academy v2.1.3 — Restore Real Owner Console
 
-## Code
+The v2.1/v2.1.2 component packages were based on the older Foundation component,
+which restored a static demo Admin table.
 
-Extract this patch into your project root and allow it to replace:
+Extract this patch into the project root and replace:
 
 - components/FuturesAcademy.tsx
 
-It adds:
+It also restores:
 
-- supabase/new_user_zero_defaults_v212.sql
+- components/admin/OwnerDashboard.tsx
 
-## Database
-
-Run `supabase/new_user_zero_defaults_v212.sql` once in Supabase SQL Editor.
-
-This affects future registrations only. It does not reset the Owner or any
-existing member.
-
-## Expected new-user values
-
-- Level 1
-- XP: 0
-- Academy Points/Credits: 0
-- Reputation: 0
-- Streak: 0
-- Role: user
-- Premium: false
+If `supabase/admin_dashboard_v120.sql` has already run successfully, do not run
+it again. Your existing owner role and user data are not changed.

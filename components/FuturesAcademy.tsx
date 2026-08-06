@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { hasSupabase, supabase } from "@/lib/supabase-browser";
+import OwnerDashboard from "@/components/admin/OwnerDashboard";
 import AccountSelector from "@/components/evaluations/AccountSelector";
 import EvaluationHUD from "@/components/evaluations/EvaluationHUD";
 import PatternRecognition from "@/components/handbook/PatternRecognition";
@@ -742,11 +743,6 @@ export default function FuturesAcademy() {
   const [selectedMistake, setSelectedMistake] = useState<number | null>(null);
   const [showCelebration, setShowCelebration] = useState(false);
   const [practiceMode, setPracticeMode] = useState("mixed");
-  const [users, setUsers] = useState([
-    { id: "1", email: "owner@example.com", role: "owner" as Role, premium: true, xp: 1240 },
-    { id: "2", email: "student@example.com", role: "user" as Role, premium: false, xp: 680 },
-    { id: "3", email: "coach@example.com", role: "moderator" as Role, premium: true, xp: 1910 }
-  ]);
 
   const level = Math.floor(xp / 500) + 1;
   const accuracy = totalAttempts ? Math.round((correctAttempts / totalAttempts) * 100) : 0;
@@ -807,14 +803,6 @@ export default function FuturesAcademy() {
         setProfilePremium(false);
         setRole("user");
         setPremium(false);
-        setXp(0);
-        setStreak(0);
-        setPoints(0);
-        setReputation(0);
-        setTotalAttempts(0);
-        setCorrectAttempts(0);
-        setCombo(0);
-        setBestCombo(0);
         setAuthReady(true);
         return;
       }
@@ -826,7 +814,7 @@ export default function FuturesAcademy() {
 
       const { data: profile } = await client
         .from("profiles")
-        .select("display_name, role, premium, xp, streak, credits, reputation")
+        .select("display_name, role, premium, xp, streak")
         .eq("id", user.id)
         .maybeSingle();
 
@@ -845,12 +833,8 @@ export default function FuturesAcademy() {
       setRole(resolvedRole);
       setPremium(resolvedPremium);
 
-      setXp(typeof profile?.xp === "number" ? profile.xp : 0);
-      setStreak(typeof profile?.streak === "number" ? profile.streak : 0);
-      setPoints(typeof profile?.credits === "number" ? profile.credits : 0);
-      setReputation(
-        typeof profile?.reputation === "number" ? profile.reputation : 0
-      );
+      if (typeof profile?.xp === "number") setXp(profile.xp);
+      if (typeof profile?.streak === "number") setStreak(profile.streak);
 
       try {
         const savedGuest = window.localStorage.getItem("futures-academy-guest-v2-fresh");
@@ -1205,10 +1189,6 @@ export default function FuturesAcademy() {
     } finally {
       setAiLoading(false);
     }
-  }
-
-  function updateUser(id: string, patch: Partial<(typeof users)[number]>) {
-    setUsers(current => current.map(user => (user.id === id ? { ...user, ...patch } : user)));
   }
 
   const entryNum = Number(entryPrice);
@@ -2176,59 +2156,12 @@ export default function FuturesAcademy() {
     }
 
     return (
-      <section className="page-section">
-        <div className="section-heading">
-          <div><span className="eyebrow">Owner controls</span><h2>Private admin dashboard</h2></div>
-          <span className="role-badge">{role.toUpperCase()}</span>
-        </div>
-        {!canAdmin ? (
-          <div className="locked">This page is restricted to administrators and the owner.</div>
-        ) : (
-          <>
-            <div className="metric-grid">
-              <div className="metric"><span>Total accounts</span><strong>{users.length}</strong></div>
-              <div className="metric"><span>Premium users</span><strong>{users.filter(u => u.premium).length}</strong></div>
-              <div className="metric"><span>Active this week</span><strong>{users.length}</strong></div>
-              <div className="metric"><span>Attempts logged</span><strong>1,284</strong></div>
-            </div>
-            <div className="admin-table-wrap">
-              <table>
-                <thead><tr><th>User</th><th>XP</th><th>Premium</th><th>Permission</th></tr></thead>
-                <tbody>
-                  {users.map(user => (
-                    <tr key={user.id}>
-                      <td>{user.email}</td>
-                      <td>{user.xp}</td>
-                      <td>
-                        <input
-                          type="checkbox"
-                          checked={user.premium}
-                          disabled={role !== "owner" && user.role === "owner"}
-                          onChange={e => updateUser(user.id, { premium: e.target.checked })}
-                        />
-                      </td>
-                      <td>
-                        <select
-                          value={user.role}
-                          disabled={role !== "owner" || user.role === "owner"}
-                          onChange={e => updateUser(user.id, { role: e.target.value as Role })}
-                        >
-                          <option value="user">User</option>
-                          <option value="moderator">Moderator</option>
-                          <option value="admin">Admin</option>
-                          <option value="owner">Owner</option>
-                        </select>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </>
-        )}
-      </section>
+      <OwnerDashboard
+        profileRole={profileRole}
+        authUserId={authUserId}
+      />
     );
-  }, [tab, scenario, dailyScenario, choice, reveal, xp, streak, role, premium, email, password, authMessage, question, aiAnswer, aiLoading, users, canAdmin, level, practiceMode, accuracy, mistakes, selectedMistake, unlockedAchievements, soundEnabled, reducedMotion, showCelebration, totalAttempts, entryPrice, stopPrice, targetPrice, planFeedback, visibleCandles, replayRunning, replaySpeed, activePlacement, contracts, orderType, liveRiskPoints, liveRewardPoints, liveRR, estimatedLoss, estimatedProfit, lastPlacedLevel, combo, bestCombo, currentRankIndex, currentRank, nextRank, rankProgress, currentMode, dailyProgress, points, selectedAccountId, selectedAccount, paperBalance, peakBalance, trailingDrawdownFloor, drawdownRemaining, accountFailed, ownedShopItems, shopMessage, reputation, membershipLabel, profileName, profileRole, profilePremium, authUserId, showGuestImport, guestSnapshot, activeEvaluation, activeAccount, applyTradeResult]);
+  }, [tab, scenario, dailyScenario, choice, reveal, xp, streak, role, premium, email, password, authMessage, question, aiAnswer, aiLoading, canAdmin, level, practiceMode, accuracy, mistakes, selectedMistake, unlockedAchievements, soundEnabled, reducedMotion, showCelebration, totalAttempts, entryPrice, stopPrice, targetPrice, planFeedback, visibleCandles, replayRunning, replaySpeed, activePlacement, contracts, orderType, liveRiskPoints, liveRewardPoints, liveRR, estimatedLoss, estimatedProfit, lastPlacedLevel, combo, bestCombo, currentRankIndex, currentRank, nextRank, rankProgress, currentMode, dailyProgress, points, selectedAccountId, selectedAccount, paperBalance, peakBalance, trailingDrawdownFloor, drawdownRemaining, accountFailed, ownedShopItems, shopMessage, reputation, membershipLabel, profileName, profileRole, profilePremium, authUserId, showGuestImport, guestSnapshot, activeEvaluation, activeAccount, applyTradeResult]);
 
   if (identityMode === "landing") {
     return (
