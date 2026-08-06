@@ -854,9 +854,24 @@ export default function FuturesAcademy() {
       loadAuthenticatedProfile(session);
     });
 
+    const refreshAuthenticatedProfile = () => {
+      client.auth.getSession().then(({ data }) => {
+        loadAuthenticatedProfile(data.session);
+      });
+    };
+
+    window.addEventListener(
+      "futures-academy-profile-updated",
+      refreshAuthenticatedProfile
+    );
+
     return () => {
       mounted = false;
       listener.subscription.unsubscribe();
+      window.removeEventListener(
+        "futures-academy-profile-updated",
+        refreshAuthenticatedProfile
+      );
     };
   }, []);
 

@@ -1,15 +1,18 @@
-# Futures Academy v2.1.3 — Restore Real Owner Console
+# Futures Academy v2.1.4 — Live Header Progress Sync
 
-The v2.1/v2.1.2 component packages were based on the older Foundation component,
-which restored a static demo Admin table.
+The Owner Dashboard already updated Supabase, but the top header retained the
+profile values loaded at sign-in.
 
-Extract this patch into the project root and replace:
+This patch adds a profile-refresh event:
+
+- Changing your own XP updates the level/XP display.
+- Changing your own Credits updates the coin display.
+- Changing your own Reputation updates the star display.
+- Changing your own Premium or role refreshes membership badges.
+
+Extract into the project root and replace:
 
 - components/FuturesAcademy.tsx
-
-It also restores:
-
 - components/admin/OwnerDashboard.tsx
 
-If `supabase/admin_dashboard_v120.sql` has already run successfully, do not run
-it again. Your existing owner role and user data are not changed.
+No Supabase migration is required.

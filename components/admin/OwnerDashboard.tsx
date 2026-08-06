@@ -185,6 +185,13 @@ export default function OwnerDashboard({
     }
 
     setMessage(`Updated ${user.display_name || user.email}.`);
+
+    if (user.id === authUserId) {
+      window.dispatchEvent(
+        new CustomEvent("futures-academy-profile-updated")
+      );
+    }
+
     await loadDashboard(search);
 
     const { data: refreshed } = await client.rpc("owner_list_users", {
