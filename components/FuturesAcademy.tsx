@@ -190,6 +190,34 @@ function generateScenario(daily = false, mode = "mixed"): Scenario {
   };
 }
 
+
+function HelpTip({ title, text }: { title: string; text: string }) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <span className="help-wrap">
+      <button
+        type="button"
+        className="help-button"
+        aria-label={`Explain ${title}`}
+        aria-expanded={open}
+        onClick={event => {
+          event.stopPropagation();
+          setOpen(value => !value);
+        }}
+      >
+        ?
+      </button>
+      {open && (
+        <span className="help-popover" role="tooltip">
+          <strong>{title}</strong>
+          <span>{text}</span>
+        </span>
+      )}
+    </span>
+  );
+}
+
 function Chart({
   scenario,
   reveal,
@@ -225,6 +253,7 @@ function Chart({
     let crossX: number | null = null;
     let crossY: number | null = null;
     let dragging: "entry" | "stop" | "target" | null = null;
+    let dragPreview: { kind: "entry" | "stop" | "target"; value: number } | null = null;
 
     const draw = () => {
       const rect = canvas.getBoundingClientRect();
@@ -287,7 +316,8 @@ function Chart({
         ctx.stroke();
         const top = y(Math.max(c.open, c.close));
         const bottom = y(Math.min(c.open, c.close));
-        ctx.fillRect(x - step * 0.27, top, step * 0.54, Math.max(2, bottom - top));
+        const candleWidth = Math.max(3, Math.min(11, step * 0.54));
+        ctx.fillRect(x - candleWidth / 2, top, candleWidth, Math.max(2, bottom - top));
       });
 
       const volumeHeight = 62;
@@ -296,30 +326,119 @@ function Chart({
         const x = pad.l + i * step + step / 2;
         const barH = (c.volume / maxVolume) * volumeHeight;
         ctx.fillStyle = c.close >= c.open ? "rgba(27,179,134,.35)" : "rgba(221,86,105,.35)";
-        ctx.fillRect(x - step * 0.22, h - pad.b - barH, step * 0.44, barH);
+        const volumeWidth = Math.max(3, Math.min(11, step * 0.44));
+        ctx.fillRect(x - volumeWidth / 2, h - pad.b - barH, volumeWidth, barH);
       });
       ctx.fillStyle = "#6f7c89";
       ctx.font = "10px system-ui";
       ctx.fillText("VOLUME", pad.l + 4, h - pad.b - volumeHeight - 6);
 
+      const previewValue = (kind: "entry" | "stop" | "target", fallback: number) =>
+        dragPreview?.kind === kind ? dragPreview.value : fallback;
+
       const tradeLevels = [
-        { label: "ENTRY", value: Number(entryPrice), color: "#398bea", kind: "entry" as const },
-        { label: "STOP", value: Number(stopPrice), color: "#dd5669", kind: "stop" as const },
-        { label: "TARGET", value: Number(targetPrice), color: "#1bb386", kind: "target" as const }
+        { label: "ENTRY", value: previewValue("entry", Number(entryPrice)), color: "#398bea", kind: "entry" as const },
+        { label: "STOP", value: previewValue("stop", Number(stopPrice)), color: "#dd5669", kind: "stop" as const },
+        { label: "TARGET", value: previewValue("target", Number(targetPrice)), color: "#1bb386", kind: "target" as const }
       ].filter(item => Number.isFinite(item.value));
 
+      const entryLevel = tradeLevels.find(item => item.kind === "entry");
+      const stopLevel = tradeLevels.find(item => item.kind === "stop");
+      const targetLevel = tradeLevels.find(item => item.kind === "target");
+
+      // Tradovate-style risk/reward zones.
+      if (entryLevel && stopLevel) {
+        const entryY = y(entryLevel.value);
+        const stopY = y(stopLevel.value);
+        const top = Math.min(entryY, stopY);
+        const zoneHeight = Math.abs(entryY - stopY);
+        ctx.fillStyle = "rgba(221, 86, 105, 0.14)";
+        ctx.fillRect(pad.l, top, plotW, zoneHeight);
+
+        const bracketX = w - pad.r - 13;
+        ctx.strokeStyle = "#dd5669";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(bracketX, entryY);
+        ctx.lineTo(bracketX, stopY);
+        ctx.moveTo(bracketX - 8, entryY);
+        ctx.lineTo(bracketX + 1, entryY);
+        ctx.moveTo(bracketX - 8, stopY);
+        ctx.lineTo(bracketX + 1, stopY);
+        ctx.stroke();
+
+        const riskPoints = Math.abs(entryLevel.value - stopLevel.value);
+        ctx.fillStyle = "#321820";
+        ctx.strokeStyle = "#dd5669";
+        const labelY = (entryY + stopY) / 2;
+        ctx.fillRect(bracketX - 112, labelY - 17, 94, 34);
+        ctx.strokeRect(bracketX - 112, labelY - 17, 94, 34);
+        ctx.fillStyle = "#ff9aaa";
+        ctx.font = "600 11px system-ui";
+        ctx.fillText(`RISK ${riskPoints.toFixed(2)} pts`, bracketX - 105, labelY - 2);
+        ctx.font = "10px system-ui";
+        ctx.fillText(`$${(riskPoints * 5).toFixed(2)} / MES`, bracketX - 105, labelY + 11);
+      }
+
+      if (entryLevel && targetLevel) {
+        const entryY = y(entryLevel.value);
+        const targetY = y(targetLevel.value);
+        const top = Math.min(entryY, targetY);
+        const zoneHeight = Math.abs(entryY - targetY);
+        ctx.fillStyle = "rgba(27, 179, 134, 0.13)";
+        ctx.fillRect(pad.l, top, plotW, zoneHeight);
+
+        const bracketX = w - pad.r - 13;
+        ctx.strokeStyle = "#1bb386";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(bracketX, entryY);
+        ctx.lineTo(bracketX, targetY);
+        ctx.moveTo(bracketX - 8, entryY);
+        ctx.lineTo(bracketX + 1, entryY);
+        ctx.moveTo(bracketX - 8, targetY);
+        ctx.lineTo(bracketX + 1, targetY);
+        ctx.stroke();
+
+        const rewardPoints = Math.abs(targetLevel.value - entryLevel.value);
+        const riskPoints = stopLevel ? Math.abs(entryLevel.value - stopLevel.value) : 0;
+        const rr = riskPoints > 0 ? rewardPoints / riskPoints : 0;
+        ctx.fillStyle = "#102b23";
+        ctx.strokeStyle = "#1bb386";
+        const labelY = (entryY + targetY) / 2;
+        ctx.fillRect(bracketX - 128, labelY - 23, 110, 46);
+        ctx.strokeRect(bracketX - 128, labelY - 23, 110, 46);
+        ctx.fillStyle = "#82e7c7";
+        ctx.font = "600 11px system-ui";
+        ctx.fillText(`REWARD ${rewardPoints.toFixed(2)} pts`, bracketX - 121, labelY - 8);
+        ctx.font = "10px system-ui";
+        ctx.fillText(`$${(rewardPoints * 5).toFixed(2)} / MES`, bracketX - 121, labelY + 5);
+        if (rr > 0) ctx.fillText(`R:R ${rr.toFixed(2)} : 1`, bracketX - 121, labelY + 18);
+      }
+
+      // Draw order lines above the shaded zones.
       tradeLevels.forEach(item => {
         const yy = y(item.value);
-        ctx.setLineDash([4, 4]);
+        ctx.setLineDash(item.kind === "entry" ? [] : [5, 4]);
         ctx.strokeStyle = item.color;
-        ctx.lineWidth = 1.6;
+        ctx.lineWidth = item.kind === "entry" ? 2.2 : 1.7;
         ctx.beginPath();
         ctx.moveTo(pad.l, yy);
         ctx.lineTo(w - pad.r, yy);
         ctx.stroke();
         ctx.setLineDash([]);
+
+        const tagWidth = item.kind === "entry" ? 122 : 132;
+        ctx.fillStyle =
+          item.kind === "entry" ? "#15304a" :
+          item.kind === "stop" ? "#321820" :
+          "#102b23";
+        ctx.strokeStyle = item.color;
+        ctx.fillRect(pad.l + 7, yy - 16, tagWidth, 23);
+        ctx.strokeRect(pad.l + 7, yy - 16, tagWidth, 23);
         ctx.fillStyle = item.color;
-        ctx.fillText(`${item.label} ${item.value.toFixed(2)}`, pad.l + 8, yy - 5);
+        ctx.font = "600 11px system-ui";
+        ctx.fillText(`${item.label}  ${item.value.toFixed(2)}`, pad.l + 14, yy);
       });
 
       if (crossX !== null && crossY !== null) {
@@ -449,8 +568,11 @@ function Chart({
       const rect = canvas.getBoundingClientRect();
       crossX = event.clientX - rect.left;
       crossY = event.clientY - rect.top;
-      if (dragging && onChangeLevel) {
-        onChangeLevel(dragging, Math.round(getGeometry().priceFromY(event.clientY) * 4) / 4);
+      if (dragging) {
+        dragPreview = {
+          kind: dragging,
+          value: Math.round(getGeometry().priceFromY(event.clientY) * 4) / 4
+        };
       }
       draw();
     };
@@ -461,12 +583,24 @@ function Chart({
         return;
       }
       dragging = nearestLine(event.clientY);
-      if (dragging) canvas.setPointerCapture(event.pointerId);
+      if (dragging) {
+        const startingValue =
+          dragging === "entry" ? Number(entryPrice) :
+          dragging === "stop" ? Number(stopPrice) :
+          Number(targetPrice);
+        dragPreview = { kind: dragging, value: startingValue };
+        canvas.setPointerCapture(event.pointerId);
+      }
     };
 
     const onUp = (event: PointerEvent) => {
+      if (dragging && dragPreview && onChangeLevel) {
+        onChangeLevel(dragging, dragPreview.value);
+      }
       dragging = null;
+      dragPreview = null;
       try { canvas.releasePointerCapture(event.pointerId); } catch {}
+      draw();
     };
 
     const onLeave = () => {
@@ -688,6 +822,8 @@ export default function FuturesAcademy() {
   function changePracticeMode(mode: string) {
     setPracticeMode(mode);
     setScenario(generateScenario(false, mode));
+    setVisibleCandles(24);
+    setReplayRunning(false);
     setChoice(null);
     setEntryPrice("");
     setStopPrice("");
@@ -894,13 +1030,22 @@ export default function FuturesAcademy() {
               <div className="market-chip">{currentMode.short}</div>
             </div>
             <div className="replay-toolbar">
-              <button type="button" className="secondary compact" onClick={() => setReplayRunning(v => !v)}>
-                {replayRunning ? "Pause" : "Play"}
-              </button>
-              <button type="button" className="secondary compact" onClick={() => setVisibleCandles(v => Math.min(v + 1, scenario.candles.length))}>
-                +1 candle
-              </button>
-              <button type="button" className="secondary compact" onClick={resetReplay}>Reset</button>
+              <div className="control-with-help">
+                <button type="button" className="secondary compact" onClick={() => setReplayRunning(v => !v)}>
+                  {replayRunning ? "Pause" : "Play"}
+                </button>
+                <HelpTip title="Replay" text="Play reveals future candles one at a time. Pause stops the replay at the current candle." />
+              </div>
+              <div className="control-with-help">
+                <button type="button" className="secondary compact" onClick={() => setVisibleCandles(v => Math.min(v + 1, scenario.candles.length))}>
+                  +1 candle
+                </button>
+                <HelpTip title="Advance one candle" text="Reveals exactly one additional candle so you can inspect price action slowly." />
+              </div>
+              <div className="control-with-help">
+                <button type="button" className="secondary compact" onClick={resetReplay}>Reset</button>
+                <HelpTip title="Reset replay" text="Returns the scenario to its starting candles and clears your current trade plan." />
+              </div>
               <label>Speed
                 <select value={replaySpeed} onChange={e => setReplaySpeed(Number(e.target.value))}>
                   <option value={1200}>Slow</option>
@@ -930,27 +1075,39 @@ export default function FuturesAcademy() {
             </p>
             <div className="quote-grid">
               <div><span>Instrument</span><strong>MES</strong></div>
-              <label><span>Contracts</span><input type="number" min="1" max="10" value={contracts} onChange={e => setContracts(Math.max(1, Number(e.target.value) || 1))} /></label>
+              <label>
+                <span className="label-with-help">Contracts <HelpTip title="Contracts" text="The number of MES contracts in the simulated trade. More contracts increase both potential profit and potential loss." /></span>
+                <input type="number" min="1" max="10" value={contracts} onChange={e => setContracts(Math.max(1, Number(e.target.value) || 1))} />
+              </label>
             </div>
             <div className="order-type-row">
-              {(["market", "limit", "stop"] as const).map(type => (
-                <button type="button" key={type} className={orderType === type ? "active" : ""} onClick={() => setOrderType(type)}>
-                  {type.toUpperCase()}
-                </button>
-              ))}
+              <div>
+                <button type="button" className={orderType === "market" ? "active" : ""} onClick={() => setOrderType("market")}>MARKET</button>
+                <HelpTip title="Market order" text="Enters at the best available current price. It favors speed over exact entry price." />
+              </div>
+              <div>
+                <button type="button" className={orderType === "limit" ? "active" : ""} onClick={() => setOrderType("limit")}>LIMIT</button>
+                <HelpTip title="Limit order" text="Only enters at your chosen price or better. The order may never fill if price does not return to it." />
+              </div>
+              <div>
+                <button type="button" className={orderType === "stop" ? "active" : ""} onClick={() => setOrderType("stop")}>STOP</button>
+                <HelpTip title="Stop entry order" text="Activates after price reaches your trigger. Traders often use it to enter after confirmation or continuation." />
+              </div>
             </div>
             <p className="label">Your decision</p>
             <div className="decision-grid">
-              {(["buy", "sell", "wait"] as const).map(item => (
-                <button
-                  key={item}
-                  className={`decision ${item} ${choice === item ? "active" : ""}`}
-                  onClick={() => !reveal && setChoice(item)}
-                  type="button"
-                >
-                  {item.toUpperCase()}
-                </button>
-              ))}
+              <div>
+                <button className={`decision buy ${choice === "buy" ? "active" : ""}`} onClick={() => !reveal && setChoice("buy")} type="button">BUY</button>
+                <HelpTip title="Buy" text="Choose Buy when you expect price to move higher after a valid bullish break and retest." />
+              </div>
+              <div>
+                <button className={`decision sell ${choice === "sell" ? "active" : ""}`} onClick={() => !reveal && setChoice("sell")} type="button">SELL</button>
+                <HelpTip title="Sell" text="Choose Sell when you expect price to move lower after a valid bearish break and retest." />
+              </div>
+              <div>
+                <button className={`decision wait ${choice === "wait" ? "active" : ""}`} onClick={() => !reveal && setChoice("wait")} type="button">WAIT</button>
+                <HelpTip title="Wait" text="Choose Wait when the break, retest, or confirmation is missing, unclear, or invalid." />
+              </div>
             </div>
 
             {choice !== "wait" && (
@@ -963,12 +1120,24 @@ export default function FuturesAcademy() {
                   ] as const).map(([kind, label, value, setter]) => (
                     <div className="level-control" key={kind}>
                       <div className="level-heading">
-                        <span>{label}</span>
+                        <span className="label-with-help">
+                          {label}
+                          <HelpTip
+                            title={label}
+                            text={
+                              kind === "entry"
+                                ? "The price where your simulated position opens."
+                                : kind === "stop"
+                                ? "The price that exits the trade to limit your loss when the setup fails."
+                                : "The price where the trade closes for your planned profit."
+                            }
+                          />
+                        </span>
                         <button
                           type="button"
                           className={activePlacement === kind ? "targeting active" : "targeting"}
                           onClick={() => setActivePlacement(activePlacement === kind ? null : kind)}
-                          title={`Place ${label} on chart`}
+                          title={`Tap, then place ${label} on chart`}
                         >
                           ⊕
                         </button>
@@ -989,16 +1158,22 @@ export default function FuturesAcademy() {
                     </div>
                   ))}
                 </div>
+                <div className="bracket-legend">
+                  <span><i className="legend-swatch reward-zone" />Green area: planned profit zone</span>
+                  <span><i className="legend-swatch risk-zone" />Red area: planned loss zone</span>
+                  <HelpTip title="Risk/reward brackets" text="The shaded green and red areas visualize your planned reward and risk. The side brackets show the distance from entry to target and from entry to stop." />
+                </div>
                 <div className="risk-card">
-                  <div><span>Risk</span><strong>{liveRiskPoints > 0 ? `${liveRiskPoints.toFixed(2)} pts` : "—"}</strong></div>
-                  <div><span>Reward</span><strong>{liveRewardPoints > 0 ? `${liveRewardPoints.toFixed(2)} pts` : "—"}</strong></div>
-                  <div><span>R:R</span><strong>{liveRR > 0 ? `${liveRR.toFixed(2)}:1` : "—"}</strong></div>
-                  <div><span>Est. loss</span><strong>{estimatedLoss > 0 ? `$${estimatedLoss.toFixed(2)}` : "—"}</strong></div>
-                  <div><span>Est. profit</span><strong>{estimatedProfit > 0 ? `$${estimatedProfit.toFixed(2)}` : "—"}</strong></div>
+                  <div><span className="label-with-help">Risk <HelpTip title="Risk" text="The distance from entry to stop-loss, measured in index points." /></span><strong>{liveRiskPoints > 0 ? `${liveRiskPoints.toFixed(2)} pts` : "—"}</strong></div>
+                  <div><span className="label-with-help">Reward <HelpTip title="Reward" text="The distance from entry to take-profit, measured in index points." /></span><strong>{liveRewardPoints > 0 ? `${liveRewardPoints.toFixed(2)} pts` : "—"}</strong></div>
+                  <div><span className="label-with-help">R:R <HelpTip title="Reward-to-risk" text="Compares planned reward with planned risk. A value of 2:1 means two units of reward for each unit risked." /></span><strong>{liveRR > 0 ? `${liveRR.toFixed(2)}:1` : "—"}</strong></div>
+                  <div><span className="label-with-help">Est. loss <HelpTip title="Estimated loss" text="Approximate simulated dollar loss if the stop is reached, based on MES point value and contract count." /></span><strong>{estimatedLoss > 0 ? `$${estimatedLoss.toFixed(2)}` : "—"}</strong></div>
+                  <div><span className="label-with-help">Est. profit <HelpTip title="Estimated profit" text="Approximate simulated dollar profit if the target is reached, based on MES point value and contract count." /></span><strong>{estimatedProfit > 0 ? `$${estimatedProfit.toFixed(2)}` : "—"}</strong></div>
                 </div>
               </>
             )}
 
+            <div className="submit-with-help">
             <button
               className="primary"
               type="button"
@@ -1011,6 +1186,8 @@ export default function FuturesAcademy() {
             >
               Submit trade plan
             </button>
+            <HelpTip title="Submit trade plan" text="Locks your direction, entry, stop, and target, then grades the complete plan and reveals the explanation." />
+            </div>
             {reveal && (
               <div className={`feedback ${choice === scenario.answer ? "good" : "bad"}`}>
                 <strong>{choice === scenario.answer ? "Correct setup read" : `Best answer: ${scenario.answer.toUpperCase()}`}</strong>

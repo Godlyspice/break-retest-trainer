@@ -178,3 +178,22 @@ This release changes the app from a plain trainer into a return-focused training
 - Simulator and precise side-panel trade controls remain intact
 
 This is still an educational simulator using synthetic scenarios. Rank names are game progression labels, not claims of real trading ability.
+
+
+## Usability fix v0.3.1
+
+- Added interactive question-mark explanations to the main simulator controls
+- Explained market, limit, stop, buy, sell, wait, contracts, entry, stop-loss, take-profit, risk, reward, R:R, estimated profit/loss, replay controls, and submit
+- Capped candlestick and volume-bar width so changing modes cannot create oversized candles
+- Rebuilt line dragging to use an in-canvas preview and save the new price on release
+- Reset replay candle count consistently when switching programs
+
+
+## Risk/reward visualization v0.3.2
+
+- Added translucent green take-profit zone between entry and target
+- Added translucent red stop-loss zone between entry and stop
+- Added right-side risk and reward brackets
+- Added point and approximate MES dollar labels
+- Added live reward-to-risk label inside the reward bracket
+- Order lines and price tags remain draggable and are rendered above the colored zones
