@@ -873,3 +873,117 @@ footer { padding: 8px 12px; text-align: center; color: var(--muted); border-top:
     font-size: .78rem;
   }
 }
+
+
+/* Control structure fix v0.3.5 */
+.control-button-shell {
+  position: relative;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 20px;
+  align-items: center;
+  gap: 4px;
+  overflow: visible;
+}
+.control-button-shell > button:not(.help-button) {
+  width: 100%;
+  min-width: 0;
+  height: 40px;
+  margin: 0;
+}
+.control-button-shell > .help-wrap {
+  width: 20px;
+  height: 20px;
+  position: relative;
+  z-index: 30;
+}
+.order-type-row {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+}
+.order-type-row > .control-button-shell > button {
+  padding: 8px 4px;
+}
+.decision-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  align-items: stretch;
+}
+.decision-shell {
+  height: 48px;
+}
+.decision-shell > .decision {
+  height: 48px !important;
+  min-height: 48px !important;
+  max-height: 48px !important;
+  padding: 0 4px !important;
+  line-height: 1 !important;
+}
+.help-wrap,
+.help-button {
+  pointer-events: auto;
+}
+.help-popover {
+  pointer-events: auto;
+}
+.contracts-control {
+  padding: 10px;
+  border: 1px solid var(--border);
+  background: var(--panel2);
+  border-radius: 6px;
+  min-width: 0;
+  overflow: visible;
+}
+.control-label-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+}
+.contract-stepper {
+  grid-template-columns: 36px minmax(0, 1fr) 36px !important;
+  height: 38px;
+}
+.contract-stepper button {
+  height: 38px;
+  cursor: pointer;
+}
+.contract-stepper input {
+  height: 38px;
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+.contract-stepper input::-webkit-outer-spin-button,
+.contract-stepper input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.risk-card,
+.risk-metric,
+.trade-summary-title,
+.bracket-legend {
+  overflow: visible !important;
+}
+.risk-metric {
+  z-index: auto;
+}
+.risk-metric .help-wrap {
+  z-index: 40;
+}
+.risk-metric .help-popover,
+.trade-summary-title .help-popover {
+  z-index: 300;
+}
+.ticket {
+  overflow: visible;
+}
+@media(max-width: 520px) {
+  .control-button-shell {
+    grid-template-columns: minmax(0, 1fr) 18px;
+    gap: 3px;
+  }
+  .decision-shell,
+  .decision-shell > .decision {
+    height: 44px !important;
+    min-height: 44px !important;
+    max-height: 44px !important;
+  }
+}

@@ -1117,48 +1117,56 @@ export default function FuturesAcademy() {
             </p>
             <div className="quote-grid">
               <div><span>Instrument</span><strong>MES</strong></div>
-              <label>
-                <span className="label-with-help">Contracts <HelpTip title="Contracts" text="The number of MES contracts in the simulated trade. More contracts increase both potential profit and potential loss." /></span>
+              <div className="contracts-control">
+                <div className="control-label-row">
+                  <span>Contracts</span>
+                  <HelpTip title="Contracts" text="The number of MES contracts in the simulated trade. More contracts increase both potential profit and potential loss." />
+                </div>
                 <div className="contract-stepper">
                   <button type="button" onClick={() => setContracts(value => Math.max(1, value - 1))} aria-label="Decrease contracts">−</button>
-                  <input type="number" min="1" max="10" value={contracts} onChange={e => setContracts(Math.max(1, Number(e.target.value) || 1))} />
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    value={contracts}
+                    aria-label="Contract quantity"
+                    onChange={e => {
+                      const digits = e.target.value.replace(/\D/g, "");
+                      if (!digits) return;
+                      setContracts(Math.min(10, Math.max(1, Number(digits))));
+                    }}
+                  />
                   <button type="button" onClick={() => setContracts(value => Math.min(10, value + 1))} aria-label="Increase contracts">+</button>
                 </div>
-              </label>
+              </div>
             </div>
             <div className="order-type-row">
-              <button type="button" className={orderType === "market" ? "active" : ""} onClick={() => setOrderType("market")}>
-                <span>MARKET</span>
+              <div className="control-button-shell">
+                <button type="button" className={orderType === "market" ? "active" : ""} onClick={() => setOrderType("market")}>MARKET</button>
                 <HelpTip title="Market order" text="Enters at the best available current price. It favors speed over exact entry price." />
-              </button>
-              <button type="button" className={orderType === "limit" ? "active" : ""} onClick={() => setOrderType("limit")}>
-                <span>LIMIT</span>
+              </div>
+              <div className="control-button-shell">
+                <button type="button" className={orderType === "limit" ? "active" : ""} onClick={() => setOrderType("limit")}>LIMIT</button>
                 <HelpTip title="Limit order" text="Only enters at your chosen price or better. The order may never fill if price does not return to it." />
-              </button>
-              <button type="button" className={orderType === "stop" ? "active" : ""} onClick={() => setOrderType("stop")}>
-                <span>STOP</span>
+              </div>
+              <div className="control-button-shell">
+                <button type="button" className={orderType === "stop" ? "active" : ""} onClick={() => setOrderType("stop")}>STOP</button>
                 <HelpTip title="Stop entry order" text="Activates after price reaches your trigger. Traders often use it to enter after confirmation or continuation." />
-              </button>
+              </div>
             </div>
             <p className="label">Your decision</p>
             <div className="decision-grid">
-              <div className="decision-cell">
-                <button className={`decision buy ${choice === "buy" ? "active" : ""}`} onClick={() => !reveal && setChoice("buy")} type="button">
-                  <span>▲ BUY</span>
-                  <HelpTip title="Buy" text="Choose Buy when you expect price to move higher after a valid bullish break and retest." />
-                </button>
+              <div className="control-button-shell decision-shell">
+                <button className={`decision buy ${choice === "buy" ? "active" : ""}`} onClick={() => !reveal && setChoice("buy")} type="button">▲ BUY</button>
+                <HelpTip title="Buy" text="Choose Buy when you expect price to move higher after a valid bullish break and retest." />
               </div>
-              <div className="decision-cell">
-                <button className={`decision sell ${choice === "sell" ? "active" : ""}`} onClick={() => !reveal && setChoice("sell")} type="button">
-                  <span>▼ SELL</span>
-                  <HelpTip title="Sell" text="Choose Sell when you expect price to move lower after a valid bearish break and retest." />
-                </button>
+              <div className="control-button-shell decision-shell">
+                <button className={`decision sell ${choice === "sell" ? "active" : ""}`} onClick={() => !reveal && setChoice("sell")} type="button">▼ SELL</button>
+                <HelpTip title="Sell" text="Choose Sell when you expect price to move lower after a valid bearish break and retest." />
               </div>
-              <div className="decision-cell">
-                <button className={`decision wait ${choice === "wait" ? "active" : ""}`} onClick={() => !reveal && setChoice("wait")} type="button">
-                  <span>● WAIT</span>
-                  <HelpTip title="Wait" text="Choose Wait when the break, retest, or confirmation is missing, unclear, or invalid." />
-                </button>
+              <div className="control-button-shell decision-shell">
+                <button className={`decision wait ${choice === "wait" ? "active" : ""}`} onClick={() => !reveal && setChoice("wait")} type="button">● WAIT</button>
+                <HelpTip title="Wait" text="Choose Wait when the break, retest, or confirmation is missing, unclear, or invalid." />
               </div>
             </div>
 
@@ -1216,7 +1224,10 @@ export default function FuturesAcademy() {
                   <HelpTip title="Risk/reward brackets" text="The shaded green and red areas visualize your planned reward and risk. The side brackets show the distance from entry to target and from entry to stop." />
                 </div>
                 <div className="trade-summary-title">
-                  <strong>Live trade summary</strong>
+                  <div className="control-label-row">
+                    <strong>Live trade summary</strong>
+                    <HelpTip title="Live trade summary" text="These values update as you change contracts, entry, stop-loss, and take-profit. They estimate risk, reward, reward-to-risk, profit, and loss for the simulated trade." />
+                  </div>
                   <span>{liveRR >= 2 ? "Strong plan" : liveRR >= 1 ? "Acceptable plan" : "Needs adjustment"}</span>
                 </div>
                 <div className="risk-card">

@@ -221,3 +221,15 @@ This is still an educational simulator using synthetic scenarios. Rank names are
 - Moved help icons inside Market, Limit, Stop, Buy, Sell, and Wait controls
 - Fixed help icon alignment so icons no longer sit behind or below buttons
 - Added minus and plus contract buttons while retaining direct number input
+
+
+## Control structure fix v0.3.5
+
+- Removed invalid nested button markup from order types and decisions
+- Fixed Market, Limit, and Stop help icons by placing them beside—not inside—the buttons
+- Forced Buy, Sell, and Wait to identical heights and widths
+- Rebuilt Contracts as a proper non-label control with working minus and plus buttons
+- Replaced number input with a numeric text input so browser spinner arrows no longer appear
+- Prevented the Contracts container from activating its help popup
+- Added a working help popup to Live trade summary
+- Removed tooltip clipping from risk cards and summary panels
