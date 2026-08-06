@@ -25,7 +25,7 @@ const demoLeaders = [
 
 
 const achievementCatalog = [
-  { id: "first_correct", title: "First Confirmation", description: "Get your first scenario correct.", icon: "✓", requirement: 1 },
+  { id: "first_correct", title: "First Confirmation", description: "Get your first scenario correct.", icon: "🧭", requirement: 1 },
   { id: "fakeout_finder", title: "Fakeout Finder", description: "Correctly identify 10 failed breaks.", icon: "↩", requirement: 10 },
   { id: "retest_rookie", title: "Retest Rookie", description: "Complete 25 scenarios.", icon: "R", requirement: 25 },
   { id: "retest_master", title: "Retest Master", description: "Complete 100 scenarios.", icon: "M", requirement: 100 },
@@ -38,7 +38,7 @@ const practiceModes = [
     id: "mixed",
     label: "Main Simulator",
     short: "MIXED",
-    icon: "◆",
+    icon: "📈",
     difficulty: "Adaptive",
     reward: "40–100 XP",
     description: "Every break-and-retest situation is mixed together. No hints about what comes next.",
@@ -48,7 +48,7 @@ const practiceModes = [
     id: "weakness",
     label: "Weakness Hunt",
     short: "FOCUS",
-    icon: "◎",
+    icon: "🎯",
     difficulty: "Personalized",
     reward: "Bonus XP",
     description: "Targets the scenario types you miss most and saves them to Mistake Replay.",
@@ -58,7 +58,7 @@ const practiceModes = [
     id: "clean",
     label: "Confirmation Lab",
     short: "GUIDED",
-    icon: "✓",
+    icon: "🧭",
     difficulty: "Beginner",
     reward: "30 XP",
     description: "Clear bullish and bearish retests with stronger visual guidance and calmer pacing.",
@@ -68,7 +68,7 @@ const practiceModes = [
     id: "fakeouts",
     label: "Fakeout Arena",
     short: "HARD",
-    icon: "↯",
+    icon: "⚡",
     difficulty: "Advanced",
     reward: "75 XP",
     description: "Failed breaks, traps, and fast reversals. Waiting is often the winning decision.",
@@ -78,7 +78,7 @@ const practiceModes = [
     id: "wait",
     label: "Patience Protocol",
     short: "DISCIPLINE",
-    icon: "◷",
+    icon: "🛡️",
     difficulty: "Mental",
     reward: "Streak XP",
     description: "Choppy markets and invalid setups designed to train the hardest action: doing nothing.",
@@ -944,11 +944,12 @@ export default function FuturesAcademy() {
     if (tab === "home") {
       return (
         <section className="command-center">
-          <div className="hero-panel">
+          <div className="hero-panel hero-illustrated">
             <div className="hero-copy">
               <span className="hero-kicker">TRADING COMMAND CENTER</span>
               <h1>Welcome back, Trader.</h1>
               <p>Master break-and-retest decisions through missions, replay, and focused review.</p>
+              <div className="hero-motto">🕯️ Read the candle. 🧠 Trust the setup. 🎯 Execute the plan.</div>
               <div className="hero-actions">
                 <button className="launch-button" type="button" onClick={() => setTab("train")}>
                   <span>▶</span>
@@ -970,18 +971,18 @@ export default function FuturesAcademy() {
 
           <div className="hud-grid">
             <div className="hud-card accent-card">
-              <span>LEVEL</span><strong>{level}</strong>
+              <span>⭐ LEVEL</span><strong>{level}</strong>
               <div className="mini-track"><i style={{ width: `${(xp % 500) / 5}%` }} /></div>
               <small>{xp.toLocaleString()} total XP</small>
             </div>
             <div className="hud-card fire-card">
-              <span>COMBO</span><strong>×{combo}</strong><small>Best ×{bestCombo}</small>
+              <span>🔥 COMBO</span><strong>×{combo}</strong><small>Best ×{bestCombo}</small>
             </div>
             <div className="hud-card">
-              <span>ACCURACY</span><strong>{accuracy}%</strong><small>{correctAttempts}/{totalAttempts} correct</small>
+              <span>🎯 ACCURACY</span><strong>{accuracy}%</strong><small>{correctAttempts}/{totalAttempts} correct</small>
             </div>
             <div className="hud-card">
-              <span>DAILY STREAK</span><strong>🔥 {streak}</strong><small>Keep the chain alive</small>
+              <span>📅 DAILY STREAK</span><strong>🔥 {streak}</strong><small>Keep the chain alive</small>
             </div>
           </div>
 
@@ -996,7 +997,7 @@ export default function FuturesAcademy() {
             </article>
 
             <article className="mission-card simulator-mission">
-              <div className="mission-top"><span>◆ MAIN SIMULATOR</span><b>UNLIMITED</b></div>
+              <div className="mission-top"><span>📊 MAIN SIMULATOR</span><b>UNLIMITED</b></div>
               <h2>Mixed Market Operations</h2>
               <p>Breaks, retests, fakeouts, and no-trade situations with no advance warning.</p>
               <div className="difficulty-row"><span>Difficulty</span><strong>★★★★☆</strong></div>
@@ -1004,7 +1005,7 @@ export default function FuturesAcademy() {
             </article>
 
             <article className="mission-card review-mission">
-              <div className="mission-top"><span>◎ REVIEW CENTER</span><b>{mistakes.length} SAVED</b></div>
+              <div className="mission-top"><span>🧠 REVIEW CENTER</span><b>{mistakes.length} SAVED</b></div>
               <h2>Eliminate Repeat Mistakes</h2>
               <p>Replay the exact charts that trapped you and study the numbered explanation lanes.</p>
               <div className="difficulty-row"><span>Priority</span><strong>{mistakes.length ? "HIGH" : "CLEAR"}</strong></div>
@@ -1039,7 +1040,14 @@ export default function FuturesAcademy() {
     if (tab === "train") {
       return (
         <section className={`simulator-screen mode-${practiceMode} ${showCelebration ? "celebrate" : ""}`}>
-          {showCelebration && <div className="xp-pop">PERFECT · +{scenario.xp} XP · COMBO ×{combo}</div>}
+          <div className="simulator-art" aria-hidden="true">
+            <span className="art-candle art-candle-1" />
+            <span className="art-candle art-candle-2" />
+            <span className="art-candle art-candle-3" />
+            <span className="art-candle art-candle-4" />
+            <span className="art-candle art-candle-5" />
+          </div>
+          {showCelebration && <div className="xp-pop">✨ PERFECT · +{scenario.xp} XP · COMBO ×{combo}</div>}
           <div className="mode-hero">
             <div className="mode-symbol">{currentMode.icon}</div>
             <div>
@@ -1569,17 +1577,17 @@ export default function FuturesAcademy() {
       </header>
       <nav className="nav">
         {[
-          ["home", "Command Center"],
-          ["train", "Simulator"],
-          ["daily", "Daily Mission"],
-          ["career", "Career"],
-          ["mistakes", "Review"],
-          ["achievements", "Badges"],
-          ["leaderboard", "Leaders"],
-          ["ai", "AI Coach"],
-          ["profile", "Profile"],
-          ["settings", "Settings"],
-          ["admin", "Admin"]
+          ["home", "🏠 Command Center"],
+          ["train", "📈 Simulator"],
+          ["daily", "🔥 Daily Mission"],
+          ["career", "🏆 Career"],
+          ["mistakes", "🧠 Review"],
+          ["achievements", "🎖️ Badges"],
+          ["leaderboard", "🥇 Leaders"],
+          ["ai", "🤖 AI Coach"],
+          ["profile", "👤 Profile"],
+          ["settings", "⚙️ Settings"],
+          ["admin", "🔐 Admin"]
         ].map(([id, label]) => (
           <button key={id} className={tab === id ? "active" : ""} onClick={() => { setTab(id as Tab); setReveal(false); setChoice(null); }}>
             {label}

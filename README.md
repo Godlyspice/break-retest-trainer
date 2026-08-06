@@ -243,3 +243,15 @@ This is still an educational simulator using synthetic scenarios. Rank names are
 - Raised the active tooltip above every other help icon
 - Temporarily hides background help icons while a tooltip is open
 - Improved tooltip opacity and prevented visual overlap in the risk/reward section
+
+
+## Visual theme v0.3.7
+
+- Added icon-enhanced navigation
+- Replaced abstract mode glyphs with more recognizable training icons
+- Added subtle trading-themed background art and chart-watermark decoration
+- Added motivational hero messaging
+- Added illustrated mission cards and HUD accents
+- Added mode-specific decorative candlestick artwork
+- Kept backgrounds low-opacity so charts and controls remain readable
+- Added gentle motion that respects reduced-motion preferences
