@@ -987,3 +987,114 @@ footer { padding: 8px 12px; text-align: center; color: var(--muted); border-top:
     max-height: 44px !important;
   }
 }
+
+
+/* Layout cleanup v0.3.6 */
+
+/* Only style the two direct quote-grid cards, not every nested div. */
+.quote-grid > div {
+  padding: 10px;
+  border: 1px solid var(--border);
+  background: var(--panel2);
+  border-radius: 6px;
+  display: grid;
+  min-width: 0;
+}
+
+/* Neutralize the older broad descendant rule inside the contracts card. */
+.quote-grid .contracts-control,
+.quote-grid .contracts-control .control-label-row,
+.quote-grid .contracts-control .contract-stepper {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  border-radius: 0;
+}
+
+.quote-grid .contracts-control {
+  padding: 10px;
+  border: 1px solid var(--border);
+  background: var(--panel2);
+  border-radius: 6px;
+  display: grid;
+  align-content: start;
+  gap: 9px;
+}
+
+.quote-grid .contracts-control .control-label-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.quote-grid .contracts-control .contract-stepper {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) 36px;
+  gap: 4px;
+  height: 38px;
+}
+
+.quote-grid .contracts-control .contract-stepper button,
+.quote-grid .contracts-control .contract-stepper input {
+  height: 38px;
+  min-width: 0;
+}
+
+.quote-grid .contracts-control .contract-stepper input {
+  width: 100%;
+  text-align: center;
+}
+
+/* Keep both top cards aligned and compact. */
+.quote-grid {
+  align-items: stretch;
+}
+
+.quote-grid > div:first-child,
+.quote-grid > .contracts-control {
+  min-height: 104px;
+}
+
+/* Bring the active tooltip above every other help button. */
+.help-wrap:has(.help-popover) {
+  z-index: 10000 !important;
+}
+
+.help-wrap:has(.help-popover) .help-popover {
+  z-index: 10001 !important;
+  background: #08111a !important;
+  border-color: #5d7890 !important;
+  box-shadow: 0 18px 45px rgba(0, 0, 0, .72) !important;
+  isolation: isolate;
+}
+
+/* While one tooltip is open, hide the other question marks underneath it. */
+.ticket:has(.help-popover) .help-wrap:not(:has(.help-popover)) .help-button {
+  visibility: hidden;
+}
+
+/* Restore them immediately when the tooltip closes. */
+.ticket:not(:has(.help-popover)) .help-button {
+  visibility: visible;
+}
+
+/* Prevent clipped tooltip text in the risk/reward legend area. */
+.bracket-legend,
+.trade-summary-title,
+.risk-card,
+.ticket {
+  isolation: auto;
+}
+
+.bracket-legend .help-wrap,
+.trade-summary-title .help-wrap {
+  position: relative;
+  overflow: visible;
+}
+
+@media (max-width: 520px) {
+  .quote-grid > div:first-child,
+  .quote-grid > .contracts-control {
+    min-height: 96px;
+  }
+}

@@ -233,3 +233,13 @@ This is still an educational simulator using synthetic scenarios. Rank names are
 - Prevented the Contracts container from activating its help popup
 - Added a working help popup to Live trade summary
 - Removed tooltip clipping from risk cards and summary panels
+
+
+## Layout cleanup v0.3.6
+
+- Fixed the broken Instrument and Contracts card layout
+- Stopped nested contract controls from inheriting quote-card styling
+- Kept the contracts stepper inside a single compact card
+- Raised the active tooltip above every other help icon
+- Temporarily hides background help icons while a tooltip is open
+- Improved tooltip opacity and prevented visual overlap in the risk/reward section
