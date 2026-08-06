@@ -5413,3 +5413,567 @@ body {
     max-width: none !important;
   }
 }
+
+
+/* Futures Academy v4.5 — Full Responsive UI Refinement */
+
+/* Global layout rhythm */
+.v1-content,
+.page-section,
+.command-center-v220,
+.marketplace,
+.page,
+.owner-dashboard {
+  width: 100%;
+  min-width: 0;
+}
+
+.v1-content {
+  padding: clamp(14px, 1.8vw, 24px);
+}
+
+.page-section,
+.command-center-v220,
+.marketplace,
+.page,
+.owner-dashboard {
+  max-width: 1440px;
+  margin-inline: auto;
+}
+
+section,
+article,
+div {
+  min-width: 0;
+}
+
+/* Consistent text wrapping */
+h1,
+h2,
+h3,
+strong,
+.profile-name,
+.user-name,
+.account-name,
+.card-title {
+  overflow-wrap: anywhere;
+}
+
+p,
+small,
+span {
+  word-break: normal;
+}
+
+/* Header and status strip */
+.v1-header {
+  min-height: 64px;
+  padding-inline: clamp(10px, 1.5vw, 20px);
+  gap: 12px;
+}
+
+.v1-header .brand {
+  min-width: 0;
+}
+
+.v1-header .brand > div:last-child {
+  min-width: 0;
+}
+
+.v1-header .brand strong,
+.v1-header .brand span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.v1-header .status-strip {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.v1-header .status-strip > * {
+  flex: 0 0 auto;
+}
+
+/* Buttons */
+button {
+  min-height: 40px;
+}
+
+.auth-buttons button,
+.cc-hero-actions button,
+.cc-quick-actions button,
+.name-setup-actions button,
+.profile-name-editor-controls button {
+  min-height: 44px;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+input,
+select,
+textarea {
+  min-width: 0;
+}
+
+/* Command Center */
+.command-center-v220 {
+  display: grid;
+  gap: 14px;
+}
+
+.command-center-v220 .cc-hero {
+  grid-template-columns: minmax(0, 1.35fr) minmax(280px, .65fr);
+  gap: clamp(20px, 3vw, 34px);
+  padding: clamp(24px, 3.5vw, 48px);
+}
+
+.command-center-v220 .cc-hero-copy {
+  max-width: none;
+}
+
+.command-center-v220 .cc-hero-copy h1 {
+  max-width: min(100%, 840px);
+}
+
+.command-center-v220 .cc-hero-actions {
+  grid-template-columns: minmax(230px, 1.4fr) minmax(180px, .9fr) minmax(82px, .35fr);
+}
+
+.cc-overview-grid {
+  align-items: stretch;
+}
+
+.cc-evaluation-overview,
+.cc-daily-briefing,
+.cc-account-snapshot {
+  height: 100%;
+}
+
+.cc-card-heading {
+  min-height: 48px;
+}
+
+.cc-balance-display strong {
+  overflow-wrap: anywhere;
+}
+
+.cc-quick-actions > button {
+  min-height: 68px;
+}
+
+.cc-program-grid {
+  align-items: stretch;
+}
+
+.cc-program-grid .program-card {
+  height: 100%;
+}
+
+/* Account cards */
+.account-grid,
+.account-selector-grid {
+  align-items: stretch;
+}
+
+.account-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.account-card > button,
+.account-card .startButton {
+  margin-top: auto;
+}
+
+/* Career */
+.career-live-summary {
+  max-width: 900px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.career-requirement-card {
+  max-width: 900px;
+}
+
+.career-path {
+  width: 100%;
+  max-width: 900px;
+  margin-inline: auto;
+}
+
+.rank-node {
+  min-height: 82px;
+}
+
+.rank-node > div:not(.rank-medal) {
+  min-width: 0;
+}
+
+.rank-node strong,
+.rank-node small {
+  overflow-wrap: anywhere;
+}
+
+.career-rank-emblem {
+  flex: 0 0 auto;
+}
+
+/* Marketplace */
+.marketplace .hero {
+  align-items: center;
+}
+
+.marketplace .controls {
+  grid-template-columns: minmax(240px, 1fr) minmax(150px, 190px);
+}
+
+.marketplace .grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  align-items: stretch;
+}
+
+.marketplace .card {
+  height: 100%;
+  min-height: 330px;
+}
+
+.marketplace .cardTop {
+  align-items: start;
+}
+
+.marketplace .cardTop h3 {
+  overflow-wrap: anywhere;
+}
+
+.marketplace .card > p {
+  min-height: 0;
+}
+
+.marketplace .card button {
+  margin-top: auto;
+}
+
+/* Academy RPG / classes */
+.classGrid {
+  align-items: stretch;
+}
+
+.classCard {
+  height: 100%;
+  min-height: 0;
+}
+
+.classCard > p {
+  min-height: 0;
+}
+
+.perk {
+  min-height: 0;
+}
+
+.skillGrid,
+.questGrid {
+  align-items: stretch;
+}
+
+.skillTrack,
+.questCard {
+  height: 100%;
+}
+
+/* Profile */
+.profile-grid,
+.profile-layout {
+  align-items: stretch;
+}
+
+.profile-card,
+.account-access-card {
+  height: 100%;
+}
+
+.profile-name-editor {
+  width: 100%;
+}
+
+/* Admin */
+.owner-metrics,
+.metric-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.owner-user-row,
+.admin-user-row {
+  min-width: 0;
+}
+
+.owner-user-row > *,
+.admin-user-row > * {
+  min-width: 0;
+}
+
+.owner-user-row .user-email,
+.admin-user-row .user-email {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Medium desktop */
+@media (max-width: 1240px) {
+  .cc-overview-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .cc-evaluation-overview {
+    grid-column: 1 / -1;
+  }
+
+  .marketplace .grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .owner-metrics,
+  .metric-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Tablet */
+@media (max-width: 980px) {
+  .command-center-v220 .cc-hero {
+    grid-template-columns: 1fr;
+  }
+
+  .command-center-v220 .cc-rank-console {
+    width: 100%;
+    min-height: auto;
+    grid-template-columns: 190px minmax(0, 1fr);
+    justify-items: stretch;
+  }
+
+  .command-center-v220 .cc-rank-orbit {
+    justify-self: center;
+  }
+
+  .command-center-v220 .cc-hero-actions {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .command-center-v220 .cc-icon-launch {
+    grid-column: 1 / -1;
+  }
+
+  .cc-quick-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .marketplace .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .career-live-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .career-requirement-bars {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Mobile */
+@media (max-width: 820px) {
+  .v1-content {
+    padding: 12px 10px 92px;
+  }
+
+  .v1-header {
+    min-height: 58px;
+    padding: 8px 10px;
+    align-items: center;
+  }
+
+  .v1-header .brand strong {
+    font-size: .74rem;
+  }
+
+  .v1-header .brand span {
+    font-size: .49rem;
+  }
+
+  .v1-header .status-strip {
+    padding-bottom: 2px;
+  }
+
+  .command-center-v220 .cc-hero {
+    padding: 20px 16px;
+    border-radius: 14px;
+  }
+
+  .command-center-v220 .cc-hero-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .command-center-v220 .cc-icon-launch {
+    grid-column: auto;
+  }
+
+  .command-center-v220 .cc-rank-console {
+    grid-template-columns: 1fr;
+  }
+
+  .cc-overview-grid,
+  .cc-quick-actions,
+  .marketplace .controls,
+  .profile-grid,
+  .profile-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .cc-evaluation-meters,
+  .cc-rule-strip {
+    grid-template-columns: 1fr;
+  }
+
+  .cc-daily-ring {
+    grid-template-columns: 1fr;
+    justify-items: center;
+  }
+
+  .cc-daily-rewards {
+    width: 100%;
+  }
+
+  .marketplace .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .marketplace .card {
+    min-height: 0;
+  }
+
+  .marketplace .hero {
+    display: grid;
+    gap: 10px;
+  }
+
+  .marketplace .balance {
+    width: fit-content;
+  }
+
+  .career-live-summary,
+  .owner-metrics,
+  .metric-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .career-requirement-top {
+    align-items: flex-start;
+  }
+
+  .rank-node {
+    min-height: 76px;
+    padding: 10px;
+  }
+
+  .profile-name-editor-controls,
+  .name-setup-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-name-editor-controls button,
+  .name-setup-actions button {
+    width: 100%;
+  }
+
+  .v3-mobile-dock {
+    min-height: 64px;
+  }
+
+  .v3-mobile-dock button {
+    min-height: 48px;
+  }
+}
+
+/* Small mobile */
+@media (max-width: 520px) {
+  .v1-content {
+    padding-inline: 8px;
+  }
+
+  .command-center-v220 .cc-hero-copy h1 {
+    font-size: clamp(1.72rem, 10.5vw, 2.3rem);
+  }
+
+  .command-center-v220 .cc-hero-copy h1 span {
+    font-size: clamp(1.65rem, 10vw, 2.2rem);
+  }
+
+  .cc-quick-actions,
+  .career-live-summary,
+  .owner-metrics,
+  .metric-grid,
+  .cc-snapshot-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .cc-primary-launch {
+    grid-template-columns: 38px minmax(0, 1fr);
+  }
+
+  .cc-primary-launch > b {
+    display: none;
+  }
+
+  .marketplace .categories {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 5px;
+    scrollbar-width: none;
+  }
+
+  .marketplace .categories::-webkit-scrollbar {
+    display: none;
+  }
+
+  .marketplace .categories button {
+    flex: 0 0 auto;
+  }
+
+  .career-requirement-top {
+    display: grid;
+  }
+
+  .name-setup-modal {
+    max-height: calc(100vh - 22px);
+    overflow-y: auto;
+  }
+}
+
+/* Very wide screens */
+@media (min-width: 1600px) {
+  .v1-content {
+    padding-inline: 32px;
+  }
+
+  .command-center-v220,
+  .marketplace,
+  .page,
+  .owner-dashboard {
+    max-width: 1560px;
+  }
+
+  .marketplace .grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}

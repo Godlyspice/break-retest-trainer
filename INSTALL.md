@@ -1,15 +1,14 @@
-# Futures Academy v4.4.3 — Sidebar Badge Fix
+# Futures Academy v4.5 — Full Responsive UI Refinement
 
-This complete bundle includes v4.4.2 plus the desktop navigation fix.
+This is a cumulative package. It already includes:
 
-## Fixed
-
-- OPEN, NEW, ELIGIBLE, OWNER, and LOCKED badges no longer get cut off.
-- Desktop sidebar width now matches the new icon-and-label design.
-- Navigation text uses the available middle column correctly.
-- Main page content resizes instead of overlapping the sidebar.
-- Medium desktop widths use a slightly smaller but complete sidebar.
-- Mobile bottom navigation remains unchanged.
+- Expanded classes and animated icons
+- Editable profile names
+- Guest, Demo, and account name onboarding
+- Class-perks compile fix
+- Command Center hero clipping fix
+- Sidebar eligibility badge fix
+- Full responsive UI refinement
 
 ## Install
 
@@ -18,6 +17,44 @@ This complete bundle includes v4.4.2 plus the desktop navigation fix.
 3. Choose Merge and Replace.
 4. Commit and push:
 
-`Fix sidebar eligibility badge clipping`
+`Refine responsive UI across Futures Academy`
 
-No Supabase migration is required.
+No new Supabase migration is required for this update.
+
+## Refined
+
+- Dashboard spacing
+- Card heights and alignment
+- Long-name handling
+- Responsive typography
+- Button sizing
+- Marketplace grid
+- Career layout
+- Class cards
+- Profile layout
+- Admin metrics
+- Header overflow
+- Mobile padding
+- Bottom navigation spacing
+- Small-screen controls
+- Wide-screen scaling
+
+## Test
+
+Desktop:
+- Command Center
+- Academy Path
+- Career
+- Marketplace
+- Profile
+- Admin
+- Sidebar
+
+Mobile:
+- Header status row
+- Bottom dock
+- More menu
+- Command Center
+- Marketplace categories
+- Profile-name form
+- Guest name modal
