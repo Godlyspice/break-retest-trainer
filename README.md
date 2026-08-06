@@ -127,3 +127,17 @@ Focused practice remains optional through a small Practice Mode selector:
 - No-Trade
 
 There are no required separate stages or locked lesson sections.
+
+
+## Trade planning update
+
+The main mixed trainer now requires a complete trade plan for Buy and Sell decisions:
+
+- Entry price
+- Stop-loss price
+- Take-profit price
+- Automatic validation of stop/target direction
+- Reward-to-risk feedback
+- Entry, stop, and target lines drawn directly on the chart
+
+Wait decisions do not require trade levels.

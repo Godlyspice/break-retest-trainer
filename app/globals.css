@@ -195,3 +195,50 @@ footer { padding: 8px 12px; text-align: center; color: var(--muted); border-top:
   .mode-control { grid-template-columns: 1fr; gap: 3px; }
   .mode-control select { min-width: 120px; }
 }
+
+
+.trade-plan-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  margin: 10px 0;
+  padding: 10px;
+  border: 1px solid var(--border);
+  background: var(--panel2);
+  border-radius: 6px;
+}
+.trade-plan-grid label {
+  margin: 0;
+  grid-template-columns: 92px 1fr;
+  align-items: center;
+  gap: 8px;
+}
+.trade-plan-grid input {
+  padding: 8px;
+}
+.plan-grade {
+  display: grid;
+  gap: 4px;
+  margin: 10px 0;
+  padding: 10px;
+  border: 1px solid var(--border);
+  background: #111922;
+  border-radius: 5px;
+}
+.plan-grade span {
+  color: var(--muted);
+  font-size: .82rem;
+}
+@media (max-width: 850px) {
+  .trade-plan-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .trade-plan-grid label {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 520px) {
+  .trade-plan-grid {
+    grid-template-columns: 1fr;
+  }
+}

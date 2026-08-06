@@ -137,11 +137,17 @@ function generateScenario(daily = false, mode = "mixed"): Scenario {
 function Chart({
   scenario,
   reveal,
-  choice
+  choice,
+  entryPrice,
+  stopPrice,
+  targetPrice
 }: {
   scenario: Scenario;
   reveal: boolean;
   choice: string | null;
+  entryPrice?: string;
+  stopPrice?: string;
+  targetPrice?: string;
 }) {
   const ref = useRef<HTMLCanvasElement>(null);
 
@@ -212,6 +218,26 @@ function Chart({
         const top = y(Math.max(c.open, c.close));
         const bottom = y(Math.min(c.open, c.close));
         ctx.fillRect(x - step * 0.27, top, step * 0.54, Math.max(2, bottom - top));
+      });
+
+      const tradeLevels = [
+        { label: "ENTRY", value: Number(entryPrice), color: "#398bea" },
+        { label: "STOP", value: Number(stopPrice), color: "#dd5669" },
+        { label: "TARGET", value: Number(targetPrice), color: "#1bb386" }
+      ].filter(item => Number.isFinite(item.value));
+
+      tradeLevels.forEach(item => {
+        const yy = y(item.value);
+        ctx.setLineDash([4, 4]);
+        ctx.strokeStyle = item.color;
+        ctx.lineWidth = 1.3;
+        ctx.beginPath();
+        ctx.moveTo(pad.l, yy);
+        ctx.lineTo(w - pad.r, yy);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = item.color;
+        ctx.fillText(`${item.label} ${item.value.toFixed(2)}`, pad.l + 8, yy - 5);
       });
 
       if (reveal) {
@@ -296,6 +322,10 @@ export default function FuturesAcademy() {
   const [scenario, setScenario] = useState(() => generateScenario());
   const [dailyScenario] = useState(() => generateScenario(true));
   const [choice, setChoice] = useState<"buy" | "sell" | "wait" | null>(null);
+  const [entryPrice, setEntryPrice] = useState("");
+  const [stopPrice, setStopPrice] = useState("");
+  const [targetPrice, setTargetPrice] = useState("");
+  const [planFeedback, setPlanFeedback] = useState("");
   const [reveal, setReveal] = useState(false);
   const [xp, setXp] = useState(1240);
   const [streak, setStreak] = useState(3);
@@ -363,6 +393,36 @@ export default function FuturesAcademy() {
     const correct = choice === activeScenario.answer;
     playTone(soundEnabled, correct);
 
+    const entry = Number(entryPrice);
+    const stop = Number(stopPrice);
+    const target = Number(targetPrice);
+    let planMessage = "";
+
+    if (choice === "wait") {
+      planMessage = "No entry, stop, or target is required for a Wait decision.";
+    } else if (![entry, stop, target].every(Number.isFinite)) {
+      planMessage = "Direction submitted, but the trade plan was incomplete.";
+    } else {
+      const risk = choice === "buy" ? entry - stop : stop - entry;
+      const reward = choice === "buy" ? target - entry : entry - target;
+      const validSide =
+        choice === "buy"
+          ? stop < entry && target > entry
+          : stop > entry && target < entry;
+      const rr = risk > 0 ? reward / risk : 0;
+
+      if (!validSide) {
+        planMessage = "The stop and target are on the wrong sides of the entry.";
+      } else if (rr < 1) {
+        planMessage = `Trade plan is valid, but reward-to-risk is only ${rr.toFixed(1)}:1.`;
+      } else if (rr < 2) {
+        planMessage = `Trade plan is valid with about ${rr.toFixed(1)}:1 reward-to-risk.`;
+      } else {
+        planMessage = `Strong trade plan: about ${rr.toFixed(1)}:1 reward-to-risk.`;
+      }
+    }
+    setPlanFeedback(planMessage);
+
     if (correct) {
       setCorrectAttempts(v => v + 1);
       if (choice === "wait") setCorrectWaits(v => v + 1);
@@ -394,6 +454,10 @@ export default function FuturesAcademy() {
   function nextScenario() {
     setScenario(generateScenario(false, practiceMode));
     setChoice(null);
+    setEntryPrice("");
+    setStopPrice("");
+    setTargetPrice("");
+    setPlanFeedback("");
     setReveal(false);
   }
 
@@ -401,6 +465,10 @@ export default function FuturesAcademy() {
     setPracticeMode(mode);
     setScenario(generateScenario(false, mode));
     setChoice(null);
+    setEntryPrice("");
+    setStopPrice("");
+    setTargetPrice("");
+    setPlanFeedback("");
     setReveal(false);
   }
 
@@ -445,7 +513,7 @@ export default function FuturesAcademy() {
               </div>
               <div className="market-chip">{practiceMode === "mixed" ? "MAIN MODE" : "FOCUSED"}</div>
             </div>
-            <Chart scenario={scenario} reveal={reveal} choice={choice} />
+            <Chart scenario={scenario} reveal={reveal} choice={choice} entryPrice={entryPrice} stopPrice={stopPrice} targetPrice={targetPrice} />
           </div>
           <aside className="ticket">
             <h2>{practiceMode === "mixed" ? "Main mixed trainer" : "Focused practice"}</h2>
@@ -469,8 +537,53 @@ export default function FuturesAcademy() {
                 </button>
               ))}
             </div>
-            <button className="primary" type="button" disabled={!choice || reveal} onClick={() => submitAnswer()}>
-              Submit decision
+
+            {choice !== "wait" && (
+              <div className="trade-plan-grid">
+                <label>
+                  Entry
+                  <input
+                    inputMode="decimal"
+                    value={entryPrice}
+                    onChange={e => setEntryPrice(e.target.value)}
+                    placeholder={scenario.candles.at(-1)?.close.toFixed(2)}
+                    disabled={reveal}
+                  />
+                </label>
+                <label>
+                  Stop-loss
+                  <input
+                    inputMode="decimal"
+                    value={stopPrice}
+                    onChange={e => setStopPrice(e.target.value)}
+                    placeholder="Price"
+                    disabled={reveal}
+                  />
+                </label>
+                <label>
+                  Take-profit
+                  <input
+                    inputMode="decimal"
+                    value={targetPrice}
+                    onChange={e => setTargetPrice(e.target.value)}
+                    placeholder="Price"
+                    disabled={reveal}
+                  />
+                </label>
+              </div>
+            )}
+
+            <button
+              className="primary"
+              type="button"
+              disabled={
+                !choice ||
+                reveal ||
+                (choice !== "wait" && (!entryPrice || !stopPrice || !targetPrice))
+              }
+              onClick={() => submitAnswer()}
+            >
+              Submit trade plan
             </button>
             {reveal && (
               <div className={`feedback ${choice === scenario.answer ? "good" : "bad"}`}>
@@ -484,6 +597,10 @@ export default function FuturesAcademy() {
                     ? "Price crossed the level but quickly returned through it. The failed break makes waiting safer."
                     : "Price remained choppy around the level without a clean close, retest, and confirmation sequence."}
                 </p>
+                <div className="plan-grade">
+                  <strong>Trade-plan feedback</strong>
+                  <span>{planFeedback}</span>
+                </div>
                 <button className="secondary" type="button" onClick={nextScenario}>Next scenario</button>
               </div>
             )}
@@ -500,7 +617,7 @@ export default function FuturesAcademy() {
             <div className="streak">🔥 {streak}-day streak</div>
           </div>
           <div className="challenge-card">
-            <Chart scenario={dailyScenario} reveal={reveal} choice={choice} />
+            <Chart scenario={dailyScenario} reveal={reveal} choice={choice} entryPrice={entryPrice} stopPrice={stopPrice} targetPrice={targetPrice} />
             <div className="challenge-actions">
               {(["buy", "sell", "wait"] as const).map(item => (
                 <button key={item} className={`decision ${item} ${choice === item ? "active" : ""}`} onClick={() => !reveal && setChoice(item)}>
@@ -724,7 +841,7 @@ export default function FuturesAcademy() {
         )}
       </section>
     );
-  }, [tab, scenario, dailyScenario, choice, reveal, xp, streak, role, premium, email, password, authMessage, question, aiAnswer, aiLoading, users, canAdmin, level, practiceMode, accuracy, mistakes, selectedMistake, unlockedAchievements, soundEnabled, reducedMotion, showCelebration, totalAttempts]);
+  }, [tab, scenario, dailyScenario, choice, reveal, xp, streak, role, premium, email, password, authMessage, question, aiAnswer, aiLoading, users, canAdmin, level, practiceMode, accuracy, mistakes, selectedMistake, unlockedAchievements, soundEnabled, reducedMotion, showCelebration, totalAttempts, entryPrice, stopPrice, targetPrice, planFeedback]);
 
   return (
     <main className="app-shell">
