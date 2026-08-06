@@ -381,3 +381,30 @@ After deploying the code, run:
 `supabase/admin_dashboard_v112.sql`
 
 once in the Supabase SQL Editor. Then sign out and back in before opening the Admin page.
+
+
+# Futures Academy v1.2 — Modular Owner Console
+
+This release begins the architecture refactor without changing the simulator's
+visual design.
+
+## New component structure
+
+- `components/admin/OwnerDashboard.tsx`
+- Admin data fetching, user actions, analytics, and audit history are no longer
+  embedded inside the main simulator component.
+
+## Added owner tools
+
+- Search and view all users
+- Promote moderators and administrators
+- Grant permanent or temporary Premium
+- Ban, unban, suspend, and unsuspend users
+- Adjust XP, Credits, and Reputation
+- Grant profile badges and backgrounds
+- View daily signups, activity, attempts, average accuracy, and most-played mode
+- View a permanent owner audit history
+
+## Required database step
+
+Run `supabase/admin_dashboard_v120.sql` after the existing v1.1.2 migration.

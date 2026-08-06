@@ -2332,3 +2332,84 @@ footer { padding: 8px 12px; text-align: center; color: var(--muted); border-top:
   .admin-action-grid { grid-template-columns: 1fr; }
   .activity-chart { grid-template-columns: repeat(14, 30px); }
 }
+
+
+/* Owner Console v1.2 */
+.admin-panel-tabs {
+  display: flex;
+  gap: 7px;
+  margin: 15px 0 8px;
+}
+.admin-panel-tabs button {
+  padding: 9px 13px;
+  border: 1px solid #304657;
+  border-radius: 7px;
+  background: #101a22;
+  color: #94a5b3;
+}
+.admin-panel-tabs button.active {
+  border-color: #4e8bc0;
+  background: #173047;
+  color: #c6e4ff;
+}
+.audit-log-list {
+  display: grid;
+  gap: 8px;
+}
+.audit-entry {
+  padding: 12px;
+  display: grid;
+  grid-template-columns: 38px minmax(0,1fr) minmax(140px,auto);
+  gap: 10px;
+  align-items: center;
+  border: 1px solid #293b48;
+  border-radius: 8px;
+  background: #101820;
+}
+.audit-icon {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #192a38;
+}
+.audit-entry p {
+  margin: 3px 0;
+  color: var(--muted);
+  text-transform: capitalize;
+}
+.audit-entry small {
+  color: #71808d;
+}
+.audit-entry code {
+  max-width: 340px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #9fc5e4;
+}
+.admin-cosmetic-grid {
+  display: grid;
+  grid-template-columns: minmax(160px,1fr) auto;
+  gap: 7px;
+}
+.admin-cosmetic-grid button {
+  padding: 9px;
+  border: 1px solid #3a5265;
+  border-radius: 6px;
+  background: #172633;
+  color: white;
+}
+@media(max-width:700px) {
+  .audit-entry {
+    grid-template-columns: 38px 1fr;
+  }
+  .audit-entry code {
+    grid-column: 1 / -1;
+    max-width: 100%;
+  }
+  .admin-cosmetic-grid {
+    grid-template-columns: 1fr;
+  }
+}
