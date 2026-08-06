@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { hasSupabase, supabase } from "@/lib/supabase-browser";
 import AccountSelector from "@/components/evaluations/AccountSelector";
+import EvaluationHUD from "@/components/evaluations/EvaluationHUD";
+import PatternRecognition from "@/components/handbook/PatternRecognition";
 import EmptyLeaderboard from "@/components/leaderboards/EmptyLeaderboard";
 import { careerRanks, evaluationAccounts } from "@/lib/evaluations";
 import { useEvaluation } from "@/hooks/useEvaluation";
@@ -730,7 +732,8 @@ export default function FuturesAcademy() {
   const {
     activeEvaluation,
     activeAccount,
-    startEvaluation
+    startEvaluation,
+    applyTradeResult
   } = useEvaluation(authUserId);
 
   const [correctWaits, setCorrectWaits] = useState(0);
@@ -1019,6 +1022,24 @@ export default function FuturesAcademy() {
     setTotalAttempts(v => v + 1);
     const correct = choice === activeScenario.answer;
     playTone(soundEnabled, correct);
+
+    const evaluationNet =
+      correct
+        ? choice !== "wait" && Number.isFinite(estimatedProfit) && estimatedProfit > 0
+          ? estimatedProfit
+          : 10
+        : choice !== "wait" && Number.isFinite(estimatedLoss) && estimatedLoss > 0
+        ? -estimatedLoss
+        : -25;
+
+    if (activeEvaluation) {
+      const evaluationResult = await applyTradeResult(evaluationNet);
+      if (!evaluationResult.ok) {
+        setPlanFeedback(evaluationResult.message);
+      } else if (evaluationResult.passed || evaluationResult.failed) {
+        setPlanFeedback(evaluationResult.message);
+      }
+    }
 
     const entry = Number(entryPrice);
     const stop = Number(stopPrice);
@@ -1613,6 +1634,12 @@ export default function FuturesAcademy() {
             )}
           </aside>
           </div>
+          {activeEvaluation && activeAccount && (
+            <EvaluationHUD
+              evaluation={activeEvaluation}
+              account={activeAccount}
+            />
+          )}
           <div className="account-hud">
             <div className="account-hud-item">
               <span>Paper account</span>
@@ -1748,6 +1775,13 @@ export default function FuturesAcademy() {
               </article>
             ))}
           </div>
+
+          <PatternRecognition
+            onPractice={mode => {
+              changePracticeMode(mode);
+              setTab("train");
+            }}
+          />
         </section>
       );
     }
@@ -2160,7 +2194,7 @@ export default function FuturesAcademy() {
         )}
       </section>
     );
-  }, [tab, scenario, dailyScenario, choice, reveal, xp, streak, role, premium, email, password, authMessage, question, aiAnswer, aiLoading, users, canAdmin, level, practiceMode, accuracy, mistakes, selectedMistake, unlockedAchievements, soundEnabled, reducedMotion, showCelebration, totalAttempts, entryPrice, stopPrice, targetPrice, planFeedback, visibleCandles, replayRunning, replaySpeed, activePlacement, contracts, orderType, liveRiskPoints, liveRewardPoints, liveRR, estimatedLoss, estimatedProfit, lastPlacedLevel, combo, bestCombo, currentRankIndex, currentRank, nextRank, rankProgress, currentMode, dailyProgress, points, selectedAccountId, selectedAccount, paperBalance, peakBalance, trailingDrawdownFloor, drawdownRemaining, accountFailed, ownedShopItems, shopMessage, reputation, membershipLabel, profileName, profileRole, profilePremium, authUserId, showGuestImport, guestSnapshot, activeEvaluation, activeAccount]);
+  }, [tab, scenario, dailyScenario, choice, reveal, xp, streak, role, premium, email, password, authMessage, question, aiAnswer, aiLoading, users, canAdmin, level, practiceMode, accuracy, mistakes, selectedMistake, unlockedAchievements, soundEnabled, reducedMotion, showCelebration, totalAttempts, entryPrice, stopPrice, targetPrice, planFeedback, visibleCandles, replayRunning, replaySpeed, activePlacement, contracts, orderType, liveRiskPoints, liveRewardPoints, liveRR, estimatedLoss, estimatedProfit, lastPlacedLevel, combo, bestCombo, currentRankIndex, currentRank, nextRank, rankProgress, currentMode, dailyProgress, points, selectedAccountId, selectedAccount, paperBalance, peakBalance, trailingDrawdownFloor, drawdownRemaining, accountFailed, ownedShopItems, shopMessage, reputation, membershipLabel, profileName, profileRole, profilePremium, authUserId, showGuestImport, guestSnapshot, activeEvaluation, activeAccount, applyTradeResult]);
 
   if (identityMode === "landing") {
     return (

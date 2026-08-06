@@ -1,0 +1,92 @@
+.hud {
+  display: grid;
+  grid-template-columns: 1.3fr repeat(5,1fr);
+  gap: 0;
+  border: 1px solid #2d4251;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #0d151c;
+  box-shadow: 0 10px 32px rgba(0,0,0,.28);
+}
+
+.identity,
+.metric {
+  min-height: 72px;
+  padding: 10px 12px;
+  display: grid;
+  align-content: center;
+  gap: 4px;
+  border-right: 1px solid #273744;
+}
+
+.identity {
+  grid-template-columns: 38px 1fr auto;
+  align-items: center;
+}
+
+.identity > span {
+  font-size: 1.3rem;
+}
+
+.identity small,
+.metric span {
+  color: #7e8d99;
+  font-size: .62rem;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+}
+
+.identity strong,
+.metric strong {
+  font-size: .79rem;
+}
+
+.identity b {
+  padding: 4px 6px;
+  border-radius: 999px;
+  background: #163e30;
+  color: #89e0bd;
+  font-size: .58rem;
+}
+
+.metric i {
+  height: 5px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #1d2932;
+}
+
+.metric em {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg,#358ed2,#35d0a0);
+}
+
+.failed {
+  border-color: #743c48;
+}
+
+.failed .identity b {
+  background: #3c1821;
+  color: #ff9dac;
+}
+
+.passed {
+  border-color: #39745b;
+}
+
+@media(max-width:1000px) {
+  .hud {
+    grid-template-columns: repeat(3,1fr);
+  }
+}
+
+@media(max-width:620px) {
+  .hud {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .identity {
+    grid-column: 1 / -1;
+  }
+}

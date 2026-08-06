@@ -19,3 +19,20 @@ It upgrades the existing application rather than replacing the simulator.
 - Fixed nullable Supabase client calls in the supplied component
 
 See `INSTALL.md` for deployment instructions.
+
+
+## v2.1 additions
+
+- Simulator outcomes now update active evaluation balances
+- Automatic profit-target checking
+- Automatic trailing-drawdown failure
+- Automatic daily-loss failure
+- Automatic consistency-rule checking
+- Automatic pass/fail status
+- Evaluation trade history table
+- Sticky Evaluation HUD with live rule progress
+- Beginner Pattern Recognition Handbook
+- Bullish and bearish retests
+- Bull and bear traps
+- Chop/no-trade recognition
+- Early-entry warning pattern

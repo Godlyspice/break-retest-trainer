@@ -67,3 +67,21 @@ database types, tables, policies, and functions. It does not delete users.
 
 The next build will connect completed simulator trades to the evaluation rule
 engine and automatically pass or fail accounts.
+
+
+# v2.1 Live Evaluation + Pattern Recognition
+
+After deploying this update, run:
+
+`supabase/evaluation_engine_v210.sql`
+
+in Supabase SQL Editor.
+
+Then test:
+
+1. Start a Starter Evaluation.
+2. Complete a correct simulator trade.
+3. Confirm the Evaluation HUD balance increases.
+4. Submit an incorrect trade and confirm balance/drawdown update.
+5. Open Handbook and scroll to Pattern Recognition.
+6. Click a pattern's Practice button and confirm it opens the matching mode.
