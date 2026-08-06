@@ -1,22 +1,13 @@
-# Futures Academy v2.1.8 — Career Live Progress Sync
+# Futures Academy v2.1.9 — Polished Career Dashboard
 
-Career now queries the current Supabase profile whenever the Career tab opens.
-Admin-granted XP and Reputation no longer require a simulator trade.
+This is a complete drag-and-drop patch.
 
-## Install
-
-Replace:
+Extract the ZIP into the root of the project and allow Windows to replace:
 
 - components/FuturesAcademy.tsx
-
-Then append the contents of:
-
-- app/career-live-sync.css
-
-to the bottom of your existing:
-
 - app/globals.css
 
-Do not replace globals.css with career-live-sync.css.
+The global stylesheet already contains the Career dashboard styling. Do not
+copy or append CSS manually.
 
 No Supabase migration is required.
