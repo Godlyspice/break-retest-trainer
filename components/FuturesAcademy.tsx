@@ -923,7 +923,7 @@ export default function FuturesAcademy() {
       setEmail(user.email || "");
       setIdentityMode("account");
 
-      const { data: profile } = await supabase
+      const { data: profile } = await client
         .from("profiles")
         .select("display_name, role, premium, xp, streak")
         .eq("id", user.id)
@@ -959,9 +959,9 @@ export default function FuturesAcademy() {
       setAuthReady(true);
     };
 
-    supabase.auth.getSession().then(({ data }) => loadAuthenticatedProfile(data.session));
+    client.auth.getSession().then(({ data }) => loadAuthenticatedProfile(data.session));
 
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: listener } = client.auth.onAuthStateChange((_event, session) => {
       loadAuthenticatedProfile(session);
     });
 
