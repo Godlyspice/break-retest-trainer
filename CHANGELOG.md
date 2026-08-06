@@ -1,10 +1,7 @@
-# Futures Academy v4.2 Changelog
+# Futures Academy v4.4.1 Changelog
 
-- Expanded trader classes from 4 to 12
-- Added advanced and endgame specializations
-- Added multiple perks to every class
-- Increased class difficulty and eligibility requirements
-- Added animated class emblems
-- Added animated navigation and feature icons
-- Rebuilt Career medals as animated icon shields with Roman numerals
-- Fixed missing Reputation and Academy Points header icons
+- Combined v4.3 and v4.4 into one complete package
+- Included v4.2 expanded classes and animated icon system
+- Fixed `currentClass.perk` compile error
+- Added rendered list for `currentClass.perks`
+- Added current-class perk-list styling

@@ -700,16 +700,21 @@
     min-height: auto;
   }
 }
-.currentClassPerks{
-  margin:10px 0 0;
-  padding:0;
-  list-style:none;
-  display:grid;
-  gap:6px;
+
+/* v4.4.1 current class perks compile fix */
+
+.currentClassPerks {
+  width: 100%;
+  margin: 10px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+  list-style: none;
+  text-align: left;
 }
 
-.currentClassPerks li{
-  color:#b9d5ff;
-  font-size:.7rem;
-  line-height:1.4;
+.currentClassPerks li {
+  color: #b9d5ff;
+  font-size: .7rem;
+  line-height: 1.4;
 }

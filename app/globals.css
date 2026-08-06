@@ -4942,3 +4942,278 @@ body {
     animation: none !important;
   }
 }
+
+
+/* Futures Academy v4.3 — Editable display names */
+.profile-name-editor {
+  grid-column: 1 / -1;
+  margin-top: 14px;
+  padding: 14px;
+  border: 1px solid rgba(78, 119, 173, .52);
+  border-radius: 11px;
+  background:
+    radial-gradient(circle at 100% 0, rgba(143, 62, 255, .10), transparent 34%),
+    linear-gradient(145deg, rgba(8, 20, 35, .96), rgba(3, 9, 18, .98));
+}
+
+.profile-name-editor-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 9px;
+}
+
+.profile-name-editor-heading > div {
+  display: grid;
+  gap: 3px;
+}
+
+.profile-name-editor-heading span {
+  color: #49b8ff;
+  font-size: .56rem;
+  font-weight: 900;
+  letter-spacing: .12em;
+}
+
+.profile-name-editor-heading strong {
+  font-size: .78rem;
+}
+
+.profile-name-editor-heading small {
+  color: #788ba0;
+  font-size: .61rem;
+}
+
+.profile-name-editor-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+
+.profile-name-editor-controls input {
+  min-width: 0;
+  min-height: 42px;
+  padding: 10px 12px;
+  border: 1px solid rgba(62, 117, 166, .60);
+  border-radius: 8px;
+  background: rgba(2, 8, 17, .88);
+  color: #f1f7ff;
+}
+
+.profile-name-editor-controls input:focus {
+  border-color: #3ebcff;
+  box-shadow:
+    0 0 0 3px rgba(42, 171, 255, .10),
+    0 0 22px rgba(60, 99, 255, .10);
+}
+
+.profile-name-editor-controls button {
+  min-width: 112px;
+  padding: 10px 13px;
+  border: 1px solid rgba(97, 111, 255, .72);
+  border-radius: 8px;
+  background: linear-gradient(100deg, #168dff, #7341ef);
+  color: white;
+  font-weight: 850;
+}
+
+.profile-name-editor-controls button:disabled {
+  opacity: .45;
+  filter: grayscale(.35);
+  cursor: not-allowed;
+}
+
+.profile-name-editor > p {
+  margin: 8px 0 0;
+  color: #71859a;
+  font-size: .62rem;
+  line-height: 1.4;
+}
+
+.profile-name-message {
+  margin-top: 8px;
+  padding: 8px 10px;
+  border: 1px solid rgba(218, 157, 62, .42);
+  border-radius: 7px;
+  background: rgba(67, 43, 8, .35);
+  color: #e8c67a;
+  font-size: .64rem;
+}
+
+.profile-name-message.success {
+  border-color: rgba(49, 207, 141, .48);
+  background: rgba(12, 73, 49, .34);
+  color: #86e4b7;
+}
+
+@media(max-width: 620px) {
+  .profile-name-editor-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-name-editor-controls button {
+    width: 100%;
+  }
+}
+
+
+/* Futures Academy v4.4 — Name selection during onboarding */
+.name-setup-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 30000;
+  padding: 18px;
+  display: grid;
+  place-items: center;
+  background: rgba(0, 2, 8, .82);
+  backdrop-filter: blur(12px);
+}
+
+.name-setup-modal {
+  width: min(100%, 480px);
+  padding: 25px;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(102, 83, 255, .72);
+  border-radius: 17px;
+  background:
+    radial-gradient(circle at 50% 0, rgba(158, 65, 255, .18), transparent 33%),
+    radial-gradient(circle at 0 100%, rgba(0, 212, 255, .10), transparent 32%),
+    linear-gradient(145deg, #071222, #020711 74%);
+  box-shadow:
+    0 35px 100px rgba(0,0,0,.72),
+    0 0 35px rgba(95, 61, 255, .18);
+}
+
+.name-setup-modal::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: .10;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(64, 133, 255, .16) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(64, 133, 255, .16) 1px, transparent 1px);
+  background-size: 30px 30px;
+}
+
+.name-setup-modal > * {
+  position: relative;
+  z-index: 2;
+}
+
+.name-setup-icon {
+  width: 68px;
+  height: 68px;
+  margin-bottom: 14px;
+  display: grid;
+  place-items: center;
+  clip-path: polygon(50% 0, 92% 24%, 92% 76%, 50% 100%, 8% 76%, 8% 24%);
+  background: linear-gradient(145deg, #7b39e9, #174da5);
+  font-size: 1.7rem;
+  box-shadow: 0 0 30px rgba(123, 57, 233, .35);
+}
+
+.name-setup-modal h2 {
+  margin: 5px 0 8px;
+  font-size: 1.45rem;
+}
+
+.name-setup-modal > p {
+  margin: 0 0 16px;
+  color: #8fa3b7;
+  font-size: .78rem;
+  line-height: 1.55;
+}
+
+.name-setup-modal label {
+  display: grid;
+  gap: 7px;
+  color: #afc1d2;
+  font-size: .67rem;
+  font-weight: 800;
+}
+
+.name-setup-modal input {
+  min-height: 48px;
+  padding: 11px 13px;
+  border: 1px solid rgba(72, 139, 198, .72);
+  border-radius: 9px;
+  background: rgba(1, 7, 16, .88);
+  color: white;
+  font-size: .88rem;
+}
+
+.name-setup-modal input:focus {
+  border-color: #00dfff;
+  box-shadow:
+    0 0 0 3px rgba(0, 211, 255, .10),
+    0 0 24px rgba(85, 78, 255, .16);
+}
+
+.name-setup-counter {
+  margin-top: 7px;
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  color: #687e92;
+  font-size: .57rem;
+}
+
+.name-setup-counter b {
+  color: #92a9bd;
+}
+
+.name-setup-error {
+  margin-top: 10px;
+  padding: 9px 10px;
+  border: 1px solid rgba(255, 88, 111, .52);
+  border-radius: 7px;
+  background: rgba(91, 16, 31, .36);
+  color: #ff9dac;
+  font-size: .66rem;
+}
+
+.name-setup-actions {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 8px;
+}
+
+.name-setup-actions button {
+  min-height: 43px;
+}
+
+.name-setup-modal > small {
+  display: block;
+  margin-top: 10px;
+  color: #64798b;
+  font-size: .58rem;
+  text-align: center;
+}
+
+.account-name-help {
+  display: block;
+  margin: -3px 0 9px;
+  color: #708397;
+  font-size: .61rem;
+  line-height: 1.4;
+}
+
+@media(max-width: 520px) {
+  .name-setup-backdrop {
+    padding: 10px;
+    align-items: end;
+  }
+
+  .name-setup-modal {
+    padding: 20px 16px;
+    border-radius: 17px 17px 12px 12px;
+  }
+
+  .name-setup-actions {
+    grid-template-columns: 1fr;
+  }
+}

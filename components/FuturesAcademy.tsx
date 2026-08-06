@@ -679,9 +679,17 @@ export default function FuturesAcademy() {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [tourStep, setTourStep] = useState(0);
   const [guestPrompt, setGuestPrompt] = useState("");
+  const [nameSetupMode, setNameSetupMode] = useState<
+    "guest" | "demo" | "account" | null
+  >(null);
+  const [setupDisplayName, setSetupDisplayName] = useState("");
+  const [setupNameMessage, setSetupNameMessage] = useState("");
   const [handbookQuery, setHandbookQuery] = useState("");
   const [authUserId, setAuthUserId] = useState<string | null>(null);
   const [profileName, setProfileName] = useState("Demo Trader");
+  const [profileNameDraft, setProfileNameDraft] = useState("");
+  const [profileNameMessage, setProfileNameMessage] = useState("");
+  const [profileNameSaving, setProfileNameSaving] = useState(false);
   const [profileRole, setProfileRole] = useState<"user" | "moderator" | "admin" | "owner">("user");
   const [profilePremium, setProfilePremium] = useState(false);
   const [authReady, setAuthReady] = useState(false);
@@ -863,6 +871,7 @@ export default function FuturesAcademy() {
       if (!session?.user) {
         setAuthUserId(null);
         setProfileName("Demo Trader");
+        setProfileNameDraft("");
         setProfileRole("user");
         setProfilePremium(false);
         setRole("user");
@@ -884,12 +893,14 @@ export default function FuturesAcademy() {
 
       if (!mounted) return;
 
-      setProfileName(
+      const resolvedDisplayName =
         profile?.display_name ||
         user.user_metadata?.display_name ||
         user.email?.split("@")[0] ||
-        "Academy Member"
-      );
+        "Academy Member";
+
+      setProfileName(resolvedDisplayName);
+      setProfileNameDraft(resolvedDisplayName);
       const resolvedRole = (profile?.role || "user") as "user" | "moderator" | "admin" | "owner";
       const resolvedPremium = Boolean(profile?.premium);
       setProfileRole(resolvedRole);
@@ -1047,17 +1058,123 @@ export default function FuturesAcademy() {
     return () => window.clearInterval(timer);
   }, [replayRunning, replaySpeed, scenario.candles.length]);
 
+  function validateDisplayName(value: string) {
+    const cleaned = value.trim().replace(/\s+/g, " ");
+
+    if (cleaned.length < 3 || cleaned.length > 30) {
+      return {
+        ok: false as const,
+        name: cleaned,
+        message: "Choose a name between 3 and 30 characters."
+      };
+    }
+
+    if (!/^[a-zA-Z0-9 _-]+$/.test(cleaned)) {
+      return {
+        ok: false as const,
+        name: cleaned,
+        message:
+          "Use letters, numbers, spaces, underscores, or hyphens only."
+      };
+    }
+
+    return { ok: true as const, name: cleaned, message: "" };
+  }
+
   async function auth(mode: "signin" | "signup") {
     if (!supabase) {
       setAuthMessage("Demo mode is active. Add Supabase environment variables to enable real accounts.");
       return;
     }
-    const action =
-      mode === "signup"
-        ? supabase.auth.signUp({ email, password })
-        : supabase.auth.signInWithPassword({ email, password });
-    const { error } = await action;
-    setAuthMessage(error ? error.message : mode === "signup" ? "Account created. Check your email if confirmation is enabled." : "Signed in.");
+    if (mode === "signup") {
+      const validation = validateDisplayName(profileNameDraft);
+
+      if (!validation.ok) {
+        setAuthMessage(validation.message);
+        return;
+      }
+
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            display_name: validation.name
+          }
+        }
+      });
+
+      setAuthMessage(
+        error
+          ? error.message
+          : "Account created. Check your email if confirmation is enabled."
+      );
+      return;
+    }
+
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
+
+    setAuthMessage(error ? error.message : "Signed in.");
+  }
+
+  async function saveProfileName() {
+    const client = supabase;
+    const cleaned = profileNameDraft.trim().replace(/\s+/g, " ");
+
+    setProfileNameMessage("");
+
+    if (!client || !authUserId) {
+      setProfileNameMessage("Sign in before changing your display name.");
+      return;
+    }
+
+    if (cleaned.length < 3 || cleaned.length > 30) {
+      setProfileNameMessage(
+        "Display name must contain between 3 and 30 characters."
+      );
+      return;
+    }
+
+    if (!/^[a-zA-Z0-9 _-]+$/.test(cleaned)) {
+      setProfileNameMessage(
+        "Use letters, numbers, spaces, underscores, or hyphens only."
+      );
+      return;
+    }
+
+    if (cleaned === profileName) {
+      setProfileNameMessage("Your display name is already saved.");
+      return;
+    }
+
+    setProfileNameSaving(true);
+
+    const { data, error } = await client.rpc("update_my_display_name", {
+      new_display_name: cleaned
+    });
+
+    setProfileNameSaving(false);
+
+    if (error) {
+      setProfileNameMessage(error.message);
+      return;
+    }
+
+    const savedName =
+      typeof data === "string" && data.trim()
+        ? data.trim()
+        : cleaned;
+
+    setProfileName(savedName);
+    setProfileNameDraft(savedName);
+    setProfileNameMessage("Display name updated.");
+
+    window.dispatchEvent(
+      new CustomEvent("futures-academy-profile-updated")
+    );
   }
 
   async function signOutAccount() {
@@ -1108,8 +1225,48 @@ export default function FuturesAcademy() {
     setShowGuestImport(false);
   }
 
-  function enterGuestMode() {
-    setIdentityMode("guest");
+  function openNameSetup(mode: "guest" | "demo" | "account") {
+    setNameSetupMode(mode);
+    setSetupNameMessage("");
+    setSetupDisplayName(
+      mode === "guest"
+        ? "Guest Trader"
+        : mode === "demo"
+        ? "Demo Trader"
+        : ""
+    );
+  }
+
+  function closeNameSetup() {
+    setNameSetupMode(null);
+    setSetupNameMessage("");
+  }
+
+  function confirmNameSetup() {
+    if (!nameSetupMode) return;
+
+    const validation = validateDisplayName(setupDisplayName);
+
+    if (!validation.ok) {
+      setSetupNameMessage(validation.message);
+      return;
+    }
+
+    const selectedName = validation.name;
+    setProfileName(selectedName);
+    setProfileNameDraft(selectedName);
+
+    if (nameSetupMode === "account") {
+      setIdentityMode("account");
+      setTab("profile");
+      setNameSetupMode(null);
+      setSetupNameMessage("");
+      return;
+    }
+
+    const isDemo = nameSetupMode === "demo";
+
+    setIdentityMode(isDemo ? "demo" : "guest");
     setXp(0);
     setStreak(0);
     setPoints(0);
@@ -1124,35 +1281,30 @@ export default function FuturesAcademy() {
     setSelectedAccountId("starter");
     setPaperBalance(10000);
     setPeakBalance(10000);
+
+    if (isDemo) {
+      setPracticeMode("clean");
+      setTab("train");
+    } else {
+      setTab("home");
+    }
+
     setShowOnboarding(true);
     setTourStep(0);
+    setNameSetupMode(null);
+    setSetupNameMessage("");
+  }
+
+  function enterGuestMode() {
+    openNameSetup("guest");
   }
 
   function enterDemoMode() {
-    setIdentityMode("demo");
-    setXp(0);
-    setStreak(0);
-    setPoints(0);
-    setReputation(0);
-    setTotalAttempts(0);
-    setCorrectAttempts(0);
-    setCombo(0);
-    setBestCombo(0);
-    setCorrectWaits(0);
-    setFakeoutsFound(0);
-    setMistakes([]);
-    setSelectedAccountId("starter");
-    setPaperBalance(10000);
-    setPeakBalance(10000);
-    setPracticeMode("clean");
-    setTab("train");
-    setShowOnboarding(true);
-    setTourStep(0);
+    openNameSetup("demo");
   }
 
   function enterAccountMode() {
-    setIdentityMode("account");
-    setTab("profile");
+    openNameSetup("account");
   }
 
   const tourSteps = [
@@ -2814,9 +2966,85 @@ export default function FuturesAcademy() {
                   </div>
                 </div>
                 <button type="button" className="sign-out-button" onClick={signOutAccount}>Sign out</button>
+
+                <div className="profile-name-editor">
+                  <div className="profile-name-editor-heading">
+                    <div>
+                      <span>PUBLIC DISPLAY NAME</span>
+                      <strong>Choose how other members see you</strong>
+                    </div>
+                    <small>{profileNameDraft.trim().length}/30</small>
+                  </div>
+
+                  <div className="profile-name-editor-controls">
+                    <input
+                      type="text"
+                      value={profileNameDraft}
+                      maxLength={30}
+                      autoComplete="nickname"
+                      placeholder="Enter a display name"
+                      onChange={event => {
+                        setProfileNameDraft(event.target.value);
+                        setProfileNameMessage("");
+                      }}
+                      onKeyDown={event => {
+                        if (event.key === "Enter") {
+                          event.preventDefault();
+                          saveProfileName();
+                        }
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={saveProfileName}
+                      disabled={
+                        profileNameSaving ||
+                        profileNameDraft.trim() === profileName
+                      }
+                    >
+                      {profileNameSaving ? "Saving…" : "Save name"}
+                    </button>
+                  </div>
+
+                  <p>
+                    This replaces the email username throughout Futures
+                    Academy. Your email remains private.
+                  </p>
+
+                  {profileNameMessage && (
+                    <div
+                      className={`profile-name-message ${
+                        profileNameMessage === "Display name updated."
+                          ? "success"
+                          : ""
+                      }`}
+                      aria-live="polite"
+                    >
+                      {profileNameMessage}
+                    </div>
+                  )}
+                </div>
               </div>
             ) : (
               <>
+                <label>
+                  Preferred profile name
+                  <input
+                    value={profileNameDraft}
+                    onChange={event => {
+                      setProfileNameDraft(event.target.value);
+                      setAuthMessage("");
+                    }}
+                    type="text"
+                    maxLength={30}
+                    autoComplete="nickname"
+                    placeholder="How should other traders see you?"
+                  />
+                </label>
+                <small className="account-name-help">
+                  Used publicly instead of your email username. You can
+                  change it later in Profile.
+                </small>
                 <label>Email<input value={email} onChange={e => setEmail(e.target.value)} type="email" /></label>
                 <label>Password<input value={password} onChange={e => setPassword(e.target.value)} type="password" /></label>
                 <div className="auth-buttons">
@@ -2865,7 +3093,9 @@ export default function FuturesAcademy() {
     xpRankProgress, reputationRankProgress, xpToNextRank,
     reputationToNextRank, currentMode, dailyProgress, points, selectedAccountId, selectedAccount, paperBalance, peakBalance, trailingDrawdownFloor, drawdownRemaining, accountFailed, ownedShopItems, equippedShopItems, shopMessage, reputation, membershipLabel,
     equippedAccountIcon, equippedBadge, equippedTitle, equippedProfileFrame,
-    equippedBackground, equippedEffect, equippedTheme, profileName, profileRole, profilePremium, authUserId, showGuestImport, guestSnapshot, activeEvaluation, activeAccount, applyTradeResult]);
+    equippedBackground, equippedEffect, equippedTheme, profileName,
+    profileNameDraft, profileNameMessage, profileNameSaving,
+    nameSetupMode, setupDisplayName, setupNameMessage, profileRole, profilePremium, authUserId, showGuestImport, guestSnapshot, activeEvaluation, activeAccount, applyTradeResult]);
 
   if (identityMode === "landing") {
     return (
@@ -2883,6 +3113,109 @@ export default function FuturesAcademy() {
           <button className="welcome-secondary" type="button" onClick={enterAccountMode}>⭐ Create Free Account / Sign In</button>
           <small>Guest progress is stored only on this device. Guests do not appear on leaderboards.</small>
         </section>
+
+        {nameSetupMode && (
+          <div
+            className="name-setup-backdrop"
+            onPointerDown={event => {
+              if (event.currentTarget === event.target) {
+                closeNameSetup();
+              }
+            }}
+          >
+            <section
+              className="name-setup-modal"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="name-setup-title"
+            >
+              <div className="name-setup-icon">
+                {nameSetupMode === "guest"
+                  ? "👤"
+                  : nameSetupMode === "demo"
+                  ? "▶"
+                  : "⭐"}
+              </div>
+
+              <span className="eyebrow">
+                {nameSetupMode === "account"
+                  ? "ACCOUNT SETUP"
+                  : "TRADER IDENTITY"}
+              </span>
+
+              <h2 id="name-setup-title">
+                Choose your profile name
+              </h2>
+
+              <p>
+                This is the name shown throughout Futures Academy.
+                Your account email is never used as your public name.
+              </p>
+
+              <label>
+                Preferred name
+                <input
+                  autoFocus
+                  type="text"
+                  value={setupDisplayName}
+                  maxLength={30}
+                  autoComplete="nickname"
+                  placeholder="Example: ChartFalcon"
+                  onChange={event => {
+                    setSetupDisplayName(event.target.value);
+                    setSetupNameMessage("");
+                  }}
+                  onKeyDown={event => {
+                    if (event.key === "Enter") {
+                      event.preventDefault();
+                      confirmNameSetup();
+                    }
+                  }}
+                />
+              </label>
+
+              <div className="name-setup-counter">
+                <span>
+                  Letters, numbers, spaces, underscores, and hyphens
+                </span>
+                <b>{setupDisplayName.trim().length}/30</b>
+              </div>
+
+              {setupNameMessage && (
+                <div className="name-setup-error" aria-live="polite">
+                  {setupNameMessage}
+                </div>
+              )}
+
+              <div className="name-setup-actions">
+                <button
+                  type="button"
+                  className="secondary"
+                  onClick={closeNameSetup}
+                >
+                  Back
+                </button>
+                <button
+                  type="button"
+                  className="primary"
+                  onClick={confirmNameSetup}
+                >
+                  {nameSetupMode === "account"
+                    ? "Continue to account setup"
+                    : nameSetupMode === "demo"
+                    ? "Start demo"
+                    : "Continue as guest"}
+                </button>
+              </div>
+
+              {nameSetupMode !== "account" && (
+                <small>
+                  Guest and Demo names are saved only on this device.
+                </small>
+              )}
+            </section>
+          </div>
+        )}
       </main>
     );
   }

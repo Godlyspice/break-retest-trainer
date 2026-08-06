@@ -1,54 +1,34 @@
-# Futures Academy v4.2 — Expanded Classes & Animated Emblems
+# Futures Academy v4.4.1 — Combined Fixed Bundle
 
-This is one complete drag-and-drop package built on v4.1.
+This package includes:
+
+- v4.2 expanded trader classes and animated icons
+- v4.3 editable profile names
+- v4.4 name selection during Guest, Demo, and account onboarding
+- The compile fix changing `currentClass.perk` to `currentClass.perks`
 
 ## Install
 
 1. Extract this ZIP.
-2. Drag all folders into the root of your current project.
-3. Choose Merge and Replace when prompted.
+2. Drag every included folder into the root of your project.
+3. Choose Merge and Replace.
 4. Commit and push:
 
-`Expand trader classes and animated emblems`
+`Install v4.4.1 combined fixed bundle`
 
-No Supabase migration is required.
+## Supabase
 
-## Added
+Run these SQL files in order if you have not already run them:
 
-- 12 trader classes instead of 4
-- 4 to 7 perks per class
-- Difficulty ratings from 2/10 to 10/10
-- Much harder Level and Reputation requirements
-- Price Action Specialist
-- Risk Manager
-- Pattern Hunter
-- Breakout Trader
-- Swing Strategist
-- Scalper Elite
-- Trend Follower
-- Capital Protector
-- Psychology Master
-- Volatility Specialist
-- News Analyst
-- Algo Developer
-- Animated class emblems
-- Animated navigation icons
-- Animated Handbook, reward, and program icons
-- Animated Career shields while retaining Roman numerals
-- Fixed visible Reputation icon
-- Fixed visible Academy Points icon
+1. `supabase/editable_profile_names_v430.sql`
+2. `supabase/name_onboarding_v440.sql`
 
-## Test
+If you already ran either file successfully, you do not need to run it again.
 
-1. Confirm Reputation and Points icons appear in the top header.
-2. Open Academy Path.
-3. Confirm 12 classes display.
-4. Confirm each class shows:
-   - difficulty
-   - multiple perks
-   - Level requirement
-   - Reputation requirement
-   - eligible/locked state
-5. Open Career and confirm Roman numerals remain visible.
-6. Confirm the current Career emblem animates.
-7. Check mobile navigation and reduced-motion behavior.
+## Verify
+
+- The project compiles without the `Property 'perk' does not exist` error.
+- Guest and Demo ask for a profile name.
+- New account signup asks for a preferred profile name.
+- Existing users can change their name from Profile.
+- Academy Path shows all expanded classes and multiple perks.

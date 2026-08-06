@@ -491,10 +491,10 @@ export default function AcademyRPG({
           <small>ACTIVE TRADER CLASS</small>
           <strong>{currentClass.name}</strong>
           <ul className={styles.currentClassPerks}>
-  {currentClass.perks.map((perk) => (
-    <li key={perk}>{perk}</li>
-  ))}
-</ul>
+            {currentClass.perks.map((perk) => (
+              <li key={perk}>✦ {perk}</li>
+            ))}
+          </ul>
           <div>
             <span>LVL {level}</span>
             <span>⭐ {reputation.toLocaleString()}</span>
