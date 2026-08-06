@@ -5977,3 +5977,492 @@ textarea {
     grid-template-columns: repeat(5, minmax(0, 1fr));
   }
 }
+
+
+/* Futures Academy v4.6 — Learning, Trophy, and Vault Expansion */
+
+/* Handbook brightness correction */
+.handbook-page-v460 {
+  position: relative;
+  isolation: isolate;
+  background:
+    radial-gradient(circle at 75% 0, rgba(77, 54, 190, .075), transparent 32%),
+    linear-gradient(180deg, #040914, #02060d) !important;
+}
+
+.handbook-page-v460::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: .045;
+  background-image:
+    linear-gradient(rgba(56, 116, 195, .16) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(56, 116, 195, .16) 1px, transparent 1px);
+  background-size: 46px 46px;
+}
+
+.handbook-page-v460 .handbook-search {
+  border-color: rgba(58, 102, 158, .48);
+  background: rgba(3, 10, 20, .86) !important;
+  box-shadow: none !important;
+}
+
+.handbook-page-v460 .handbook-card {
+  min-height: 310px;
+  display: flex;
+  flex-direction: column;
+  border-color: rgba(47, 84, 133, .52);
+  background:
+    radial-gradient(circle at 100% 0, rgba(107, 61, 218, .055), transparent 34%),
+    linear-gradient(145deg, #07111e, #030812 78%) !important;
+  box-shadow:
+    inset 0 1px rgba(255,255,255,.015),
+    0 14px 34px rgba(0,0,0,.25) !important;
+}
+
+.handbook-page-v460 .handbook-card:hover {
+  border-color: rgba(61, 145, 221, .62);
+  box-shadow:
+    0 18px 42px rgba(0,0,0,.38),
+    0 0 18px rgba(65, 76, 214, .07) !important;
+}
+
+.handbook-topic-icon {
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+}
+
+.handbook-card-expanded {
+  grid-column: span 2;
+}
+
+.handbook-expanded-content {
+  margin-top: 5px;
+  display: grid;
+  gap: 9px;
+}
+
+.handbook-expanded-content > div {
+  padding: 11px;
+  border: 1px solid rgba(54, 94, 141, .43);
+  border-radius: 8px;
+  background: rgba(2, 8, 16, .62);
+}
+
+.handbook-expanded-content span {
+  color: #55b9f5;
+  font-size: .54rem;
+  font-weight: 900;
+  letter-spacing: .10em;
+}
+
+.handbook-expanded-content p {
+  margin: 5px 0 0;
+  color: #9bafc1;
+  font-size: .69rem;
+  line-height: 1.58;
+}
+
+.handbook-example {
+  border-color: rgba(121, 76, 216, .45) !important;
+  background: rgba(32, 16, 66, .22) !important;
+}
+
+.handbook-example span {
+  color: #b785ff;
+}
+
+.handbook-actions {
+  margin-top: auto;
+  padding-top: 12px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+}
+
+.handbook-actions button {
+  min-height: 40px;
+  border-radius: 7px;
+  font-size: .64rem;
+  font-weight: 800;
+}
+
+.handbook-learn-more {
+  border: 1px solid rgba(135, 78, 223, .55);
+  background: rgba(55, 27, 103, .35);
+  color: #c9a9ff;
+}
+
+.handbook-practice {
+  border: 1px solid rgba(43, 139, 204, .58);
+  background: rgba(16, 70, 104, .43);
+  color: #a9ddff;
+}
+
+/* Account Vault animated emblems */
+.vault-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.vault-card::before {
+  content: "";
+  position: absolute;
+  width: 190px;
+  height: 190px;
+  top: -115px;
+  right: -100px;
+  border-radius: 50%;
+  opacity: .14;
+  filter: blur(22px);
+  background: var(--vault-tone, #168cff);
+  pointer-events: none;
+}
+
+.vault-icon {
+  width: 72px;
+  height: 76px;
+  position: relative;
+  display: grid;
+  place-items: center;
+  background: transparent !important;
+  border: 0 !important;
+  overflow: visible !important;
+  color: var(--vault-tone, #168cff);
+}
+
+.vault-icon-starter { --vault-tone: #238cff; }
+.vault-icon-growth { --vault-tone: #00dda6; }
+.vault-icon-pro { --vault-tone: #9a50ff; }
+.vault-icon-elite { --vault-tone: #ff9e2d; }
+.vault-icon-funded { --vault-tone: #ff3971; }
+
+.vault-icon-unlocked .academy-icon-shell {
+  animation:
+    vaultEmblemFloat 3.8s ease-in-out infinite,
+    vaultEmblemGlow 2.5s ease-in-out infinite;
+}
+
+.vault-icon-locked {
+  filter: grayscale(.7);
+  opacity: .48;
+}
+
+.vault-lock {
+  position: absolute;
+  right: 1px;
+  bottom: 4px;
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #61543b;
+  border-radius: 50%;
+  background: #211b12;
+  font-size: .65rem;
+}
+
+.vault-card.selected {
+  border-color: color-mix(in srgb, var(--vault-tone, #168cff) 70%, white 10%);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--vault-tone, #168cff) 20%, transparent),
+    0 0 26px color-mix(in srgb, var(--vault-tone, #168cff) 13%, transparent);
+}
+
+@keyframes vaultEmblemFloat {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-4px) rotate(1.5deg); }
+}
+
+@keyframes vaultEmblemGlow {
+  0%, 100% {
+    filter: drop-shadow(0 0 5px currentColor);
+  }
+  50% {
+    filter:
+      drop-shadow(0 0 10px currentColor)
+      drop-shadow(0 0 20px color-mix(in srgb, currentColor 50%, transparent));
+  }
+}
+
+/* Trophy collection */
+.trophy-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  align-items: stretch;
+}
+
+.trophy-plinth {
+  min-height: 285px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-color: rgba(48, 77, 111, .52);
+  background:
+    radial-gradient(circle at 50% 0, rgba(87, 61, 167, .08), transparent 35%),
+    linear-gradient(145deg, #07111d, #030810) !important;
+}
+
+.trophy-plinth::before {
+  content: "";
+  position: absolute;
+  inset: auto 12% 0;
+  height: 45%;
+  opacity: .08;
+  background: radial-gradient(ellipse, currentColor, transparent 68%);
+  pointer-events: none;
+}
+
+.trophy-plinth.unlocked {
+  color: #49baff;
+}
+
+.trophy-common.unlocked { color: #9aafc2; }
+.trophy-uncommon.unlocked { color: #3fdd9d; }
+.trophy-rare.unlocked { color: #42a9ff; }
+.trophy-epic.unlocked { color: #a15aff; }
+.trophy-legendary.unlocked { color: #ffca35; }
+
+.trophy-cup {
+  width: 74px;
+  height: 78px;
+  display: grid;
+  place-items: center;
+}
+
+.trophy-plinth.unlocked .trophy-cup {
+  animation: trophyHover 4s ease-in-out infinite;
+}
+
+.trophy-symbol {
+  min-height: 25px;
+  color: currentColor;
+  font-size: .85rem;
+  font-weight: 900;
+}
+
+.trophy-plinth > small {
+  color: #6f8498;
+  font-size: .52rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.trophy-plinth > b {
+  margin-top: auto;
+  padding: 5px 8px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  color: currentColor;
+  font-size: .56rem;
+}
+
+@keyframes trophyHover {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+/* Achievement list */
+.achievement {
+  min-height: 94px;
+}
+
+.achievement-icon {
+  position: relative;
+  width: 54px;
+  height: 58px;
+  display: grid;
+  place-items: center;
+}
+
+.achievement-icon > span {
+  position: absolute;
+  z-index: 3;
+  color: white;
+  font-size: .57rem;
+  font-weight: 900;
+}
+
+.achievement > div:nth-child(2) {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.achievement > div:nth-child(2) small {
+  color: #6e8296;
+  font-size: .51rem;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.achievement-common.unlocked { border-color: rgba(155, 177, 196, .45); }
+.achievement-uncommon.unlocked { border-color: rgba(48, 215, 147, .52); }
+.achievement-rare.unlocked { border-color: rgba(48, 157, 255, .57); }
+.achievement-epic.unlocked { border-color: rgba(155, 69, 255, .62); }
+.achievement-legendary.unlocked {
+  border-color: rgba(255, 199, 47, .68);
+  box-shadow: 0 0 22px rgba(255, 189, 25, .08);
+}
+
+/* Achievement popup */
+.achievement-toast {
+  width: min(440px, calc(100vw - 24px));
+  position: fixed;
+  z-index: 40000;
+  right: 18px;
+  top: 82px;
+  overflow: hidden;
+  padding: 14px 45px 14px 14px;
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  border: 1px solid rgba(173, 80, 255, .76);
+  border-radius: 13px;
+  background:
+    radial-gradient(circle at 0 50%, rgba(150, 58, 255, .20), transparent 35%),
+    linear-gradient(145deg, #0a1422, #030811 75%);
+  box-shadow:
+    0 24px 70px rgba(0,0,0,.68),
+    0 0 30px rgba(118, 55, 255, .18);
+  animation: achievementToastEnter .45s cubic-bezier(.2,.8,.2,1);
+}
+
+.achievement-toast-glow {
+  position: absolute;
+  width: 120px;
+  height: 120px;
+  left: -35px;
+  top: -25px;
+  border-radius: 50%;
+  opacity: .22;
+  background: #9a45ff;
+  filter: blur(30px);
+}
+
+.achievement-toast > *:not(.achievement-toast-glow) {
+  position: relative;
+  z-index: 2;
+}
+
+.achievement-toast-icon {
+  width: 62px;
+  height: 66px;
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+
+.achievement-toast-icon > span {
+  position: absolute;
+  z-index: 4;
+  color: white;
+  font-size: .65rem;
+  font-weight: 900;
+}
+
+.achievement-toast small {
+  color: #ba84ff;
+  font-size: .52rem;
+  font-weight: 900;
+  letter-spacing: .09em;
+}
+
+.achievement-toast strong {
+  display: block;
+  margin: 3px 0;
+  font-size: .88rem;
+}
+
+.achievement-toast p {
+  margin: 0;
+  color: #899daf;
+  font-size: .63rem;
+  line-height: 1.4;
+}
+
+.achievement-toast b {
+  display: block;
+  margin-top: 5px;
+  color: #ffcf58;
+  font-size: .61rem;
+}
+
+.achievement-toast > button {
+  position: absolute;
+  right: 9px;
+  top: 8px;
+  width: 29px;
+  min-height: 29px;
+  border: 1px solid rgba(109, 130, 159, .44);
+  border-radius: 50%;
+  background: rgba(8, 17, 27, .72);
+  color: #a8b8c6;
+}
+
+@keyframes achievementToastEnter {
+  from {
+    opacity: 0;
+    transform: translate3d(30px, -8px, 0) scale(.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media(max-width: 1180px) {
+  .trophy-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media(max-width: 850px) {
+  .handbook-card-expanded {
+    grid-column: auto;
+  }
+
+  .trophy-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .achievement-toast {
+    top: auto;
+    right: 10px;
+    bottom: 84px;
+  }
+}
+
+@media(max-width: 560px) {
+  .handbook-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .trophy-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .achievement-toast {
+    grid-template-columns: 52px minmax(0, 1fr);
+    padding-left: 10px;
+  }
+
+  .achievement-toast-icon {
+    width: 50px;
+    height: 54px;
+  }
+}
+
+@media(prefers-reduced-motion: reduce) {
+  .vault-icon-unlocked .academy-icon-shell,
+  .trophy-plinth.unlocked .trophy-cup,
+  .achievement-toast {
+    animation: none !important;
+  }
+}

@@ -29,13 +29,337 @@ type Scenario = {
 };
 
 const achievementCatalog = [
-  { id: "first_correct", title: "First Confirmation", description: "Get your first scenario correct.", icon: "🧭", requirement: 1 },
-  { id: "fakeout_finder", title: "Fakeout Finder", description: "Correctly identify 10 failed breaks.", icon: "↩", requirement: 10 },
-  { id: "retest_rookie", title: "Retest Rookie", description: "Complete 25 scenarios.", icon: "R", requirement: 25 },
-  { id: "retest_master", title: "Retest Master", description: "Complete 100 scenarios.", icon: "M", requirement: 100 },
-  { id: "streak_7", title: "Seven-Day Discipline", description: "Reach a 7-day challenge streak.", icon: "daily", requirement: 7 },
-  { id: "patient_trader", title: "Patience Pays", description: "Choose Wait correctly 20 times.", icon: "⏳", requirement: 20 }
-];
+  {
+    id: "first_correct",
+    title: "First Confirmation",
+    description: "Make your first correct simulator decision.",
+    icon: "🧭",
+    metric: "correctAttempts",
+    requirement: 1,
+    category: "Training",
+    rarity: "Common",
+    reward: "+50 XP"
+  },
+  {
+    id: "decisions_10",
+    title: "Getting Started",
+    description: "Complete 10 simulator decisions.",
+    icon: "10",
+    metric: "totalAttempts",
+    requirement: 10,
+    category: "Training",
+    rarity: "Common",
+    reward: "+75 XP"
+  },
+  {
+    id: "decisions_25",
+    title: "Retest Rookie",
+    description: "Complete 25 simulator decisions.",
+    icon: "R",
+    metric: "totalAttempts",
+    requirement: 25,
+    category: "Training",
+    rarity: "Uncommon",
+    reward: "+100 XP"
+  },
+  {
+    id: "decisions_50",
+    title: "Scenario Regular",
+    description: "Complete 50 simulator decisions.",
+    icon: "50",
+    metric: "totalAttempts",
+    requirement: 50,
+    category: "Training",
+    rarity: "Uncommon",
+    reward: "+150 XP"
+  },
+  {
+    id: "decisions_100",
+    title: "Retest Master",
+    description: "Complete 100 simulator decisions.",
+    icon: "M",
+    metric: "totalAttempts",
+    requirement: 100,
+    category: "Training",
+    rarity: "Rare",
+    reward: "+250 XP"
+  },
+  {
+    id: "decisions_250",
+    title: "Chart Veteran",
+    description: "Complete 250 simulator decisions.",
+    icon: "V",
+    metric: "totalAttempts",
+    requirement: 250,
+    category: "Training",
+    rarity: "Epic",
+    reward: "+500 XP"
+  },
+  {
+    id: "fakeout_5",
+    title: "Trap Spotter",
+    description: "Correctly identify 5 failed breakouts.",
+    icon: "↩",
+    metric: "fakeoutsFound",
+    requirement: 5,
+    category: "Patterns",
+    rarity: "Common",
+    reward: "+10 reputation"
+  },
+  {
+    id: "fakeout_10",
+    title: "Fakeout Finder",
+    description: "Correctly identify 10 failed breakouts.",
+    icon: "⚡",
+    metric: "fakeoutsFound",
+    requirement: 10,
+    category: "Patterns",
+    rarity: "Uncommon",
+    reward: "+20 reputation"
+  },
+  {
+    id: "fakeout_25",
+    title: "Trap Specialist",
+    description: "Correctly identify 25 failed breakouts.",
+    icon: "T",
+    metric: "fakeoutsFound",
+    requirement: 25,
+    category: "Patterns",
+    rarity: "Rare",
+    reward: "+40 reputation"
+  },
+  {
+    id: "wait_5",
+    title: "Wait Is a Position",
+    description: "Correctly choose Wait 5 times.",
+    icon: "⏳",
+    metric: "correctWaits",
+    requirement: 5,
+    category: "Discipline",
+    rarity: "Common",
+    reward: "+10 points"
+  },
+  {
+    id: "wait_20",
+    title: "Patience Pays",
+    description: "Correctly choose Wait 20 times.",
+    icon: "🛡️",
+    metric: "correctWaits",
+    requirement: 20,
+    category: "Discipline",
+    rarity: "Uncommon",
+    reward: "+25 points"
+  },
+  {
+    id: "wait_50",
+    title: "Selective Trader",
+    description: "Correctly choose Wait 50 times.",
+    icon: "S",
+    metric: "correctWaits",
+    requirement: 50,
+    category: "Discipline",
+    rarity: "Epic",
+    reward: "+75 points"
+  },
+  {
+    id: "accuracy_60",
+    title: "Developing Accuracy",
+    description: "Reach 60% lifetime accuracy after at least 20 decisions.",
+    icon: "60",
+    metric: "accuracy60",
+    requirement: 1,
+    category: "Performance",
+    rarity: "Common",
+    reward: "+100 XP"
+  },
+  {
+    id: "accuracy_75",
+    title: "Precision Trader",
+    description: "Reach 75% lifetime accuracy after at least 50 decisions.",
+    icon: "75",
+    metric: "accuracy75",
+    requirement: 1,
+    category: "Performance",
+    rarity: "Rare",
+    reward: "+250 XP"
+  },
+  {
+    id: "accuracy_85",
+    title: "Elite Precision",
+    description: "Reach 85% lifetime accuracy after at least 100 decisions.",
+    icon: "85",
+    metric: "accuracy85",
+    requirement: 1,
+    category: "Performance",
+    rarity: "Legendary",
+    reward: "Exclusive title"
+  },
+  {
+    id: "combo_5",
+    title: "Decision Combo",
+    description: "Reach a correct-decision combo of 5.",
+    icon: "×5",
+    metric: "bestCombo",
+    requirement: 5,
+    category: "Performance",
+    rarity: "Common",
+    reward: "+50 XP"
+  },
+  {
+    id: "combo_10",
+    title: "Locked In",
+    description: "Reach a correct-decision combo of 10.",
+    icon: "×10",
+    metric: "bestCombo",
+    requirement: 10,
+    category: "Performance",
+    rarity: "Rare",
+    reward: "+20 points"
+  },
+  {
+    id: "combo_20",
+    title: "Flow State",
+    description: "Reach a correct-decision combo of 20.",
+    icon: "×20",
+    metric: "bestCombo",
+    requirement: 20,
+    category: "Performance",
+    rarity: "Legendary",
+    reward: "Animated aura"
+  },
+  {
+    id: "streak_3",
+    title: "Three-Day Habit",
+    description: "Reach a 3-day Academy streak.",
+    icon: "3",
+    metric: "streak",
+    requirement: 3,
+    category: "Consistency",
+    rarity: "Common",
+    reward: "+10 points"
+  },
+  {
+    id: "streak_7",
+    title: "Seven-Day Discipline",
+    description: "Reach a 7-day Academy streak.",
+    icon: "7",
+    metric: "streak",
+    requirement: 7,
+    category: "Consistency",
+    rarity: "Uncommon",
+    reward: "+25 points"
+  },
+  {
+    id: "streak_30",
+    title: "Monthly Discipline",
+    description: "Reach a 30-day Academy streak.",
+    icon: "30",
+    metric: "streak",
+    requirement: 30,
+    category: "Consistency",
+    rarity: "Epic",
+    reward: "Exclusive frame"
+  },
+  {
+    id: "level_5",
+    title: "Academy Cadet",
+    description: "Reach Level 5.",
+    icon: "V",
+    metric: "level",
+    requirement: 5,
+    category: "Career",
+    rarity: "Common",
+    reward: "+100 XP"
+  },
+  {
+    id: "level_15",
+    title: "Established Trader",
+    description: "Reach Level 15.",
+    icon: "XV",
+    metric: "level",
+    requirement: 15,
+    category: "Career",
+    rarity: "Rare",
+    reward: "Career badge"
+  },
+  {
+    id: "level_30",
+    title: "Professional Rank",
+    description: "Reach Level 30.",
+    icon: "XXX",
+    metric: "level",
+    requirement: 30,
+    category: "Career",
+    rarity: "Epic",
+    reward: "Profile emblem"
+  },
+  {
+    id: "rep_1000",
+    title: "Known in the Academy",
+    description: "Earn 1,000 reputation.",
+    icon: "★",
+    metric: "reputation",
+    requirement: 1000,
+    category: "Reputation",
+    rarity: "Uncommon",
+    reward: "+50 points"
+  },
+  {
+    id: "rep_10000",
+    title: "Respected Trader",
+    description: "Earn 10,000 reputation.",
+    icon: "✦",
+    metric: "reputation",
+    requirement: 10000,
+    category: "Reputation",
+    rarity: "Rare",
+    reward: "Respected title"
+  },
+  {
+    id: "rep_50000",
+    title: "Academy Authority",
+    description: "Earn 50,000 reputation.",
+    icon: "◆",
+    metric: "reputation",
+    requirement: 50000,
+    category: "Reputation",
+    rarity: "Legendary",
+    reward: "Legendary badge"
+  },
+  {
+    id: "balance_11000",
+    title: "First Green Thousand",
+    description: "Grow a paper account balance to $11,000.",
+    icon: "$",
+    metric: "paperBalance",
+    requirement: 11000,
+    category: "Evaluations",
+    rarity: "Uncommon",
+    reward: "+100 XP"
+  },
+  {
+    id: "balance_15000",
+    title: "Account Builder",
+    description: "Grow a paper account balance to $15,000.",
+    icon: "$$",
+    metric: "paperBalance",
+    requirement: 15000,
+    category: "Evaluations",
+    rarity: "Rare",
+    reward: "+40 reputation"
+  },
+  {
+    id: "mistakes_10",
+    title: "Review Discipline",
+    description: "Save 10 mistakes for structured review.",
+    icon: "↻",
+    metric: "mistakes",
+    requirement: 10,
+    category: "Learning",
+    rarity: "Uncommon",
+    reward: "+100 XP"
+  }
+] as const
 
 const practiceModes = [
   {
@@ -685,6 +1009,11 @@ export default function FuturesAcademy() {
   const [setupDisplayName, setSetupDisplayName] = useState("");
   const [setupNameMessage, setSetupNameMessage] = useState("");
   const [handbookQuery, setHandbookQuery] = useState("");
+  const [expandedHandbookTopic, setExpandedHandbookTopic] = useState<string | null>(null);
+  const [achievementToast, setAchievementToast] = useState<
+    (typeof achievementCatalog)[number] | null
+  >(null);
+  const previousAchievementIdsRef = useRef<string[] | null>(null);
   const [authUserId, setAuthUserId] = useState<string | null>(null);
   const [profileName, setProfileName] = useState("Demo Trader");
   const [profileNameDraft, setProfileNameDraft] = useState("");
@@ -754,14 +1083,65 @@ export default function FuturesAcademy() {
 
   const level = Math.floor(xp / 500) + 1;
   const accuracy = totalAttempts ? Math.round((correctAttempts / totalAttempts) * 100) : 0;
-  const unlockedAchievements = achievementCatalog.filter(item =>
-    item.id === "first_correct" ? correctAttempts >= 1 :
-    item.id === "fakeout_finder" ? fakeoutsFound >= item.requirement :
-    item.id === "retest_rookie" ? totalAttempts >= item.requirement :
-    item.id === "retest_master" ? totalAttempts >= item.requirement :
-    item.id === "streak_7" ? streak >= item.requirement :
-    correctWaits >= item.requirement
-  );
+  const unlockedAchievements = achievementCatalog.filter(item => {
+    switch (item.metric) {
+      case "correctAttempts":
+        return correctAttempts >= item.requirement;
+      case "totalAttempts":
+        return totalAttempts >= item.requirement;
+      case "fakeoutsFound":
+        return fakeoutsFound >= item.requirement;
+      case "correctWaits":
+        return correctWaits >= item.requirement;
+      case "bestCombo":
+        return bestCombo >= item.requirement;
+      case "streak":
+        return streak >= item.requirement;
+      case "level":
+        return level >= item.requirement;
+      case "reputation":
+        return reputation >= item.requirement;
+      case "paperBalance":
+        return paperBalance >= item.requirement;
+      case "mistakes":
+        return mistakes.length >= item.requirement;
+      case "accuracy60":
+        return totalAttempts >= 20 && accuracy >= 60;
+      case "accuracy75":
+        return totalAttempts >= 50 && accuracy >= 75;
+      case "accuracy85":
+        return totalAttempts >= 100 && accuracy >= 85;
+      default:
+        return false;
+    }
+  });
+  useEffect(() => {
+    const currentIds = unlockedAchievements.map(item => item.id);
+
+    if (previousAchievementIdsRef.current === null) {
+      previousAchievementIdsRef.current = currentIds;
+      return;
+    }
+
+    const newlyUnlocked = unlockedAchievements.find(
+      item => !previousAchievementIdsRef.current?.includes(item.id)
+    );
+
+    previousAchievementIdsRef.current = currentIds;
+
+    if (!newlyUnlocked) return;
+
+    setAchievementToast(newlyUnlocked);
+
+    const timeout = window.setTimeout(() => {
+      setAchievementToast(current =>
+        current?.id === newlyUnlocked.id ? null : current
+      );
+    }, 6500);
+
+    return () => window.clearTimeout(timeout);
+  }, [unlockedAchievements]);
+
   const membershipLabel =
     profileRole === "owner" ? "👑 Academy Founder" :
     profileRole === "admin" ? "🛡️ Administrator" :
@@ -2563,38 +2943,197 @@ export default function FuturesAcademy() {
 
     if (tab === "handbook") {
       const topics = [
-        { title: "What is MES?", icon: "📘", text: "MES is the Micro E-mini S&P 500 futures contract. In this simulator, one point is treated as $5 per contract." },
-        { title: "Break and retest", icon: "trade", text: "A valid setup usually includes a meaningful break, a return to the level, and confirmation that the level is holding or rejecting." },
-        { title: "Market order", icon: "⚡", text: "A market order prioritizes immediate execution instead of an exact entry price." },
-        { title: "Limit order", icon: "🎯", text: "A limit order waits for your chosen price or better. It may never fill." },
-        { title: "Stop order", icon: "🚦", text: "A stop entry activates after price reaches a trigger, often after confirmation." },
-        { title: "Stop-loss", icon: "🛡️", text: "The stop-loss exits the simulated trade when the setup fails and limits the planned loss." },
-        { title: "Take-profit", icon: "points", text: "The take-profit closes the simulated trade at your planned reward level." },
-        { title: "Reward-to-risk", icon: "⚖️", text: "Reward-to-risk compares the planned gain with the planned loss. A 2:1 plan seeks two units of reward per unit risked." },
-        { title: "Trailing drawdown", icon: "📉", text: "The drawdown floor can rise as the paper account reaches new peaks. Reaching it fails the current paper account." },
-        { title: "Why Wait matters", icon: "⏳", text: "Not trading a weak setup is part of disciplined trading. Wait is often the best decision." }
+        {
+          title: "What is MES?",
+          icon: "handbook",
+          text:
+            "MES is the Micro E-mini S&P 500 futures contract. In this simulator, one point is treated as $5 per contract.",
+          details:
+            "MES follows the S&P 500 index but uses a smaller contract multiplier than the standard ES contract. That makes it useful for practicing position sizing and risk control. A move of one full index point equals $5 per MES contract, while a quarter-point tick equals $1.25.",
+          example:
+            "Example: Buying 1 MES contract at 5,200.00 and exiting at 5,204.00 represents a 4-point move, or $20 before fees. A stop at 5,197.00 would represent 3 points of risk, or $15."
+        },
+        {
+          title: "Break and retest",
+          icon: "trade",
+          text:
+            "A valid setup usually includes a meaningful break, a return to the level, and confirmation that the level is holding or rejecting.",
+          details:
+            "The break should show real intent rather than a tiny wick through the level. During the retest, price returns to the old support or resistance area. Confirmation may include rejection wicks, closes back in the breakout direction, increased volume, or a failure to reclaim the level.",
+          example:
+            "Example: Resistance sits at 5,250. Price closes above it at 5,253, returns to 5,250, forms a bullish rejection candle, and then closes at 5,254. The retest held, so the setup has more confirmation than buying the first breakout candle."
+        },
+        {
+          title: "Market order",
+          icon: "trade",
+          text:
+            "A market order prioritizes immediate execution instead of an exact entry price.",
+          details:
+            "A market order fills at the best currently available price. In fast conditions, the fill can differ from the price shown when the order was submitted. This difference is called slippage.",
+          example:
+            "Example: The screen shows 5,200.00 when Buy is pressed, but the order fills at 5,200.50 because available sellers changed before execution."
+        },
+        {
+          title: "Limit order",
+          icon: "pattern",
+          text:
+            "A limit order waits for your chosen price or better. It may never fill.",
+          details:
+            "A buy limit is placed below the current price, while a sell limit is placed above it. The order protects the entry price but cannot guarantee participation. Price may approach the level and reverse without filling.",
+          example:
+            "Example: MES trades at 5,210. You place a buy limit at 5,205 near support. The order fills only if price trades at 5,205 or lower."
+        },
+        {
+          title: "Stop order",
+          icon: "evaluation",
+          text:
+            "A stop entry activates after price reaches a trigger, often after confirmation.",
+          details:
+            "A buy stop is normally placed above current price and a sell stop below current price. Once triggered, it becomes an executable order. Stop entries are often used to require price to prove momentum before entering.",
+          example:
+            "Example: Resistance is 5,230. A buy stop at 5,231.25 enters only after price trades above the level."
+        },
+        {
+          title: "Stop-loss",
+          icon: "risk",
+          text:
+            "The stop-loss exits the simulated trade when the setup fails and limits the planned loss.",
+          details:
+            "A stop should sit beyond the point that invalidates the idea, not at a random dollar amount. Placing it directly on an obvious level may cause normal retest noise to exit the trade too early.",
+          example:
+            "Example: A long trade is based on support holding at 5,180. If the setup becomes invalid below 5,176, the stop might be placed at 5,175.75 rather than exactly at 5,180."
+        },
+        {
+          title: "Take-profit",
+          icon: "points",
+          text:
+            "The take-profit closes the simulated trade at your planned reward level.",
+          details:
+            "A take-profit should be based on nearby structure, prior highs or lows, measured moves, or a defined reward-to-risk objective. Planning it before entry reduces emotional exits.",
+          example:
+            "Example: Risk is 4 points and the plan requires 2:1 reward-to-risk. The initial target would be 8 points from entry, provided market structure supports that target."
+        },
+        {
+          title: "Reward-to-risk",
+          icon: "statistics",
+          text:
+            "Reward-to-risk compares the planned gain with the planned loss. A 2:1 plan seeks two units of reward per unit risked.",
+          details:
+            "Reward-to-risk does not determine whether a setup is good by itself. It helps compare the potential payoff with the amount at risk. A high ratio with an unrealistic target is not automatically better.",
+          example:
+            "Example: An entry risks $25 to potentially make $50. The planned reward-to-risk ratio is 2:1."
+        },
+        {
+          title: "Trailing drawdown",
+          icon: "evaluation",
+          text:
+            "The drawdown floor can rise as the paper account reaches new peaks. Reaching it fails the current paper account.",
+          details:
+            "A trailing drawdown follows the account's highest balance by a fixed distance. As the peak rises, the failure floor can rise too. Depending on the evaluation rules, it may stop trailing after reaching the starting balance.",
+          example:
+            "Example: A $25,000 account has a $1,500 trailing drawdown. If the peak reaches $26,000, the floor becomes $24,500. Falling to that floor fails the evaluation."
+        },
+        {
+          title: "Why Wait matters",
+          icon: "psychology",
+          text:
+            "Not trading a weak setup is part of disciplined trading. Wait is often the best decision.",
+          details:
+            "Many losses come from treating every movement as an opportunity. Waiting protects capital when confirmation is missing, price is trapped in chop, the stop location is unclear, or reward-to-risk is poor.",
+          example:
+            "Example: Price briefly breaks resistance but immediately closes back below it. Instead of buying the breakout, Wait allows the next candles to reveal whether it was a fakeout."
+        }
       ];
+
       const visibleTopics = topics.filter(topic =>
-        `${topic.title} ${topic.text}`.toLowerCase().includes(handbookQuery.toLowerCase())
+        `${topic.title} ${topic.text} ${topic.details} ${topic.example}`
+          .toLowerCase()
+          .includes(handbookQuery.toLowerCase())
       );
+
       return (
-        <section className="v1-page handbook-page">
+        <section className="v1-page handbook-page handbook-page-v460">
           <div className="v1-page-header">
-            <div><span className="eyebrow">New trader guide</span><h1>Academy Handbook</h1><p>Simple explanations without overwhelming terminology.</p></div>
+            <div>
+              <span className="eyebrow">New trader guide</span>
+              <h1>Academy Handbook</h1>
+              <p>
+                Start with the simple definition, then expand any topic
+                for a detailed explanation and practical example.
+              </p>
+            </div>
           </div>
+
           <div className="handbook-search">
             <span>🔎</span>
-            <input value={handbookQuery} onChange={e => setHandbookQuery(e.target.value)} placeholder="Search: stop-loss, limit order, drawdown..." />
+            <input
+              value={handbookQuery}
+              onChange={event => setHandbookQuery(event.target.value)}
+              placeholder="Search: stop-loss, limit order, drawdown..."
+            />
           </div>
+
           <div className="handbook-grid">
-            {visibleTopics.map(topic => (
-              <article className="handbook-card" key={topic.title}>
-                <div>{topic.icon}</div>
-                <h2>{topic.title}</h2>
-                <p>{topic.text}</p>
-                <button type="button" onClick={() => setTab("train")}>Practice this concept →</button>
-              </article>
-            ))}
+            {visibleTopics.map(topic => {
+              const expanded = expandedHandbookTopic === topic.title;
+
+              return (
+                <article
+                  className={`handbook-card ${
+                    expanded ? "handbook-card-expanded" : ""
+                  }`}
+                  key={topic.title}
+                >
+                  <div className="handbook-topic-icon">
+                    <AcademyIcon
+                      name={topic.icon as any}
+                      size={28}
+                      framed
+                    />
+                  </div>
+
+                  <h2>{topic.title}</h2>
+                  <p>{topic.text}</p>
+
+                  {expanded && (
+                    <div className="handbook-expanded-content">
+                      <div>
+                        <span>IN-DEPTH EXPLANATION</span>
+                        <p>{topic.details}</p>
+                      </div>
+                      <div className="handbook-example">
+                        <span>PRACTICAL EXAMPLE</span>
+                        <p>{topic.example}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="handbook-actions">
+                    <button
+                      type="button"
+                      className="handbook-learn-more"
+                      onClick={() =>
+                        setExpandedHandbookTopic(current =>
+                          current === topic.title ? null : topic.title
+                        )
+                      }
+                    >
+                      {expanded
+                        ? "Hide detailed explanation"
+                        : "Learn more + example"}
+                    </button>
+
+                    <button
+                      type="button"
+                      className="handbook-practice"
+                      onClick={() => setTab("train")}
+                    >
+                      Practice concept →
+                    </button>
+                  </div>
+                </article>
+              );
+            })}
           </div>
 
           <PatternRecognition
@@ -2620,7 +3159,28 @@ export default function FuturesAcademy() {
               const selected = account.id === selectedAccountId;
               return (
                 <article className={`vault-card ${unlocked ? "unlocked" : "locked"} ${selected ? "selected" : ""}`} key={account.id}>
-                  <div className="vault-icon">{unlocked ? account.icon : "🔒"}</div>
+                  <div
+                    className={`vault-icon vault-icon-${account.id} ${
+                      unlocked ? "vault-icon-unlocked" : "vault-icon-locked"
+                    }`}
+                  >
+                    <AcademyIcon
+                      name={
+                        account.id === "starter"
+                          ? "trade"
+                          : account.id === "growth"
+                          ? "career"
+                          : account.id === "pro"
+                          ? "evaluation"
+                          : account.id === "elite"
+                          ? "rank"
+                          : "trophy"
+                      }
+                      size={34}
+                      framed
+                    />
+                    {!unlocked && <span className="vault-lock">🔒</span>}
+                  </div>
                   <span>{unlocked ? "AVAILABLE" : "LOCKED"}</span>
                   <h2>{account.name}</h2>
                   <div className="vault-numbers">
@@ -2686,11 +3246,24 @@ export default function FuturesAcademy() {
             {achievementCatalog.map(item => {
               const unlocked = unlockedAchievements.some(a => a.id === item.id);
               return (
-                <article className={`trophy-plinth ${unlocked ? "unlocked" : ""}`} key={item.id}>
-                  <div className="trophy-cup">{unlocked ? "trophy" : "🔒"}</div>
-                  <span>{item.icon}</span>
+                <article
+                  className={`trophy-plinth trophy-${item.rarity.toLowerCase()} ${
+                    unlocked ? "unlocked" : ""
+                  }`}
+                  key={item.id}
+                >
+                  <div className="trophy-cup">
+                    {unlocked ? (
+                      <AcademyIcon name="trophy" size={38} framed />
+                    ) : (
+                      "🔒"
+                    )}
+                  </div>
+                  <span className="trophy-symbol">{item.icon}</span>
+                  <small>{item.category} · {item.rarity}</small>
                   <h3>{item.title}</h3>
                   <p>{item.description}</p>
+                  <b>{unlocked ? item.reward : "LOCKED"}</b>
                 </article>
               );
             })}
@@ -2777,10 +3350,22 @@ export default function FuturesAcademy() {
             {achievementCatalog.map(item => {
               const unlocked = unlockedAchievements.some(unlockedItem => unlockedItem.id === item.id);
               return (
-                <div key={item.id} className={`achievement ${unlocked ? "unlocked" : "locked-achievement"}`}>
-                  <div className="achievement-icon">{item.icon}</div>
-                  <div><strong>{item.title}</strong><span>{item.description}</span></div>
-                  <b>{unlocked ? "UNLOCKED" : "LOCKED"}</b>
+                <div
+                  key={item.id}
+                  className={`achievement achievement-${item.rarity.toLowerCase()} ${
+                    unlocked ? "unlocked" : "locked-achievement"
+                  }`}
+                >
+                  <div className="achievement-icon">
+                    <AcademyIcon name="trophy" size={24} framed />
+                    <span>{item.icon}</span>
+                  </div>
+                  <div>
+                    <small>{item.category} · {item.rarity}</small>
+                    <strong>{item.title}</strong>
+                    <span>{item.description}</span>
+                  </div>
+                  <b>{unlocked ? item.reward : "LOCKED"}</b>
                 </div>
               );
             })}
@@ -3095,7 +3680,8 @@ export default function FuturesAcademy() {
     equippedAccountIcon, equippedBadge, equippedTitle, equippedProfileFrame,
     equippedBackground, equippedEffect, equippedTheme, profileName,
     profileNameDraft, profileNameMessage, profileNameSaving,
-    nameSetupMode, setupDisplayName, setupNameMessage, profileRole, profilePremium, authUserId, showGuestImport, guestSnapshot, activeEvaluation, activeAccount, applyTradeResult]);
+    nameSetupMode, setupDisplayName, setupNameMessage,
+    expandedHandbookTopic, achievementToast, profileRole, profilePremium, authUserId, showGuestImport, guestSnapshot, activeEvaluation, activeAccount, applyTradeResult]);
 
   if (identityMode === "landing") {
     return (
@@ -3467,6 +4053,29 @@ export default function FuturesAcademy() {
             </div>
           </section>
         </div>
+      )}
+
+      {achievementToast && (
+        <aside className="achievement-toast" role="status" aria-live="polite">
+          <div className="achievement-toast-glow" />
+          <div className="achievement-toast-icon">
+            <AcademyIcon name="trophy" size={34} framed />
+            <span>{achievementToast.icon}</span>
+          </div>
+          <div>
+            <small>ACHIEVEMENT UNLOCKED · {achievementToast.rarity}</small>
+            <strong>{achievementToast.title}</strong>
+            <p>{achievementToast.description}</p>
+            <b>{achievementToast.reward}</b>
+          </div>
+          <button
+            type="button"
+            aria-label="Dismiss achievement"
+            onClick={() => setAchievementToast(null)}
+          >
+            ×
+          </button>
+        </aside>
       )}
 
       {showGuestImport && authUserId && (
