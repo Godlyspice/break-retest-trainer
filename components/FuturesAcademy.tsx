@@ -992,11 +992,15 @@ export default function FuturesAcademy() {
   }, [authReady, authUserId]);
 
   useEffect(() => {
-    if (!supabase || !authUserId) return;
-    supabase.rpc("touch_last_active").then(() => undefined);
+    const client = supabase;
+    if (!client || !authUserId) return;
+
+    client.rpc("touch_last_active").then(() => undefined);
+
     const interval = window.setInterval(() => {
-      supabase.rpc("touch_last_active").then(() => undefined);
+      client.rpc("touch_last_active").then(() => undefined);
     }, 5 * 60 * 1000);
+
     return () => window.clearInterval(interval);
   }, [authUserId]);
 
