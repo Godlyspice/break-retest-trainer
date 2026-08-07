@@ -444,18 +444,62 @@ function playTone(enabled: boolean, positive: boolean) {
   }
 }
 
-function generateScenario(daily = false, mode = "mixed"): Scenario {
+function generateScenario(
+  daily = false,
+  mode = "mixed",
+  previousAnswer: "buy" | "sell" | "wait" | null = null
+): Scenario {
   const modePools: Record<string, Scenario["setup"][]> = {
-    mixed: ["bull_retest", "bear_retest", "bull_fakeout", "bear_fakeout", "chop"],
     clean: ["bull_retest", "bear_retest"],
     fakeouts: ["bull_fakeout", "bear_fakeout"],
-    wait: ["bull_fakeout", "bear_fakeout", "chop"],
-    weakness: ["bull_fakeout", "bear_fakeout", "chop"]
+    wait: ["bull_fakeout", "bear_fakeout", "chop"]
   };
-  const pool = daily
-    ? (["bull_retest", "bear_retest", "bull_fakeout", "bear_fakeout", "chop"] as Scenario["setup"][])
-    : modePools[mode] || modePools.mixed;
-  const setup = pool[daily ? new Date().getDate() % pool.length : Math.floor(Math.random() * pool.length)];
+
+  const pickWaitSetup = () => {
+    const waitSetups = ["bull_fakeout", "bear_fakeout", "chop"] as Scenario["setup"][];
+    return waitSetups[Math.floor(Math.random() * waitSetups.length)];
+  };
+
+  const pickBalancedMixedSetup = () => {
+    // Main Simulator is intentionally direction-balanced:
+    // ~37.5% Buy, ~37.5% Sell, ~25% Wait.
+    // If the previous answer was Wait, Wait is temporarily reduced
+    // so users don't get long strings of no-trade scenarios.
+    const roll = Math.random();
+
+    if (previousAnswer === "wait") {
+      if (roll < 0.45) return "bull_retest" as Scenario["setup"];
+      if (roll < 0.90) return "bear_retest" as Scenario["setup"];
+      return pickWaitSetup();
+    }
+
+    if (roll < 0.375) return "bull_retest" as Scenario["setup"];
+    if (roll < 0.75) return "bear_retest" as Scenario["setup"];
+    return pickWaitSetup();
+  };
+
+  let setup: Scenario["setup"];
+
+  if (daily) {
+    // Daily scenarios rotate through Buy / Sell / Wait in a predictable,
+    // even distribution while the actual candles remain synthetic.
+    const dailyAnswerIndex = new Date().getDate() % 4;
+    setup =
+      dailyAnswerIndex === 0
+        ? "bull_retest"
+        : dailyAnswerIndex === 1
+        ? "bear_retest"
+        : dailyAnswerIndex === 2
+        ? pickWaitSetup()
+        : Math.random() < 0.5
+        ? "bull_retest"
+        : "bear_retest";
+  } else if (mode === "mixed" || mode === "weakness") {
+    setup = pickBalancedMixedSetup();
+  } else {
+    const pool = modePools[mode] || modePools.clean;
+    setup = pool[Math.floor(Math.random() * pool.length)];
+  }
 
   const level = Math.round(random(5200, 5600) * 4) / 4;
   const candles: Candle[] = [];
@@ -1037,6 +1081,7 @@ export default function FuturesAcademy() {
   const [targetPrice, setTargetPrice] = useState("");
   const [planFeedback, setPlanFeedback] = useState("");
   const [activePlacement, setActivePlacement] = useState<"entry" | "stop" | "target" | null>(null);
+  const [mobilePlacementOpen, setMobilePlacementOpen] = useState(false);
   const [lastPlacedLevel, setLastPlacedLevel] = useState<"entry" | "stop" | "target" | null>(null);
   const [visibleCandles, setVisibleCandles] = useState(18);
   const [replayRunning, setReplayRunning] = useState(false);
@@ -1085,6 +1130,7 @@ export default function FuturesAcademy() {
   const [selectedMistake, setSelectedMistake] = useState<number | null>(null);
   const [showCelebration, setShowCelebration] = useState(false);
   const [practiceMode, setPracticeMode] = useState("mixed");
+  const [simulatorInterface, setSimulatorInterface] = useState<"beginner" | "advanced">("beginner");
 
   const level = Math.floor(xp / 500) + 1;
   const accuracy = totalAttempts ? Math.round((correctAttempts / totalAttempts) * 100) : 0;
@@ -1725,6 +1771,63 @@ export default function FuturesAcademy() {
     return { xp: 15, credits: 5, reputation: 2 };
   }
 
+  function applyBeginnerTradePlan(direction: "buy" | "sell") {
+    const visibleIndex = Math.max(
+      0,
+      Math.min(visibleCandles, scenario.candles.length) - 1
+    );
+    const currentPrice =
+      scenario.candles[visibleIndex]?.close ?? scenario.level;
+
+    const entry =
+      direction === "buy"
+        ? Math.max(currentPrice, scenario.level + 0.25)
+        : Math.min(currentPrice, scenario.level - 0.25);
+
+    const riskPoints = 2.5;
+    const stop =
+      direction === "buy"
+        ? entry - riskPoints
+        : entry + riskPoints;
+    const target =
+      direction === "buy"
+        ? entry + riskPoints * 2
+        : entry - riskPoints * 2;
+
+    setContracts(1);
+    setOrderType("market");
+    setEntryPrice(entry.toFixed(2));
+    setStopPrice(stop.toFixed(2));
+    setTargetPrice(target.toFixed(2));
+    setActivePlacement(null);
+  }
+
+  function chooseTradeDirection(direction: "buy" | "sell" | "wait") {
+    if (reveal) return;
+
+    setChoice(direction);
+
+    if (direction === "wait") {
+      setEntryPrice("");
+      setStopPrice("");
+      setTargetPrice("");
+      return;
+    }
+
+    if (simulatorInterface === "beginner") {
+      applyBeginnerTradePlan(direction);
+      return;
+    }
+
+    if (
+      typeof window !== "undefined" &&
+      window.matchMedia("(max-width: 820px)").matches
+    ) {
+      setMobilePlacementOpen(true);
+      setActivePlacement("entry");
+    }
+  }
+
   async function submitAnswer(activeScenario = scenario, daily = false) {
     if (!choice) return;
     setReveal(true);
@@ -1839,13 +1942,15 @@ export default function FuturesAcademy() {
   }
 
   function nextScenario() {
-    setScenario(generateScenario(false, practiceMode));
+    setScenario(generateScenario(false, practiceMode, scenario.answer));
     setChoice(null);
     setEntryPrice("");
     setStopPrice("");
     setTargetPrice("");
     setPlanFeedback("");
     setReveal(false);
+    setMobilePlacementOpen(false);
+    setActivePlacement(null);
   }
 
   function changePracticeMode(mode: string) {
@@ -1900,10 +2005,58 @@ export default function FuturesAcademy() {
     const formatted = value.toFixed(2);
     setLastPlacedLevel(kind);
     window.setTimeout(() => setLastPlacedLevel(null), 450);
+
     if (kind === "entry") setEntryPrice(formatted);
     if (kind === "stop") setStopPrice(formatted);
     if (kind === "target") setTargetPrice(formatted);
+
+    const mobileChartPlacement =
+      typeof window !== "undefined" &&
+      window.matchMedia("(max-width: 820px)").matches &&
+      simulatorInterface === "advanced";
+
+    if (mobileChartPlacement) {
+      if (kind === "entry") {
+        setActivePlacement("stop");
+      } else if (kind === "stop") {
+        setActivePlacement("target");
+      } else {
+        setActivePlacement(null);
+        setMobilePlacementOpen(false);
+      }
+      return;
+    }
+
     setActivePlacement(null);
+  }
+
+  function startMobileBracketPlacement() {
+    setMobilePlacementOpen(true);
+
+    if (!entryPrice) {
+      setActivePlacement("entry");
+      return;
+    }
+
+    if (!stopPrice) {
+      setActivePlacement("stop");
+      return;
+    }
+
+    if (!targetPrice) {
+      setActivePlacement("target");
+      return;
+    }
+
+    setActivePlacement("entry");
+  }
+
+  function clearMobileBracket() {
+    setEntryPrice("");
+    setStopPrice("");
+    setTargetPrice("");
+    setActivePlacement("entry");
+    setMobilePlacementOpen(true);
   }
 
   function adjustLevel(kind: "entry" | "stop" | "target", amount: number) {
@@ -1924,6 +2077,8 @@ export default function FuturesAcademy() {
     setStopPrice("");
     setTargetPrice("");
     setPlanFeedback("");
+    setMobilePlacementOpen(false);
+    setActivePlacement(null);
   }
 
   async function launchEvaluation(accountId: string) {
@@ -2541,37 +2696,119 @@ export default function FuturesAcademy() {
               </button>
             ))}
           </div>
-          <div className="workspace">
+          <div className="simulator-interface-switch" role="tablist" aria-label="Simulator interface">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={simulatorInterface === "beginner"}
+              className={simulatorInterface === "beginner" ? "active beginner" : "beginner"}
+              onClick={() => {
+                setSimulatorInterface("beginner");
+                setContracts(1);
+                setOrderType("market");
+                if (choice === "buy" || choice === "sell") {
+                  window.setTimeout(() => applyBeginnerTradePlan(choice), 0);
+                }
+              }}
+            >
+              <span>🌱</span>
+              <div>
+                <strong>Beginner Mode</strong>
+                <small>Simple decisions · guided risk plan</small>
+              </div>
+              <em>RECOMMENDED</em>
+            </button>
+
+            <button
+              type="button"
+              role="tab"
+              aria-selected={simulatorInterface === "advanced"}
+              className={simulatorInterface === "advanced" ? "active advanced" : "advanced"}
+              onClick={() => setSimulatorInterface("advanced")}
+            >
+              <span>📊</span>
+              <div>
+                <strong>Advanced Mode</strong>
+                <small>Full order ticket · Tradovate-style controls</small>
+              </div>
+              <em>PRO</em>
+            </button>
+          </div>
+
+          {simulatorInterface === "beginner" && (
+            <div className="beginner-guide-strip">
+              <div>
+                <span>1</span>
+                <p><strong>Read the level</strong><small>Is price holding or failing the key area?</small></p>
+              </div>
+              <i />
+              <div>
+                <span>2</span>
+                <p><strong>Choose direction</strong><small>Buy, Sell, or Wait.</small></p>
+              </div>
+              <i />
+              <div>
+                <span>3</span>
+                <p><strong>Review the lesson</strong><small>We build a simple 2:1 plan automatically.</small></p>
+              </div>
+            </div>
+          )}
+
+          <div className={`workspace simulator-interface-${simulatorInterface}`}>
           <div className="chart-panel scenario-transition" key={scenario.id}>
             <div className="instrument-bar">
               <div><strong>MES</strong><span>Micro E-mini S&amp;P 500 · Synthetic replay</span></div>
               <div className="market-chip">{currentMode.short}</div>
             </div>
-            <div className="replay-toolbar">
-              <div className="control-with-help">
-                <button type="button" className="secondary compact" onClick={() => setReplayRunning(v => !v)}>
-                  {replayRunning ? "Pause" : "Play"}
-                </button>
-                <HelpTip title="Replay" text="Play reveals future candles one at a time. Pause stops the replay at the current candle." />
-              </div>
-              <div className="control-with-help">
-                <button type="button" className="secondary compact" onClick={() => setVisibleCandles(v => Math.min(v + 1, scenario.candles.length))}>
-                  +1 candle
-                </button>
-                <HelpTip title="Advance one candle" text="Reveals exactly one additional candle so you can inspect price action slowly." />
-              </div>
-              <div className="control-with-help">
-                <button type="button" className="secondary compact" onClick={resetReplay}>Reset</button>
-                <HelpTip title="Reset replay" text="Returns the scenario to its starting candles and clears your current trade plan." />
-              </div>
-              <label>Speed
-                <select value={replaySpeed} onChange={e => setReplaySpeed(Number(e.target.value))}>
-                  <option value={1200}>Slow</option>
-                  <option value={700}>Normal</option>
-                  <option value={350}>Fast</option>
-                </select>
-              </label>
-              <span>{visibleCandles}/{scenario.candles.length} candles</span>
+            <div className={`replay-toolbar ${simulatorInterface === "beginner" ? "beginner-toolbar" : ""}`}>
+              {simulatorInterface === "advanced" ? (
+                <>
+                  <div className="control-with-help">
+                    <button type="button" className="secondary compact" onClick={() => setReplayRunning(v => !v)}>
+                      {replayRunning ? "Pause" : "Play"}
+                    </button>
+                    <HelpTip title="Replay" text="Play reveals future candles one at a time. Pause stops the replay at the current candle." />
+                  </div>
+                  <div className="control-with-help">
+                    <button type="button" className="secondary compact" onClick={() => setVisibleCandles(v => Math.min(v + 1, scenario.candles.length))}>
+                      +1 candle
+                    </button>
+                    <HelpTip title="Advance one candle" text="Reveals exactly one additional candle so you can inspect price action slowly." />
+                  </div>
+                  <div className="control-with-help">
+                    <button type="button" className="secondary compact" onClick={resetReplay}>Reset</button>
+                    <HelpTip title="Reset replay" text="Returns the scenario to its starting candles and clears your current trade plan." />
+                  </div>
+                  <label>Speed
+                    <select value={replaySpeed} onChange={e => setReplaySpeed(Number(e.target.value))}>
+                      <option value={1200}>Slow</option>
+                      <option value={700}>Normal</option>
+                      <option value={350}>Fast</option>
+                    </select>
+                  </label>
+                  <span>{visibleCandles}/{scenario.candles.length} candles</span>
+                </>
+              ) : (
+                <>
+                  <div className="beginner-replay-copy">
+                    <span>GUIDED REPLAY</span>
+                    <strong>Reveal price action one candle at a time</strong>
+                  </div>
+                  <button
+                    type="button"
+                    className="primary compact beginner-next-candle"
+                    onClick={() =>
+                      setVisibleCandles(v =>
+                        Math.min(v + 1, scenario.candles.length)
+                      )
+                    }
+                    disabled={visibleCandles >= scenario.candles.length}
+                  >
+                    Reveal next candle →
+                  </button>
+                  <span>{visibleCandles}/{scenario.candles.length}</span>
+                </>
+              )}
             </div>
             <Chart
               scenario={scenario}
@@ -2586,12 +2823,153 @@ export default function FuturesAcademy() {
               onChangeLevel={setLevel}
               lastPlacedLevel={lastPlacedLevel}
             />
+
+            {simulatorInterface === "advanced" && choice && choice !== "wait" && (
+              <div
+                className={`mobile-chart-placement ${
+                  mobilePlacementOpen ? "open" : ""
+                }`}
+              >
+                <div className="mobile-placement-header">
+                  <div>
+                    <span>MOBILE ORDER PLACEMENT</span>
+                    <strong>
+                      {activePlacement
+                        ? `Tap the chart to place ${activePlacement}`
+                        : "Place your bracket without scrolling"}
+                    </strong>
+                  </div>
+
+                  {!mobilePlacementOpen ? (
+                    <button
+                      type="button"
+                      className="primary compact"
+                      onClick={startMobileBracketPlacement}
+                      disabled={reveal}
+                    >
+                      Place on chart
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      className="secondary compact"
+                      onClick={() => {
+                        setMobilePlacementOpen(false);
+                        setActivePlacement(null);
+                      }}
+                    >
+                      Close
+                    </button>
+                  )}
+                </div>
+
+                {mobilePlacementOpen && (
+                  <>
+                    <div className="mobile-placement-levels">
+                      {([
+                        ["entry", "Entry", entryPrice],
+                        ["stop", "Stop", stopPrice],
+                        ["target", "Target", targetPrice]
+                      ] as const).map(([kind, label, value]) => (
+                        <button
+                          type="button"
+                          key={kind}
+                          className={`mobile-level-button mobile-level-${kind} ${
+                            activePlacement === kind ? "active" : ""
+                          } ${value ? "placed" : ""}`}
+                          onClick={() => setActivePlacement(kind)}
+                          disabled={reveal}
+                        >
+                          <span>{label}</span>
+                          <strong>{value || "Tap to place"}</strong>
+                          <small>
+                            {activePlacement === kind
+                              ? "Tap chart now"
+                              : value
+                              ? "Placed"
+                              : "Not set"}
+                          </small>
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="mobile-placement-adjust">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          activePlacement &&
+                          adjustLevel(activePlacement, -0.25)
+                        }
+                        disabled={!activePlacement || reveal}
+                      >
+                        −1 tick
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          activePlacement &&
+                          adjustLevel(activePlacement, 0.25)
+                        }
+                        disabled={!activePlacement || reveal}
+                      >
+                        +1 tick
+                      </button>
+                      <button
+                        type="button"
+                        className="mobile-placement-clear"
+                        onClick={clearMobileBracket}
+                        disabled={reveal}
+                      >
+                        Reset
+                      </button>
+                    </div>
+
+                    <div className="mobile-placement-flow">
+                      <span className={entryPrice ? "done" : activePlacement === "entry" ? "active" : ""}>
+                        1 Entry
+                      </span>
+                      <i />
+                      <span className={stopPrice ? "done" : activePlacement === "stop" ? "active" : ""}>
+                        2 Stop
+                      </span>
+                      <i />
+                      <span className={targetPrice ? "done" : activePlacement === "target" ? "active" : ""}>
+                        3 Target
+                      </span>
+                    </div>
+
+                    {entryPrice && stopPrice && targetPrice && !activePlacement && (
+                      <div className="mobile-placement-complete">
+                        <span>✓ Bracket complete</span>
+                        <strong>
+                          {liveRR > 0 ? `${liveRR.toFixed(1)}:1 R:R` : "Review order"}
+                        </strong>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const ticket = document.querySelector(".ticket");
+                            ticket?.scrollIntoView({
+                              behavior: "smooth",
+                              block: "start"
+                            });
+                          }}
+                        >
+                          Review & submit ↓
+                        </button>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
           </div>
           <aside className={`ticket ${reveal && choice !== scenario.answer ? "ticket-error" : ""}`}>
-            <h2>{practiceMode === "mixed" ? "Main mixed trainer" : "Focused practice"}</h2>
+            <h2>{simulatorInterface === "beginner" ? "Beginner decision trainer" : practiceMode === "mixed" ? "Advanced trading simulator" : "Advanced focused practice"}</h2>
             <p className="mode-description">
               {practiceModes.find(mode => mode.id === practiceMode)?.description}
             </p>
+            {simulatorInterface === "advanced" ? (
+              <>
             <div className="quote-grid">
               <div><span>Instrument</span><strong>MES</strong></div>
               <div className="contracts-control">
@@ -2631,23 +3009,41 @@ export default function FuturesAcademy() {
                 <HelpTip title="Stop entry order" text="Activates after price reaches your trigger. Traders often use it to enter after confirmation or continuation." />
               </div>
             </div>
+              </>
+            ) : (
+              <div className="beginner-ticket-intro">
+                <div className="beginner-instrument">
+                  <span>MES</span>
+                  <div>
+                    <strong>Micro E-mini S&amp;P 500</strong>
+                    <small>1 contract · market entry · guided 2:1 plan</small>
+                  </div>
+                </div>
+                <div className="beginner-question">
+                  <span>YOUR ONLY JOB RIGHT NOW</span>
+                  <strong>What should the trader do?</strong>
+                  <p>Focus on the chart and key level. We’ll handle the order mechanics while you learn.</p>
+                </div>
+              </div>
+            )}
             <p className="label">Your decision</p>
             <div className="decision-grid">
               <div className="control-button-shell decision-shell">
-                <button className={`decision buy ${choice === "buy" ? "active" : ""}`} onClick={() => !reveal && setChoice("buy")} type="button">▲ BUY</button>
+                <button className={`decision buy ${choice === "buy" ? "active" : ""}`} onClick={() => chooseTradeDirection("buy")} type="button">▲ BUY</button>
                 <HelpTip title="Buy" text="Choose Buy when you expect price to move higher after a valid bullish break and retest." />
               </div>
               <div className="control-button-shell decision-shell">
-                <button className={`decision sell ${choice === "sell" ? "active" : ""}`} onClick={() => !reveal && setChoice("sell")} type="button">▼ SELL</button>
+                <button className={`decision sell ${choice === "sell" ? "active" : ""}`} onClick={() => chooseTradeDirection("sell")} type="button">▼ SELL</button>
                 <HelpTip title="Sell" text="Choose Sell when you expect price to move lower after a valid bearish break and retest." />
               </div>
               <div className="control-button-shell decision-shell">
-                <button className={`decision wait ${choice === "wait" ? "active" : ""}`} onClick={() => !reveal && setChoice("wait")} type="button">● WAIT</button>
+                <button className={`decision wait ${choice === "wait" ? "active" : ""}`} onClick={() => chooseTradeDirection("wait")} type="button">● WAIT</button>
                 <HelpTip title="Wait" text="Choose Wait when the break, retest, or confirmation is missing, unclear, or invalid." />
               </div>
             </div>
 
-            {choice !== "wait" && (
+            {choice !== "wait" && choice && (
+              simulatorInterface === "advanced" ? (
               <>
                 <div className="trade-plan-grid">
                   {([
@@ -2725,6 +3121,41 @@ export default function FuturesAcademy() {
                   <div className="risk-metric risk-metric-profit"><span className="label-with-help">Est. profit <HelpTip title="Estimated profit" text="Approximate simulated dollar profit if the target is reached, based on MES point value and contract count." /></span><strong>{estimatedProfit > 0 ? `$${estimatedProfit.toFixed(2)}` : "—"}</strong></div>
                 </div>
               </>
+              ) : (
+                <div className="beginner-plan-card">
+                  <div className="beginner-plan-heading">
+                    <div>
+                      <span>GUIDED TRADE PLAN</span>
+                      <strong>We built the mechanics for you</strong>
+                    </div>
+                    <b>2:1 R:R</b>
+                  </div>
+                  <p>
+                    Learn the direction first. Beginner Mode automatically
+                    uses 1 MES contract and places a simple educational
+                    stop and target around your entry.
+                  </p>
+                  <div className="beginner-plan-values">
+                    <div><span>Entry</span><strong>{entryPrice || "—"}</strong></div>
+                    <div><span>Stop</span><strong>{stopPrice || "—"}</strong></div>
+                    <div><span>Target</span><strong>{targetPrice || "—"}</strong></div>
+                  </div>
+                  <button
+                    type="button"
+                    className="secondary beginner-rebuild-plan"
+                    onClick={() =>
+                      choice !== "wait" && applyBeginnerTradePlan(choice)
+                    }
+                    disabled={reveal}
+                  >
+                    Rebuild guided plan
+                  </button>
+                  <small>
+                    Advanced Mode lets you manually choose contracts,
+                    order type, entry, stop, target, and exact bracket placement.
+                  </small>
+                </div>
+              )
             )}
 
             <div className="submit-with-help">
@@ -2738,9 +3169,16 @@ export default function FuturesAcademy() {
               }
               onClick={() => submitAnswer()}
             >
-              Submit trade plan
+              {simulatorInterface === "beginner" ? "Check my decision" : "Submit trade plan"}
             </button>
-            <HelpTip title="Submit trade plan" text="Locks your direction, entry, stop, and target, then grades the complete plan and reveals the explanation." />
+            <HelpTip
+              title={simulatorInterface === "beginner" ? "Check my decision" : "Submit trade plan"}
+              text={
+                simulatorInterface === "beginner"
+                  ? "Grades your Buy, Sell, or Wait decision and then explains what happened."
+                  : "Locks your direction, entry, stop, and target, then grades the complete plan and reveals the explanation."
+              }
+            />
             </div>
             {reveal && (
               <div className={`feedback ${choice === scenario.answer ? "good" : "bad"}`}>
@@ -2754,13 +3192,27 @@ export default function FuturesAcademy() {
                     ? "Price crossed the level but quickly returned through it. The failed break makes waiting safer."
                     : "Price remained choppy around the level without a clean close, retest, and confirmation sequence."}
                 </p>
-                <div className="score-breakdown">
-                  <div><span>Direction</span><strong>{choice === scenario.answer ? "10/10" : "0/10"}</strong></div>
-                  <div><span>Entry plan</span><strong>{choice === "wait" ? "N/A" : entryPrice ? "8/10" : "0/10"}</strong></div>
-                  <div><span>Stop placement</span><strong>{choice === "wait" ? "N/A" : liveRiskPoints > 0 ? "8/10" : "0/10"}</strong></div>
-                  <div><span>Target</span><strong>{choice === "wait" ? "N/A" : liveRR >= 2 ? "10/10" : liveRR >= 1 ? "7/10" : "3/10"}</strong></div>
-                  <div><span>Risk management</span><strong>{choice === "wait" ? "10/10" : liveRR >= 2 ? "10/10" : liveRR >= 1 ? "6/10" : "2/10"}</strong></div>
-                </div>
+                {simulatorInterface === "advanced" ? (
+                  <div className="score-breakdown">
+                    <div><span>Direction</span><strong>{choice === scenario.answer ? "10/10" : "0/10"}</strong></div>
+                    <div><span>Entry plan</span><strong>{choice === "wait" ? "N/A" : entryPrice ? "8/10" : "0/10"}</strong></div>
+                    <div><span>Stop placement</span><strong>{choice === "wait" ? "N/A" : liveRiskPoints > 0 ? "8/10" : "0/10"}</strong></div>
+                    <div><span>Target</span><strong>{choice === "wait" ? "N/A" : liveRR >= 2 ? "10/10" : liveRR >= 1 ? "7/10" : "3/10"}</strong></div>
+                    <div><span>Risk management</span><strong>{choice === "wait" ? "10/10" : liveRR >= 2 ? "10/10" : liveRR >= 1 ? "6/10" : "2/10"}</strong></div>
+                  </div>
+                ) : (
+                  <div className="beginner-feedback-steps">
+                    <div className={choice === scenario.answer ? "done" : "missed"}>
+                      <span>1</span><p><strong>Direction</strong><small>{choice === scenario.answer ? "You read the setup correctly." : `The stronger decision was ${scenario.answer.toUpperCase()}.`}</small></p>
+                    </div>
+                    <div className="done">
+                      <span>2</span><p><strong>Risk plan</strong><small>{choice === "wait" ? "No trade means no capital at risk." : "Beginner Mode demonstrated a simple 2:1 plan."}</small></p>
+                    </div>
+                    <div className="done">
+                      <span>3</span><p><strong>Next lesson</strong><small>Review the explanation, then try another randomized setup.</small></p>
+                    </div>
+                  </div>
+                )}
                 <div className="plan-grade">
                   <strong>Coach feedback</strong>
                   <span>{planFeedback}</span>
@@ -3706,7 +4158,7 @@ export default function FuturesAcademy() {
         authUserId={authUserId}
       />
     );
-  }, [tab, scenario, dailyScenario, choice, reveal, xp, streak, role, premium, email, password, authMessage, question, aiAnswer, aiLoading, canAdmin, level, practiceMode, accuracy, mistakes, selectedMistake, unlockedAchievements, soundEnabled, reducedMotion, showCelebration, totalAttempts, entryPrice, stopPrice, targetPrice, planFeedback, visibleCandles, replayRunning, replaySpeed, activePlacement, contracts, orderType, liveRiskPoints, liveRewardPoints, liveRR, estimatedLoss, estimatedProfit, lastPlacedLevel, combo, bestCombo, currentRankIndex, currentRank, nextRank, rankProgress,
+  }, [tab, scenario, dailyScenario, choice, reveal, xp, streak, role, premium, email, password, authMessage, question, aiAnswer, aiLoading, canAdmin, level, practiceMode, simulatorInterface, accuracy, mistakes, selectedMistake, unlockedAchievements, soundEnabled, reducedMotion, showCelebration, totalAttempts, entryPrice, stopPrice, targetPrice, planFeedback, visibleCandles, replayRunning, replaySpeed, activePlacement, mobilePlacementOpen, contracts, orderType, liveRiskPoints, liveRewardPoints, liveRR, estimatedLoss, estimatedProfit, lastPlacedLevel, combo, bestCombo, currentRankIndex, currentRank, nextRank, rankProgress,
     xpRankProgress, reputationRankProgress, xpToNextRank,
     reputationToNextRank, currentMode, dailyProgress, points, selectedAccountId, selectedAccount, paperBalance, peakBalance, trailingDrawdownFloor, drawdownRemaining, accountFailed, ownedShopItems, equippedShopItems, shopMessage, reputation, membershipLabel,
     equippedAccountIcon, equippedBadge, equippedTitle, equippedProfileFrame,
