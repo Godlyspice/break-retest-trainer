@@ -3143,9 +3143,7 @@ export default function FuturesAcademy() {
                   <button
                     type="button"
                     className="secondary beginner-rebuild-plan"
-                    onClick={() =>
-                      choice !== "wait" && applyBeginnerTradePlan(choice)
-                    }
+                    onClick={() => applyBeginnerTradePlan(choice)}
                     disabled={reveal}
                   >
                     Rebuild guided plan

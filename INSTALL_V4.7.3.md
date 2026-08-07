@@ -44,3 +44,11 @@ Beginner Mode is unchanged.
 7. Push to GitHub and let Vercel deploy.
 
 No Supabase SQL is required.
+
+
+## Build hotfix
+
+This package includes the TypeScript build fix for the Beginner Mode
+`Rebuild guided plan` button. The surrounding render already narrows
+`choice` to `buy | sell`, so the redundant comparison against `wait`
+was removed.
