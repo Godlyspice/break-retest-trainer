@@ -622,7 +622,8 @@ function Chart({
   activePlacement,
   onPlaceLevel,
   onChangeLevel,
-  lastPlacedLevel
+  lastPlacedLevel,
+  zoomScale = 1
 }: {
   scenario: Scenario;
   reveal: boolean;
@@ -635,6 +636,7 @@ function Chart({
   onPlaceLevel?: (kind: "entry" | "stop" | "target", value: number) => void;
   onChangeLevel?: (kind: "entry" | "stop" | "target", value: number) => void;
   lastPlacedLevel?: "entry" | "stop" | "target" | null;
+  zoomScale?: number;
 }) {
   const ref = useRef<HTMLCanvasElement>(null);
 
@@ -644,7 +646,7 @@ function Chart({
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    let zoom = 1;
+    let zoom = zoomScale;
     let crossX: number | null = null;
     let crossY: number | null = null;
     let dragging: "entry" | "stop" | "target" | null = null;
@@ -666,10 +668,26 @@ function Chart({
       const plotW = w - pad.l - pad.r;
       const plotH = h - pad.t - pad.b;
       const displayCandles = scenario.candles.slice(0, visibleCandles ?? scenario.candles.length);
-      const values = displayCandles.flatMap(c => [c.high, c.low]).concat(scenario.level);
+      const placedLevels = [
+        Number(entryPrice),
+        Number(stopPrice),
+        Number(targetPrice)
+      ].filter(value => Number.isFinite(value) && value > 0);
+
+      const values = displayCandles
+        .flatMap(c => [c.high, c.low])
+        .concat(scenario.level, ...placedLevels);
+
       let min = Math.min(...values);
       let max = Math.max(...values);
-      const extra = (max - min) * 0.12;
+
+      const rawRange = Math.max(max - min, 1);
+      const center = (max + min) / 2;
+      const zoomedRange = rawRange / Math.max(.65, zoomScale);
+      min = center - zoomedRange / 2;
+      max = center + zoomedRange / 2;
+
+      const extra = (max - min) * 0.16;
       min -= extra;
       max += extra;
       const y = (v: number) => pad.t + ((max - v) / (max - min)) * plotH;
@@ -936,10 +954,26 @@ function Chart({
       const rect = canvas.getBoundingClientRect();
       const pad = { l: 54, r: reveal ? 190 : 26, t: 22, b: 34 };
       const displayCandles = scenario.candles.slice(0, visibleCandles ?? scenario.candles.length);
-      const values = displayCandles.flatMap(c => [c.high, c.low]).concat(scenario.level);
+      const placedLevels = [
+        Number(entryPrice),
+        Number(stopPrice),
+        Number(targetPrice)
+      ].filter(value => Number.isFinite(value) && value > 0);
+
+      const values = displayCandles
+        .flatMap(c => [c.high, c.low])
+        .concat(scenario.level, ...placedLevels);
+
       let min = Math.min(...values);
       let max = Math.max(...values);
-      const extra = (max - min) * 0.12;
+
+      const rawRange = Math.max(max - min, 1);
+      const center = (max + min) / 2;
+      const zoomedRange = rawRange / Math.max(.65, zoomScale);
+      min = center - zoomedRange / 2;
+      max = center + zoomedRange / 2;
+
+      const extra = (max - min) * 0.16;
       min -= extra;
       max += extra;
       const plotH = rect.height - pad.t - pad.b;
@@ -1036,7 +1070,7 @@ function Chart({
       canvas.removeEventListener("pointerleave", onLeave);
       canvas.removeEventListener("wheel", onWheel);
     };
-  }, [scenario, reveal, choice, entryPrice, stopPrice, targetPrice, visibleCandles, activePlacement, onPlaceLevel, onChangeLevel]);
+  }, [scenario, reveal, choice, entryPrice, stopPrice, targetPrice, visibleCandles, activePlacement, onPlaceLevel, onChangeLevel, zoomScale]);
 
   return <canvas ref={ref} className="chart" aria-label="Synthetic MES candlestick training chart" />;
 }
@@ -1082,6 +1116,8 @@ export default function FuturesAcademy() {
   const [planFeedback, setPlanFeedback] = useState("");
   const [activePlacement, setActivePlacement] = useState<"entry" | "stop" | "target" | null>(null);
   const [mobilePlacementOpen, setMobilePlacementOpen] = useState(false);
+  const [beginnerPlacementOpen, setBeginnerPlacementOpen] = useState(false);
+  const [chartZoom, setChartZoom] = useState(1);
   const [lastPlacedLevel, setLastPlacedLevel] = useState<"entry" | "stop" | "target" | null>(null);
   const [visibleCandles, setVisibleCandles] = useState(18);
   const [replayRunning, setReplayRunning] = useState(false);
@@ -1811,11 +1847,28 @@ export default function FuturesAcademy() {
       setEntryPrice("");
       setStopPrice("");
       setTargetPrice("");
+      setActivePlacement(null);
+
+      if (simulatorInterface === "beginner") {
+        setBeginnerPlacementOpen(true);
+      } else {
+        setMobilePlacementOpen(false);
+      }
       return;
     }
 
     if (simulatorInterface === "beginner") {
-      applyBeginnerTradePlan(direction);
+      // Beginner Mode keeps the simplified UI, but the learner now
+      // manually chooses Entry, Stop, and Take-profit.
+      setBeginnerPlacementOpen(true);
+      setActivePlacement("entry");
+
+      if (
+        typeof window !== "undefined" &&
+        window.matchMedia("(max-width: 820px)").matches
+      ) {
+        setMobilePlacementOpen(true);
+      }
       return;
     }
 
@@ -1950,7 +2003,9 @@ export default function FuturesAcademy() {
     setPlanFeedback("");
     setReveal(false);
     setMobilePlacementOpen(false);
+    setBeginnerPlacementOpen(false);
     setActivePlacement(null);
+    setChartZoom(1);
   }
 
   function changePracticeMode(mode: string) {
@@ -2013,7 +2068,7 @@ export default function FuturesAcademy() {
     const mobileChartPlacement =
       typeof window !== "undefined" &&
       window.matchMedia("(max-width: 820px)").matches &&
-      simulatorInterface === "advanced";
+      mobilePlacementOpen;
 
     if (mobileChartPlacement) {
       if (kind === "entry") {
@@ -2706,15 +2761,16 @@ export default function FuturesAcademy() {
                 setSimulatorInterface("beginner");
                 setContracts(1);
                 setOrderType("market");
-                if (choice === "buy" || choice === "sell") {
-                  window.setTimeout(() => applyBeginnerTradePlan(choice), 0);
-                }
+                setBeginnerPlacementOpen(Boolean(choice));
+                setActivePlacement(
+                  choice === "buy" || choice === "sell" ? "entry" : null
+                );
               }}
             >
               <span>🌱</span>
               <div>
                 <strong>Beginner Mode</strong>
-                <small>Simple decisions · guided risk plan</small>
+                <small>Simple decisions · manual chart placement</small>
               </div>
               <em>RECOMMENDED</em>
             </button>
@@ -2749,13 +2805,17 @@ export default function FuturesAcademy() {
               <i />
               <div>
                 <span>3</span>
-                <p><strong>Review the lesson</strong><small>We build a simple 2:1 plan automatically.</small></p>
+                <p><strong>Place your levels</strong><small>Set Entry, Stop, and Take-profit yourself.</small></p>
               </div>
             </div>
           )}
 
           <div className={`workspace simulator-interface-${simulatorInterface}`}>
-          <div className="chart-panel scenario-transition" key={scenario.id}>
+          <div
+            className="chart-panel scenario-transition"
+            key={scenario.id}
+            id="training-chart-area"
+          >
             <div className="instrument-bar">
               <div><strong>MES</strong><span>Micro E-mini S&amp;P 500 · Synthetic replay</span></div>
               <div className="market-chip">{currentMode.short}</div>
@@ -2810,6 +2870,39 @@ export default function FuturesAcademy() {
                 </>
               )}
             </div>
+            <div className="chart-viewport-tools">
+              <span>CHART ZOOM</span>
+              <button
+                type="button"
+                aria-label="Zoom chart out"
+                onClick={() =>
+                  setChartZoom(value =>
+                    Math.max(.7, Number((value - .1).toFixed(2)))
+                  )
+                }
+              >
+                −
+              </button>
+              <button
+                type="button"
+                className="chart-zoom-fit"
+                onClick={() => setChartZoom(1)}
+              >
+                Fit {Math.round(chartZoom * 100)}%
+              </button>
+              <button
+                type="button"
+                aria-label="Zoom chart in"
+                onClick={() =>
+                  setChartZoom(value =>
+                    Math.min(1.4, Number((value + .1).toFixed(2)))
+                  )
+                }
+              >
+                +
+              </button>
+            </div>
+
             <Chart
               scenario={scenario}
               reveal={reveal}
@@ -2822,9 +2915,10 @@ export default function FuturesAcademy() {
               onPlaceLevel={setLevel}
               onChangeLevel={setLevel}
               lastPlacedLevel={lastPlacedLevel}
+              zoomScale={chartZoom}
             />
 
-            {simulatorInterface === "advanced" && choice && choice !== "wait" && (
+            {choice && choice !== "wait" && (
               <div
                 className={`mobile-chart-placement ${
                   mobilePlacementOpen ? "open" : ""
@@ -2832,7 +2926,7 @@ export default function FuturesAcademy() {
               >
                 <div className="mobile-placement-header">
                   <div>
-                    <span>MOBILE ORDER PLACEMENT</span>
+                    <span>{simulatorInterface === "beginner" ? "BEGINNER CHART PLACEMENT" : "MOBILE ORDER PLACEMENT"}</span>
                     <strong>
                       {activePlacement
                         ? `Tap the chart to place ${activePlacement}`
@@ -3042,6 +3136,29 @@ export default function FuturesAcademy() {
               </div>
             </div>
 
+            {simulatorInterface === "beginner" &&
+              choice === "wait" &&
+              beginnerPlacementOpen && (
+                <div className="beginner-wait-popover">
+                  <div>
+                    <span>WAIT SELECTED</span>
+                    <strong>No trade levels are needed</strong>
+                  </div>
+                  <p>
+                    Waiting means you are deliberately staying out of the
+                    market. There is no Entry, Stop-loss, or Take-profit to
+                    place. Submit the decision when you are ready to see
+                    whether patience was the correct choice.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setBeginnerPlacementOpen(false)}
+                  >
+                    Got it
+                  </button>
+                </div>
+              )}
+
             {choice !== "wait" && choice && (
               simulatorInterface === "advanced" ? (
               <>
@@ -3122,35 +3239,135 @@ export default function FuturesAcademy() {
                 </div>
               </>
               ) : (
-                <div className="beginner-plan-card">
-                  <div className="beginner-plan-heading">
+                <div
+                  className={`beginner-placement-popover ${
+                    beginnerPlacementOpen ? "open" : ""
+                  }`}
+                >
+                  <div className="beginner-placement-popover-head">
                     <div>
-                      <span>GUIDED TRADE PLAN</span>
-                      <strong>We built the mechanics for you</strong>
+                      <span>MANUAL BEGINNER PLAN</span>
+                      <strong>
+                        {choice === "buy"
+                          ? "Plan your long trade"
+                          : "Plan your short trade"}
+                      </strong>
                     </div>
-                    <b>2:1 R:R</b>
+                    <button
+                      type="button"
+                      aria-label="Close beginner placement menu"
+                      onClick={() => {
+                        setBeginnerPlacementOpen(false);
+                        setActivePlacement(null);
+                      }}
+                    >
+                      ×
+                    </button>
                   </div>
+
                   <p>
-                    Learn the direction first. Beginner Mode automatically
-                    uses 1 MES contract and places a simple educational
-                    stop and target around your entry.
+                    Beginner Mode keeps the order ticket simple, but you
+                    now decide where Entry, Stop-loss, and Take-profit belong.
+                    Pick a level below, then tap the chart.
                   </p>
-                  <div className="beginner-plan-values">
-                    <div><span>Entry</span><strong>{entryPrice || "—"}</strong></div>
-                    <div><span>Stop</span><strong>{stopPrice || "—"}</strong></div>
-                    <div><span>Target</span><strong>{targetPrice || "—"}</strong></div>
+
+                  <div className="beginner-manual-levels">
+                    {([
+                      ["entry", "Entry", entryPrice],
+                      ["stop", "Stop-loss", stopPrice],
+                      ["target", "Take-profit", targetPrice]
+                    ] as const).map(([kind, label, value]) => (
+                      <button
+                        type="button"
+                        key={kind}
+                        className={`beginner-manual-level level-${kind} ${
+                          activePlacement === kind ? "active" : ""
+                        } ${value ? "placed" : ""}`}
+                        onClick={() => setActivePlacement(kind)}
+                        disabled={reveal}
+                      >
+                        <span>{label}</span>
+                        <strong>{value || "Not placed"}</strong>
+                        <small>
+                          {activePlacement === kind
+                            ? "Tap chart now"
+                            : value
+                            ? "Tap to move"
+                            : "Select"}
+                        </small>
+                      </button>
+                    ))}
                   </div>
-                  <button
-                    type="button"
-                    className="secondary beginner-rebuild-plan"
-                    onClick={() => applyBeginnerTradePlan(choice)}
-                    disabled={reveal}
-                  >
-                    Rebuild guided plan
-                  </button>
+
+                  <div className="beginner-placement-actions">
+                    <button
+                      type="button"
+                      className="primary"
+                      onClick={() => {
+                        setBeginnerPlacementOpen(true);
+                        if (!activePlacement) {
+                          setActivePlacement(
+                            !entryPrice
+                              ? "entry"
+                              : !stopPrice
+                              ? "stop"
+                              : "target"
+                          );
+                        }
+                        document
+                          .getElementById("training-chart-area")
+                          ?.scrollIntoView({
+                            behavior: "smooth",
+                            block: "start"
+                          });
+                      }}
+                      disabled={reveal}
+                    >
+                      ⊕ Place selected level on chart
+                    </button>
+
+                    <div className="beginner-tick-adjust">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          activePlacement &&
+                          adjustLevel(activePlacement, -.25)
+                        }
+                        disabled={!activePlacement || reveal}
+                      >
+                        −1 tick
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          activePlacement &&
+                          adjustLevel(activePlacement, .25)
+                        }
+                        disabled={!activePlacement || reveal}
+                      >
+                        +1 tick
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="beginner-plan-status">
+                    <span className={entryPrice ? "done" : ""}>
+                      {entryPrice ? "✓" : "1"} Entry
+                    </span>
+                    <i />
+                    <span className={stopPrice ? "done" : ""}>
+                      {stopPrice ? "✓" : "2"} Stop
+                    </span>
+                    <i />
+                    <span className={targetPrice ? "done" : ""}>
+                      {targetPrice ? "✓" : "3"} Take-profit
+                    </span>
+                  </div>
+
                   <small>
-                    Advanced Mode lets you manually choose contracts,
-                    order type, entry, stop, target, and exact bracket placement.
+                    One MES contract is still used automatically so beginners
+                    can focus on reading price and placing levels—not sizing
+                    mechanics.
                   </small>
                 </div>
               )
@@ -4156,7 +4373,7 @@ export default function FuturesAcademy() {
         authUserId={authUserId}
       />
     );
-  }, [tab, scenario, dailyScenario, choice, reveal, xp, streak, role, premium, email, password, authMessage, question, aiAnswer, aiLoading, canAdmin, level, practiceMode, simulatorInterface, accuracy, mistakes, selectedMistake, unlockedAchievements, soundEnabled, reducedMotion, showCelebration, totalAttempts, entryPrice, stopPrice, targetPrice, planFeedback, visibleCandles, replayRunning, replaySpeed, activePlacement, mobilePlacementOpen, contracts, orderType, liveRiskPoints, liveRewardPoints, liveRR, estimatedLoss, estimatedProfit, lastPlacedLevel, combo, bestCombo, currentRankIndex, currentRank, nextRank, rankProgress,
+  }, [tab, scenario, dailyScenario, choice, reveal, xp, streak, role, premium, email, password, authMessage, question, aiAnswer, aiLoading, canAdmin, level, practiceMode, simulatorInterface, accuracy, mistakes, selectedMistake, unlockedAchievements, soundEnabled, reducedMotion, showCelebration, totalAttempts, entryPrice, stopPrice, targetPrice, planFeedback, visibleCandles, replayRunning, replaySpeed, activePlacement, mobilePlacementOpen, beginnerPlacementOpen, chartZoom, contracts, orderType, liveRiskPoints, liveRewardPoints, liveRR, estimatedLoss, estimatedProfit, lastPlacedLevel, combo, bestCombo, currentRankIndex, currentRank, nextRank, rankProgress,
     xpRankProgress, reputationRankProgress, xpToNextRank,
     reputationToNextRank, currentMode, dailyProgress, points, selectedAccountId, selectedAccount, paperBalance, peakBalance, trailingDrawdownFloor, drawdownRemaining, accountFailed, ownedShopItems, equippedShopItems, shopMessage, reputation, membershipLabel,
     equippedAccountIcon, equippedBadge, equippedTitle, equippedProfileFrame,
