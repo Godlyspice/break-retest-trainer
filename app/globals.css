@@ -6568,3 +6568,294 @@ textarea {
   .achievement-toast-timer { animation: none !important; }
   .career-rank-emblem .academy-icon-shell { animation: none !important; }
 }
+
+
+/* Futures Academy v4.7.1 — progressive Account Vault emblems */
+.account-vault-emblem {
+  --vault-color: #2f8cff;
+  --vault-rgb: 47, 140, 255;
+  width: 118px;
+  height: 118px;
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  isolation: isolate;
+  color: var(--vault-color);
+}
+
+.account-vault-starter { --vault-color: #00e59a; --vault-rgb: 0, 229, 154; }
+.account-vault-growth { --vault-color: #258cff; --vault-rgb: 37, 140, 255; }
+.account-vault-pro { --vault-color: #a650ff; --vault-rgb: 166, 80, 255; }
+.account-vault-elite { --vault-color: #ffc127; --vault-rgb: 255, 193, 39; }
+.account-vault-funded { --vault-color: #ff4b3e; --vault-rgb: 255, 75, 62; }
+
+.account-vault-emblem svg {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  z-index: 2;
+  overflow: visible;
+  stroke: currentColor;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter:
+    drop-shadow(0 0 5px rgba(var(--vault-rgb), .9))
+    drop-shadow(0 0 17px rgba(var(--vault-rgb), .42));
+}
+
+.account-vault-emblem svg path,
+.account-vault-emblem svg circle {
+  vector-effect: non-scaling-stroke;
+}
+
+.account-vault-emblem .vault-emblem-back {
+  fill: rgba(var(--vault-rgb), .075);
+  stroke-width: 2.2;
+}
+
+.account-vault-emblem .vault-emblem-detail {
+  opacity: .72;
+  stroke-width: 2;
+}
+
+.vault-emblem-aura {
+  position: absolute;
+  inset: 18%;
+  z-index: 0;
+  border-radius: 50%;
+  background: rgba(var(--vault-rgb), .24);
+  filter: blur(20px);
+  animation: vaultAuraPulse 2.8s ease-in-out infinite;
+}
+
+.account-vault-emblem:not(.account-vault-locked) svg {
+  animation: vaultCrestFloat 4.5s ease-in-out infinite;
+}
+
+.account-vault-growth svg { animation-delay: -.7s !important; }
+.account-vault-pro svg { animation-delay: -1.4s !important; }
+.account-vault-elite svg { animation-delay: -2.1s !important; }
+.account-vault-funded svg { animation-delay: -2.8s !important; }
+
+.account-vault-locked {
+  filter: grayscale(.78);
+  opacity: .5;
+}
+
+.account-vault-lock {
+  position: absolute;
+  z-index: 5;
+  right: 8px;
+  bottom: 8px;
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(211, 181, 102, .55);
+  border-radius: 50%;
+  background: #18130b;
+  font-size: .72rem;
+}
+
+.account-vault-compact {
+  width: 72px;
+  height: 72px;
+}
+
+.account-vault-compact .account-vault-lock {
+  width: 20px;
+  height: 20px;
+  right: 0;
+  bottom: 2px;
+  font-size: .52rem;
+}
+
+.vault-card > .account-vault-emblem {
+  margin: -4px 0 1px -3px;
+}
+
+.vault-card {
+  --vault-card-rgb: 47, 140, 255;
+}
+.vault-card:has(.account-vault-starter) { --vault-card-rgb: 0, 229, 154; }
+.vault-card:has(.account-vault-growth) { --vault-card-rgb: 37, 140, 255; }
+.vault-card:has(.account-vault-pro) { --vault-card-rgb: 166, 80, 255; }
+.vault-card:has(.account-vault-elite) { --vault-card-rgb: 255, 193, 39; }
+.vault-card:has(.account-vault-funded) { --vault-card-rgb: 255, 75, 62; }
+
+.vault-card.unlocked:hover,
+.vault-card.selected {
+  border-color: rgba(var(--vault-card-rgb), .72) !important;
+  box-shadow:
+    0 20px 55px rgba(0, 0, 0, .42),
+    0 0 28px rgba(var(--vault-card-rgb), .12) !important;
+}
+
+.vault-progression-panel {
+  margin-top: 18px;
+  padding: clamp(18px, 2.5vw, 27px);
+  border: 1px solid rgba(56, 104, 158, .47);
+  border-radius: 14px;
+  background:
+    radial-gradient(circle at 50% 0, rgba(73, 63, 205, .08), transparent 34%),
+    linear-gradient(145deg, #07111e, #030812 78%);
+}
+
+.vault-progression-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: end;
+  margin-bottom: 22px;
+}
+
+.vault-progression-heading h2 {
+  margin: 4px 0;
+}
+
+.vault-progression-heading p {
+  margin: 0;
+  color: #8297aa;
+  font-size: .73rem;
+}
+
+.vault-progression-heading > b {
+  padding: 7px 10px;
+  border: 1px solid rgba(88, 153, 214, .4);
+  border-radius: 999px;
+  color: #a8d9ff;
+  font-size: .66rem;
+}
+
+.vault-progression-track {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0;
+}
+
+.vault-progression-step {
+  min-width: 0;
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 3px;
+  text-align: center;
+}
+
+.vault-progression-step > i {
+  width: calc(100% - 70px);
+  height: 2px;
+  position: absolute;
+  z-index: 0;
+  left: calc(50% + 36px);
+  top: 35px;
+  background: linear-gradient(90deg, currentColor, rgba(70, 93, 119, .34));
+  opacity: .65;
+}
+
+.vault-progression-step strong {
+  font-size: .68rem;
+}
+
+.vault-progression-step small {
+  color: #8093a5;
+  font-size: .58rem;
+}
+
+.vault-progression-step > span:last-child {
+  margin-top: 4px;
+  padding: 4px 6px;
+  border: 1px solid rgba(79, 105, 133, .46);
+  border-radius: 999px;
+  color: #76899a;
+  font-size: .48rem;
+  font-weight: 900;
+}
+
+.vault-progression-step.unlocked > span:last-child {
+  border-color: rgba(45, 210, 144, .46);
+  color: #73dca8;
+}
+
+.vault-progression-step.current > span:last-child {
+  border-color: rgba(55, 162, 255, .65);
+  background: rgba(19, 87, 142, .35);
+  color: #a7ddff;
+  box-shadow: 0 0 15px rgba(48, 139, 255, .12);
+}
+
+@keyframes vaultCrestFloat {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-5px) scale(1.018); }
+}
+
+@keyframes vaultAuraPulse {
+  0%, 100% { opacity: .42; transform: scale(.88); }
+  50% { opacity: .86; transform: scale(1.12); }
+}
+
+@media (max-width: 900px) {
+  .vault-progression-track {
+    grid-template-columns: 1fr;
+    gap: 9px;
+  }
+
+  .vault-progression-step {
+    min-height: 78px;
+    grid-template-columns: 76px minmax(0, 1fr) auto;
+    grid-template-rows: auto auto;
+    justify-items: start;
+    align-items: center;
+    padding: 7px 9px;
+    border: 1px solid rgba(49, 79, 111, .45);
+    border-radius: 9px;
+    text-align: left;
+  }
+
+  .vault-progression-step .account-vault-emblem {
+    grid-row: 1 / 3;
+  }
+
+  .vault-progression-step > i {
+    display: none;
+  }
+
+  .vault-progression-step > span:last-child {
+    grid-column: 3;
+    grid-row: 1 / 3;
+  }
+}
+
+@media (max-width: 520px) {
+  .vault-progression-heading {
+    display: grid;
+    align-items: start;
+  }
+
+  .vault-progression-heading > b {
+    width: fit-content;
+  }
+
+  .vault-progression-step {
+    grid-template-columns: 62px minmax(0, 1fr);
+  }
+
+  .vault-progression-step > span:last-child {
+    grid-column: 2;
+    grid-row: auto;
+    justify-self: start;
+  }
+
+  .account-vault-compact {
+    width: 58px;
+    height: 58px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .account-vault-emblem svg,
+  .vault-emblem-aura {
+    animation: none !important;
+  }
+}

@@ -15,6 +15,7 @@ import { useEvaluation } from "@/hooks/useEvaluation";
 import AcademyRPG from "@/components/rpg/AcademyRPG";
 import { AcademyIcon } from "@/components/icons/AcademyIcon";
 import { RankEmblem } from "@/components/ui/NeonUI";
+import { AccountVaultEmblem, type VaultTier } from "@/components/vault/AccountVaultEmblem";
 
 type Role = "user" | "moderator" | "admin" | "owner";
 type Tab = "home" | "academy" | "train" | "daily" | "career" | "accounts" | "exams" | "handbook" | "mistakes" | "achievements" | "trophies" | "leaderboard" | "balance" | "shop" | "stats" | "ai" | "profile" | "settings" | "admin";
@@ -3181,28 +3182,10 @@ export default function FuturesAcademy() {
               const selected = account.id === selectedAccountId;
               return (
                 <article className={`vault-card ${unlocked ? "unlocked" : "locked"} ${selected ? "selected" : ""}`} key={account.id}>
-                  <div
-                    className={`vault-icon vault-icon-${account.id} ${
-                      unlocked ? "vault-icon-unlocked" : "vault-icon-locked"
-                    }`}
-                  >
-                    <AcademyIcon
-                      name={
-                        account.id === "starter"
-                          ? "trade"
-                          : account.id === "growth"
-                          ? "career"
-                          : account.id === "pro"
-                          ? "evaluation"
-                          : account.id === "elite"
-                          ? "rank"
-                          : "trophy"
-                      }
-                      size={34}
-                      framed
-                    />
-                    {!unlocked && <span className="vault-lock">🔒</span>}
-                  </div>
+                  <AccountVaultEmblem
+                    tier={account.id as VaultTier}
+                    locked={!unlocked}
+                  />
                   <span>{unlocked ? "AVAILABLE" : "LOCKED"}</span>
                   <h2>{account.name}</h2>
                   <div className="vault-numbers">
@@ -3219,6 +3202,33 @@ export default function FuturesAcademy() {
               );
             })}
           </div>
+
+          <section className="vault-progression-panel">
+            <div className="vault-progression-heading">
+              <div>
+                <span className="eyebrow">Evaluation progression</span>
+                <h2>Advance through five account tiers</h2>
+                <p>Each emblem becomes more prestigious as account size, rules, and reputation requirements increase.</p>
+              </div>
+              <b>{evaluationAccounts.findIndex(account => account.id === selectedAccountId) + 1} / {evaluationAccounts.length}</b>
+            </div>
+
+            <div className="vault-progression-track">
+              {evaluationAccounts.map((account, index) => {
+                const unlocked = reputation >= account.reputationRequired;
+                const selected = account.id === selectedAccountId;
+                return (
+                  <div className={`vault-progression-step ${unlocked ? "unlocked" : "locked"} ${selected ? "current" : ""}`} key={account.id}>
+                    <AccountVaultEmblem tier={account.id as VaultTier} locked={!unlocked} compact />
+                    <strong>{account.name.replace(" Evaluation", "").replace(" Challenge", "")}</strong>
+                    <small>${account.balance.toLocaleString()}</small>
+                    <span>{selected ? "CURRENT" : unlocked ? "UNLOCKED" : `${account.reputationRequired.toLocaleString()} REP`}</span>
+                    {index < evaluationAccounts.length - 1 && <i aria-hidden="true" />}
+                  </div>
+                );
+              })}
+            </div>
+          </section>
         </section>
       );
     }
