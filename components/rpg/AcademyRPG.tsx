@@ -7,8 +7,24 @@ import { AcademyIcon } from "@/components/icons/AcademyIcon";
 type TraderClassId =
   | "price_action"
   | "risk_manager"
-  | "breakout_hunter"
-  | "patient_trader";
+  | "pattern_hunter"
+  | "breakout_trader"
+  | "swing_strategist"
+  | "scalper_elite"
+  | "trend_follower"
+  | "capital_protector"
+  | "psychology_master"
+  | "volatility_specialist"
+  | "news_analyst"
+  | "algo_developer"
+  | "liquidity_sniper"
+  | "momentum_trader"
+  | "mean_reversion"
+  | "session_specialist"
+  | "volume_analyst"
+  | "execution_expert"
+  | "discipline_officer"
+  | "academy_mentor";
 
 type SkillTrack = {
   id: string;
@@ -251,6 +267,70 @@ const traderClasses = [
     ],
     requiredLevel: 100,
     requiredReputation: 250000
+  }
+  ,{
+    id: "liquidity_sniper" as TraderClassId,
+    icon: "◈", iconName: "pattern", tone: "purple",
+    name: "Liquidity Sniper", difficulty: 8,
+    description: "Studies sweeps, trapped orders, reclaim behavior, and precise entries around liquidity pools.",
+    perks: ["Liquidity Sweep scenario pool", "+25% XP from trap recognition", "Sniper reticle profile badge", "Precision-entry questline", "+10% reputation on perfect waits"],
+    requiredLevel: 65, requiredReputation: 95000
+  },
+  {
+    id: "momentum_trader" as TraderClassId,
+    icon: "➤", iconName: "streak", tone: "gold",
+    name: "Momentum Trader", difficulty: 7,
+    description: "Trains continuation entries, acceleration recognition, and disciplined exits when momentum fades.",
+    perks: ["Momentum Burst scenarios", "+20% XP after 5-answer combos", "Momentum title", "Gold pulse emblem", "Continuation challenge series"],
+    requiredLevel: 48, requiredReputation: 48000
+  },
+  {
+    id: "mean_reversion" as TraderClassId,
+    icon: "↔", iconName: "pattern", tone: "blue",
+    name: "Mean Reversion Expert", difficulty: 8,
+    description: "Recognizes stretched moves, failed continuation, range edges, and controlled returns toward value.",
+    perks: ["Range Reversion scenarios", "+25% XP on fade setups", "Mean Reversion title", "Range specialist badge", "Advanced chop lessons"],
+    requiredLevel: 58, requiredReputation: 72000
+  },
+  {
+    id: "session_specialist" as TraderClassId,
+    icon: "◷", iconName: "daily", tone: "cyan",
+    name: "Session Specialist", difficulty: 7,
+    description: "Focuses on opening ranges, session transitions, timing quality, and avoiding low-quality periods.",
+    perks: ["Session Timing Handbook branch", "+20% daily-mission XP", "Opening Range quests", "Session clock badge", "One bonus daily reroll"],
+    requiredLevel: 38, requiredReputation: 28000
+  },
+  {
+    id: "volume_analyst" as TraderClassId,
+    icon: "▥", iconName: "statistics", tone: "green",
+    name: "Volume Analyst", difficulty: 8,
+    description: "Uses participation, expansion, and confirmation clues to judge whether a move has support.",
+    perks: ["Volume Confirmation scenarios", "+25% XP from analytics drills", "Volume Analyst badge", "Advanced statistics card", "Participation quests"],
+    requiredLevel: 68, requiredReputation: 105000
+  },
+  {
+    id: "execution_expert" as TraderClassId,
+    icon: "✓", iconName: "evaluation", tone: "red",
+    name: "Execution Expert", difficulty: 9,
+    description: "Demands exact plan adherence, clean order placement, controlled sizing, and minimal hesitation.",
+    perks: ["Execution Audit challenges", "+30% XP for perfect plans", "Execution Expert frame", "Order-entry mastery badge", "Reduced penalty on one corrected plan daily"],
+    requiredLevel: 78, requiredReputation: 140000
+  },
+  {
+    id: "discipline_officer" as TraderClassId,
+    icon: "◇", iconName: "risk", tone: "violet",
+    name: "Discipline Officer", difficulty: 9,
+    description: "An endgame consistency path based on patience, rule adherence, review, and account protection.",
+    perks: ["Discipline campaign", "+30% reputation from clean sessions", "Three monthly streak shields", "Officer title and aura", "Exclusive evaluation ruleset"],
+    requiredLevel: 90, requiredReputation: 190000
+  },
+  {
+    id: "academy_mentor" as TraderClassId,
+    icon: "✦", iconName: "academy", tone: "gold",
+    name: "Academy Mentor", difficulty: 10,
+    description: "The final Core RPG class, representing broad mastery across patterns, risk, psychology, and execution.",
+    perks: ["Mentor-only challenge branch", "+40% XP from Master scenarios", "Legendary mentor emblem", "Academy Mentor title", "Mythic profile aura", "Seasonal mentor rewards", "All-class mastery showcase"],
+    requiredLevel: 120, requiredReputation: 400000
   }
 ]
 

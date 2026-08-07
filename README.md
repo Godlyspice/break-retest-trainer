@@ -36,3 +36,7 @@ See `INSTALL.md` for deployment instructions.
 - Bull and bear traps
 - Chop/no-trade recognition
 - Early-entry warning pattern
+
+
+## Current release
+Futures Academy v4.7 Core RPG. See `INSTALL_V4.7.md`.

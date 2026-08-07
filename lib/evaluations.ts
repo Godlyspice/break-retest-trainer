@@ -99,16 +99,16 @@ export const evaluationAccounts: EvaluationAccount[] = [
 ];
 
 export const careerRanks = [
-  { name: "Recruit", min: 0, reputation: 0, icon: "I" },
-  { name: "Cadet", min: 2500, reputation: 100, icon: "II" },
-  { name: "Junior Trader", min: 6000, reputation: 300, icon: "III" },
-  { name: "Trader", min: 12000, reputation: 700, icon: "IV" },
-  { name: "Senior Trader", min: 22000, reputation: 1500, icon: "V" },
-  { name: "Professional Trader", min: 40000, reputation: 3000, icon: "VI" },
-  { name: "Elite Trader", min: 70000, reputation: 6000, icon: "VII" },
-  { name: "Market Specialist", min: 120000, reputation: 12000, icon: "VIII" },
-  { name: "Funded Candidate", min: 200000, reputation: 25000, icon: "IX" },
-  { name: "Futures Master", min: 350000, reputation: 50000, icon: "X" },
-  { name: "Institutional Trader", min: 600000, reputation: 100000, icon: "XI" },
-  { name: "Academy Legend", min: 1000000, reputation: 200000, icon: "XII" }
+  { name: "Recruit", min: 0, reputation: 0, icon: "◇", tone: "slate" },
+  { name: "Cadet", min: 2500, reputation: 100, icon: "◆", tone: "blue" },
+  { name: "Junior Trader", min: 6000, reputation: 300, icon: "✦", tone: "cyan" },
+  { name: "Trader", min: 12000, reputation: 700, icon: "◈", tone: "violet" },
+  { name: "Senior Trader", min: 22000, reputation: 1500, icon: "★", tone: "purple" },
+  { name: "Professional Trader", min: 40000, reputation: 3000, icon: "⬢", tone: "blue" },
+  { name: "Elite Trader", min: 70000, reputation: 6000, icon: "✧", tone: "gold" },
+  { name: "Market Specialist", min: 120000, reputation: 12000, icon: "◉", tone: "cyan" },
+  { name: "Funded Candidate", min: 200000, reputation: 25000, icon: "♜", tone: "green" },
+  { name: "Futures Master", min: 350000, reputation: 50000, icon: "♛", tone: "gold" },
+  { name: "Institutional Trader", min: 600000, reputation: 100000, icon: "✺", tone: "violet" },
+  { name: "Academy Legend", min: 1000000, reputation: 200000, icon: "✹", tone: "legendary" }
 ] as const;

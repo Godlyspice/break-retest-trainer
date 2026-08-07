@@ -1010,9 +1010,13 @@ export default function FuturesAcademy() {
   const [setupNameMessage, setSetupNameMessage] = useState("");
   const [handbookQuery, setHandbookQuery] = useState("");
   const [expandedHandbookTopic, setExpandedHandbookTopic] = useState<string | null>(null);
+  const [achievementQueue, setAchievementQueue] = useState<
+    (typeof achievementCatalog)[number][]
+  >([]);
   const [achievementToast, setAchievementToast] = useState<
     (typeof achievementCatalog)[number] | null
   >(null);
+  const [achievementToastKey, setAchievementToastKey] = useState(0);
   const previousAchievementIdsRef = useRef<string[] | null>(null);
   const [authUserId, setAuthUserId] = useState<string | null>(null);
   const [profileName, setProfileName] = useState("Demo Trader");
@@ -1123,24 +1127,42 @@ export default function FuturesAcademy() {
       return;
     }
 
-    const newlyUnlocked = unlockedAchievements.find(
-      item => !previousAchievementIdsRef.current?.includes(item.id)
+    const previousIds = previousAchievementIdsRef.current;
+    const newlyUnlocked = unlockedAchievements.filter(
+      item => !previousIds.includes(item.id)
     );
 
     previousAchievementIdsRef.current = currentIds;
 
-    if (!newlyUnlocked) return;
+    if (newlyUnlocked.length) {
+      setAchievementQueue(queue => {
+        const existing = new Set([
+          ...queue.map(item => item.id),
+          ...(achievementToast ? [achievementToast.id] : [])
+        ]);
+        return [
+          ...queue,
+          ...newlyUnlocked.filter(item => !existing.has(item.id))
+        ];
+      });
+    }
+  }, [unlockedAchievements, achievementToast]);
 
-    setAchievementToast(newlyUnlocked);
+  useEffect(() => {
+    if (achievementToast || achievementQueue.length === 0) return;
+    const [next, ...remaining] = achievementQueue;
+    setAchievementQueue(remaining);
+    setAchievementToast(next);
+    setAchievementToastKey(key => key + 1);
+  }, [achievementQueue, achievementToast]);
 
+  useEffect(() => {
+    if (!achievementToast) return;
     const timeout = window.setTimeout(() => {
-      setAchievementToast(current =>
-        current?.id === newlyUnlocked.id ? null : current
-      );
-    }, 6500);
-
+      setAchievementToast(null);
+    }, 5200);
     return () => window.clearTimeout(timeout);
-  }, [unlockedAchievements]);
+  }, [achievementToast, achievementToastKey]);
 
   const membershipLabel =
     profileRole === "owner" ? "👑 Academy Founder" :
@@ -2919,7 +2941,7 @@ export default function FuturesAcademy() {
               const active = index === currentRankIndex;
               return (
                 <div className={`rank-node ${unlocked ? "unlocked" : ""} ${active ? "active" : ""}`} key={rank.name}>
-                  <div className={`rank-medal career-rank-emblem rank-emblem-${index + 1}`}>
+                  <div className={`rank-medal career-rank-emblem rank-emblem-${index + 1} career-rank-${rank.tone}`}>
                     <AcademyIcon name="rank" size={30} framed />
                     <span>{rank.icon}</span>
                   </div>
@@ -3681,7 +3703,7 @@ export default function FuturesAcademy() {
     equippedBackground, equippedEffect, equippedTheme, profileName,
     profileNameDraft, profileNameMessage, profileNameSaving,
     nameSetupMode, setupDisplayName, setupNameMessage,
-    expandedHandbookTopic, achievementToast, profileRole, profilePremium, authUserId, showGuestImport, guestSnapshot, activeEvaluation, activeAccount, applyTradeResult]);
+    expandedHandbookTopic, achievementToast, achievementQueue, achievementToastKey, profileRole, profilePremium, authUserId, showGuestImport, guestSnapshot, activeEvaluation, activeAccount, applyTradeResult]);
 
   if (identityMode === "landing") {
     return (
@@ -3818,7 +3840,7 @@ export default function FuturesAcademy() {
       <header className="v1-topbar">
         <button className="brand brand-button" type="button" onClick={() => setTab("home")}>
           <span className="brand-mark">FA</span>
-          <div><strong>Futures Academy</strong><span>v3 Academy RPG</span></div>
+          <div><strong>Futures Academy</strong><span>v4.7 Core RPG</span></div>
         </button>
         <div className="v1-status-strip">
           <span className="v41-header-pill v41-pill-violet" title="Reputation">
@@ -3932,14 +3954,14 @@ export default function FuturesAcademy() {
 
           <div className="sidebar-bottom">
             <button onClick={()=>setTab("settings")}>
-              <span className="v3-nav-icon">⚙️</span>
+              <span className="v3-nav-icon"><AcademyIcon name="settings" size={21} framed /></span>
               <span className="v3-nav-copy">
                 <strong>Settings</strong>
                 <small>Account and preferences</small>
               </span>
             </button>
             <button onClick={()=>setTab("admin")}>
-              <span className="v3-nav-icon">🔐</span>
+              <span className="v3-nav-icon"><AcademyIcon name="admin" size={21} framed /></span>
               <span className="v3-nav-copy">
                 <strong>Admin</strong>
                 <small>Owner operations console</small>
@@ -4056,7 +4078,7 @@ export default function FuturesAcademy() {
       )}
 
       {achievementToast && (
-        <aside className="achievement-toast" role="status" aria-live="polite">
+        <aside key={achievementToastKey} className={`achievement-toast achievement-toast-${achievementToast.rarity.toLowerCase()}`} role="status" aria-live="polite">
           <div className="achievement-toast-glow" />
           <div className="achievement-toast-icon">
             <AcademyIcon name="trophy" size={34} framed />
@@ -4075,6 +4097,7 @@ export default function FuturesAcademy() {
           >
             ×
           </button>
+          <div className="achievement-toast-timer" aria-hidden="true" />
         </aside>
       )}
 

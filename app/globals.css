@@ -6466,3 +6466,105 @@ textarea {
     animation: none !important;
   }
 }
+
+
+/* Futures Academy v4.7 Core RPG — final cumulative layer */
+:root {
+  --academy-page: #020711;
+  --academy-panel: #07121f;
+  --academy-panel-deep: #030914;
+}
+
+.v4-visual-system,
+.v1-content,
+.v1-page,
+.page-section,
+.handbook-page-v460,
+.marketplace,
+.owner-dashboard,
+.page {
+  background-color: var(--academy-page) !important;
+}
+
+.v1-content {
+  background:
+    radial-gradient(circle at 90% -10%, rgba(62, 67, 190, .08), transparent 28%),
+    radial-gradient(circle at 5% 20%, rgba(0, 161, 214, .055), transparent 22%),
+    linear-gradient(180deg, #030914, #020711 68%, #01050b) !important;
+}
+
+.handbook-page-v460 {
+  isolation: isolate;
+  background:
+    radial-gradient(circle at 88% -8%, rgba(62, 67, 190, .055), transparent 27%),
+    radial-gradient(circle at 8% 18%, rgba(0, 161, 214, .04), transparent 20%),
+    linear-gradient(180deg, #030914, #020711 70%, #01050b) !important;
+}
+
+.handbook-page-v460::before {
+  opacity: .028 !important;
+  background-size: 52px 52px !important;
+}
+
+.handbook-page-v460 .handbook-card,
+.handbook-page-v460 .handbook-search {
+  background:
+    radial-gradient(circle at 100% 0, rgba(89, 56, 177, .035), transparent 30%),
+    linear-gradient(145deg, #07121f, #030914 78%) !important;
+}
+
+.achievement-toast {
+  padding-bottom: 18px !important;
+}
+
+.achievement-toast-timer {
+  position: absolute !important;
+  z-index: 5 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  height: 4px !important;
+  transform-origin: left center;
+  background: linear-gradient(90deg, #19a8ff, #8e48ff, #ffcc38);
+  animation: achievementToastCountdown 5.2s linear forwards;
+}
+
+.achievement-toast-common { border-color: rgba(167, 187, 205, .62) !important; }
+.achievement-toast-uncommon { border-color: rgba(54, 224, 152, .72) !important; }
+.achievement-toast-rare { border-color: rgba(48, 160, 255, .78) !important; }
+.achievement-toast-epic { border-color: rgba(166, 73, 255, .82) !important; }
+.achievement-toast-legendary {
+  border-color: rgba(255, 201, 43, .88) !important;
+  box-shadow: 0 24px 74px rgba(0,0,0,.72), 0 0 34px rgba(255, 190, 35, .18) !important;
+}
+
+@keyframes achievementToastCountdown {
+  from { transform: scaleX(1); opacity: 1; }
+  to { transform: scaleX(0); opacity: .35; }
+}
+
+.career-rank-emblem .academy-icon-shell {
+  animation: careerCoreFloat 4.2s ease-in-out infinite;
+}
+.career-rank-slate { color: #8292a6; }
+.career-rank-blue { color: #3c94ff; }
+.career-rank-cyan { color: #00dcff; }
+.career-rank-violet { color: #9a55ff; }
+.career-rank-purple { color: #ce52ff; }
+.career-rank-gold { color: #ffca38; }
+.career-rank-green { color: #00e39a; }
+.career-rank-legendary { color: #ffd757; }
+.career-rank-emblem > span { color: currentColor !important; }
+.rank-node.active .career-rank-emblem {
+  filter: drop-shadow(0 0 9px currentColor) drop-shadow(0 0 22px color-mix(in srgb, currentColor 42%, transparent));
+}
+
+@keyframes careerCoreFloat {
+  0%,100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-3px) rotate(1.5deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .achievement-toast-timer { animation: none !important; }
+  .career-rank-emblem .academy-icon-shell { animation: none !important; }
+}
